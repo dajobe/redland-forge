@@ -104,6 +104,10 @@ case $hostname in
     TCL=tclsh8.3
     export TCL
     ;;
+  maris)
+    TCL=tclsh8.3
+    export TCL
+    ;;
   *)
     ;;
 esac
@@ -118,7 +122,7 @@ fi
 
 echo "$program: '$configure' succeeded"
 
-sed -n -e '/Languages available/,$p' $logs/configure.log
+sed -n -e '/Languages available/,/Berkeley/p' $logs/configure.log
 
 $MAKE > $logs/make.log 2>&1
 status=$?
