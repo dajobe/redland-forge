@@ -32,6 +32,8 @@ install=$working/install
 
 # FILES
 log_file=$logs/$program.log
+start_stamp=$logs/start-stamp
+end_stamp=$logs/end-stamp
 stamp=$logs/stamp
 
 ######################################################################
@@ -46,6 +48,8 @@ if test -d $working; then
   rm -rf $working
 fi
 mkdir $working $logs $install
+touch $start_stamp
+
 cd $working
 
 MAKE=make
@@ -194,6 +198,8 @@ rm -f $lang_log
 #   fi
 # done
 
+touch $end_stamp
+
 if [ "X$LANGS" = X ]; then
   echo "$program: No language interfaces to build"
 else
@@ -204,6 +210,9 @@ else
   echo "  FAILED  $LANGS_FAILED"
 fi
 
-rm -f $stamp
+delta=`perl -e "print int(86000*((-M '$start_stamp') - (-M '$end_stamp')))";`
+echo "$program: Total time taken: $delta secs"
+
+rm -f $stamp $start_stamp $end_stamp
 
 exit 0
