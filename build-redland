@@ -105,20 +105,28 @@ echo "$program: '$MAKE check' succeeded"
 
 LANGS_FAILED=
 LANGS_OK=
+LANGS=
 for lang in perl python tcl java ruby php; do
-  cd $lang
-  $MAKE test-$lang > $logs/$lang.log 2>&1
-  status=$?
-  if [ $status -ne 0 ]; then
-    LANGS_FAILED="$LANGS_FAILED $lang"
-  else
-    LANGS_OK="$LANGS_OK $lang"
+  if [ -d $lang ]; then 
+    cd $lang
+    $MAKE test-$lang > $logs/$lang.log 2>&1
+    status=$?
+    if [ $status -ne 0 ]; then
+      LANGS_FAILED="$LANGS_FAILED $lang"
+    else
+      LANGS_OK="$LANGS_OK $lang"
+    fi
+    cd ..
+    LANGS="$LANGS $lang"
   fi
-  cd ..
 done
 
-echo "$program: Summary of language interface builds:"
-echo "  OK      $LANGS_OK"
-echo "  FAILED  $LANGS_FAILED"
+if [ "X$LANGS" -eq X ]; then
+  echo "$program: No language interfaces to build"
+else
+  echo "$program: Summary of language interface builds:"
+  echo "  OK      $LANGS_OK"
+  echo "  FAILED  $LANGS_FAILED"
+fi
 
 exit 0
