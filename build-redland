@@ -95,6 +95,12 @@ case $hostname in
   hedwig.dajobe.org)
     RUBY=ruby1.8
     export RUBY
+    # 8.4 does not seem to work
+    TCL=tclsh8.3
+    export TCL
+    ;;
+  tribble.ilrt.bris.ac.uk)
+    # FreeBSD makes you use one version
     TCL=tclsh8.3
     export TCL
     ;;
