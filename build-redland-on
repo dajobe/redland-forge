@@ -48,12 +48,12 @@ sub my_system($) {
 }
 
 
-for my $h (@ARGV) {
+for my $userhost (@ARGV) {
   my $host;
-  if($h =~ /\@(.+)$/) {
+  if($userhost =~ /\@(.+)$/) {
     $host=$1;
   } else {
-    $host=$h;
+    $host=$userhost;
   }
   my($name,$aliases,$addrtype,$length,@addrs) = gethostbyname($host);
   if(!$name) {
@@ -62,9 +62,9 @@ for my $h (@ARGV) {
   }
 
   print "$program: Building on host $host ($name)\n";
-  my_system "ssh -n $host rm -f ./build-redland $tarball";
-  my_system "scp -pq $bins/build-redland $host:";
-  my_system "scp -pq $tarball $host:";
+  my_system "ssh -n $userhost rm -f ./build-redland $tarball";
+  my_system "scp -pq $bins/build-redland $userhost:";
+  my_system "scp -pq $tarball $userhost:";
   print "$program: Starting remote build\n";
-  my_system "ssh -n -x $host ./build-redland $file";
+  my_system "ssh -n -x $userhost ./build-redland $file";
 }
