@@ -132,6 +132,7 @@ fi
 echo "$program: '$MAKE' succeeded ($delta secs)"
 
 log=$logs/make-check.log
+touch $stamp
 $MAKE check > $log 2>&1
 status=$?
 delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
@@ -144,6 +145,7 @@ fi
 echo "$program: '$MAKE check' succeeded ($delta secs)"
 
 log=$logs/make-install.log
+touch $stamp
 $MAKE install > $log 2>&1
 status=$?
 delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
