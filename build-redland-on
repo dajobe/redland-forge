@@ -66,5 +66,5 @@ for my $userhost (@ARGV) {
   my_system "scp -pq $bins/build-redland $userhost:";
   my_system "scp -pq $tarball $userhost:";
   print "$program: Starting remote build\n";
-  my_system "ssh -n -x $userhost nice -n 1 ./build-redland $file";
+  my_system "ssh -n -x $userhost ./build-redland $file";
 }
