@@ -18,7 +18,7 @@ if(@ARGV <2) {
 }
 
 my $tarball=shift(@ARGV);
-if ($tarball !~ /^\w+-\d\..*tar\.gz$/) {
+if ($tarball !~ /^[-\w]+-\d\..*tar\.gz$/) {
   die "$program: $tarball does not look like a package tarball\n";
 }
 if (!-r $tarball) {
