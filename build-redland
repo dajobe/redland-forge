@@ -83,6 +83,13 @@ for jdkdir in `ls -1dr /usr/local/packages/j2sdk* 2>/dev/null`; do
   fi
 done
 
+for jdkdir in `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se `ls -1dr /usr/lib/java* 2>/dev/null`; do
+  if [ -d $jdkdir -a -r $jdkdir/bin/java ]; then
+    PATH=$jdkdir/bin:$PATH
+    break;
+  fi
+done
+
 hostname=`hostname`
 case $hostname in
   hedwig.dajobe.org)
@@ -104,6 +111,8 @@ if [ $status -ne 0 ]; then
 fi
 
 echo "$program: '$configure' succeeded"
+
+sed -n -e '/Languages available/,$p' $logs/configure.log
 
 $MAKE > $logs/make.log 2>&1
 status=$?
