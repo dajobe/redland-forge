@@ -68,19 +68,28 @@ gnu_arch=`./config.guess`
 echo "$program: GNU System   $gnu_arch"
 
 configure="./configure"
-# Fink
+
+dbinc=
+dbname=
+dbincdir=/usr/include
+# OSX Fink
 if [ -d /sw ]; then
   PATH=/sw/bin:$PATH
-  dbinc=/sw/include
-  if [ -d $dbinc/db4 ]; then
-    dbinc=$dbinc/db4
-  elif [ -d $dbinc/db3 ]; then
-    dbinc=$dbinc/db3
-  fi
-  configure="$configure --with-bdb-lib=/sw/lib --with-bdb-include=$dbinc"
-  CC="cc -L/sw/lib" 
-  export CC
+  dbincdir=/sw/include
 fi
+
+for version in 4 3 2; do
+  if [ -f $dbincdir/db$version/db.h ]; then
+    dbinc=$dbincdir/db$version
+    dbname=db-$version
+    break
+  fi
+done
+
+if [ "X$dbinc" != "X" ]; then
+  configure="$configure --with-bdb-dbname=$dbname --with-bdb-include=$dbinc"
+fi
+
 
 $configure > $logs/configure.log 2>&1
 status=$?
