@@ -60,13 +60,29 @@ gunzip < $here/$tarball | tar xf -
 
 cd $build
 
-# Linux, Solaris, FreeBSD
+llp=
+
+(raptor-config --version) > /dev/null 2>&1
+result=$?
+if test $result -eq 0; then
+  raptor_path=`raptor-config --prefix`
+  llp=":$raptor_path/lib"
+fi
+
 here=`pwd`
-LD_LIBRARY_PATH=$here/librdf/.libs:$here/raptor/.libs
-export LD_LIBRARY_PATH
-# OSX
-DYLD_LIBRARY_PATH=$here/librdf/.libs:$here/raptor/.libs
-export DYLD_LIBRARY_PATH
+if test `uname` = Darwin; then
+  # OSX
+  DYLD_LIBRARY_PATH=$install/lib$llp
+  #:$here/librdf/.libs:$here/raptor/.libs$llp
+  export DYLD_LIBRARY_PATH
+  echo "$program: export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
+else
+  # Linux, Solaris, FreeBSD
+  LD_LIBRARY_PATH=$install/lib$llp
+  #:$here/librdf/.libs:$here/raptor/.libs$llp
+  export LD_LIBRARY_PATH
+  echo "$program: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+fi
 
 gnu_arch=`./config.guess`
 echo "$program: GNU System   $gnu_arch"
@@ -74,16 +90,9 @@ echo "$program: GNU System   $gnu_arch"
 configure="./configure --prefix=$install"
 
 # Non-standard JDK places
-for jdkdir in `ls -1dr /usr/local/packages/j2sdk* 2>/dev/null`; do
-  if [ -r $jdkdir/include/jni.h ]; then
-    configure="$configure --with-jdk=$jdkdir"
-    PATH=$jdkdir/bin:$PATH
-    break
-  fi
-done
-
-for jdkdir in `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se `ls -1dr /usr/lib/java* 2>/dev/null`; do
+for jdkdir in `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se `ls -1dr /usr/lib/java* 2>/dev/null` /System/Library/Frameworks/JavaVM.framework /usr/local/packages/j2sdk; do
   if [ -d $jdkdir -a -r $jdkdir/bin/java ]; then
+    echo "$program: Adding java JDK in $jdkdir to PATH"
     PATH=$jdkdir/bin:$PATH
     break;
   fi
