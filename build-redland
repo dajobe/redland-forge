@@ -74,6 +74,26 @@ echo "$program: GNU System   $gnu_arch"
 
 configure="./configure"
 
+for jdkdir in `ls -1dr /usr/local/packages/j2sdk* 2>/dev/null` `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se; do
+  if [ -r $jdkdir/include/jni.h ]; then
+    configure="$configure --with-jdk=$jdkdir"
+    break
+  fi
+done
+
+hostname=`hostname`
+case $hostname in
+  hedwig.dajobe.org)
+    RUBY=ruby1.8
+    export RUBY
+    TCL=tclsh8.3
+    export TCL
+    ;;
+  *)
+    ;;
+esac
+
+
 $configure > $logs/configure.log 2>&1
 status=$?
 if [ $status -ne 0 ]; then
