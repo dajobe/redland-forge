@@ -121,7 +121,7 @@ for lang in perl python tcl java ruby php; do
   fi
 done
 
-if [ "X$LANGS" -eq X ]; then
+if [ "X$LANGS" = X ]; then
   echo "$program: No language interfaces to build"
 else
   echo "$program: Summary of language interface builds:"
