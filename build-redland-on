@@ -66,5 +66,8 @@ for my $userhost (@ARGV) {
   my_system "scp -pq $bins/build-redland $userhost:";
   my_system "scp -pq $tarball $userhost:";
   print "$program: Starting remote build\n";
+  my $t=time;
   my_system "ssh -n -x $userhost ./build-redland $file";
+  $t= time-$t;
+  print "$program: Remote build ended after $t secs\n";
 }
