@@ -24,12 +24,11 @@ version=`echo $dirname | sed -e 's/^.*-//'`
 
 here=`pwd`
 
-this=build
-
 # DIRS
-working=$here/$this
+working=$here/build
 logs=$working/logs
 build=$working/$dirname
+install=$working/install
 
 # FILES
 log_file=$logs/$program.log
@@ -42,7 +41,7 @@ echo "$program: Working area $working"
 echo "$program: Logs         $logs"
 
 rm -rf $working
-mkdir $working $logs
+mkdir $working $logs $install
 cd $working
 
 MAKE=make
@@ -72,7 +71,7 @@ export DYLD_LIBRARY_PATH
 gnu_arch=`./config.guess`
 echo "$program: GNU System   $gnu_arch"
 
-configure="./configure"
+configure="./configure --prefix=$install"
 
 # Non-standard JDK places
 for jdkdir in `ls -1dr /usr/local/packages/j2sdk* 2>/dev/null`; do
@@ -122,7 +121,7 @@ fi
 
 echo "$program: '$configure' succeeded"
 
-sed -n -e '/Languages available/,/Berkeley/p' $logs/configure.log
+sed -n -e '/^  Berkeley/,/Content digests/p' $logs/configure.log
 
 $MAKE > $logs/make.log 2>&1
 status=$?
@@ -143,6 +142,17 @@ fi
 
 echo "$program: '$MAKE check' succeeded"
 
+$MAKE install > $logs/make-install.log 2>&1
+status=$?
+if [ $status -ne 0 ]; then
+  echo "$program: '$MAKE install' failed"
+  grep '^FAIL:' $logs/make-install.log
+  exit 1;
+fi
+
+echo "$program: '$MAKE install' succeeded"
+
+
 LANGS_FAILED=
 LANGS_OK=
 LANGS=
@@ -161,11 +171,29 @@ for lang in perl python tcl java ruby php; do
   fi
 done
 
+# LANGS_INSTALL_FAILED=
+# LANGS_INSTALL_OK=
+# for lang in $LANGS_OK fake; do
+#   if [ -d $lang ]; then 
+#     cd $lang
+#     $MAKE install > $logs/$lang-install.log 2>&1
+#     status=$?
+#     if [ $status -ne 0 ]; then
+#       LANGS_INSTALL_FAILED="$LANGS_INSTALL_FAILED $lang"
+#     else
+#       LANGS_INSTALL_OK="$LANGS_INSTALL_OK $lang"
+#     fi
+#     cd ..
+#   fi
+# done
+
 if [ "X$LANGS" = X ]; then
   echo "$program: No language interfaces to build"
 else
   echo "$program: Summary of language interface builds:"
   echo "  OK      $LANGS_OK"
+#  echo "    Install OK      $LANGS_INSTALL_OK"
+#  echo "    Install FAILED  $LANGS_INSTALL_FAILED"
   echo "  FAILED  $LANGS_FAILED"
 fi
 
