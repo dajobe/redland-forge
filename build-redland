@@ -137,6 +137,7 @@ $MAKE check > $logs/make-check.log 2>&1
 status=$?
 if [ $status -ne 0 ]; then
   echo "$program: '$MAKE check' failed"
+  grep '^FAIL:' $logs/make-check.log
   exit 1;
 fi
 
