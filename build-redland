@@ -18,8 +18,8 @@ if [ ! -r $tarball ]; then
   exit 1
 fi
 
-dirname=`echo $tarball | sed -e 's,^.*/,,' -e 's/\.tar.gz$//'`
-package=`echo $dirname | sed -e 's/-.*$//'`
+dirname=`echo $tarball | sed -e 's,^.*/,,' -e 's/\.tar\..*$//'`
+package=`echo $dirname | sed -e 's/-[0-9].*$//'`
 version=`echo $dirname | sed -e 's/^.*-//'`
 
 here=`pwd`
@@ -62,30 +62,6 @@ export MAKE
 gunzip < $here/$tarball | tar xf -
 
 cd $build
-
-llp=
-
-(raptor-config --version) > /dev/null 2>&1
-result=$?
-if test $result -eq 0; then
-  raptor_path=`raptor-config --prefix`
-  llp=":$raptor_path/lib"
-fi
-
-here=`pwd`
-# if test `uname` = Darwin; then
-#   # OSX
-#   DYLD_LIBRARY_PATH=$install/lib$llp
-#   #:$here/librdf/.libs:$here/raptor/.libs$llp
-#   export DYLD_LIBRARY_PATH
-#   echo "$program: export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
-# else
-#   # Linux, Solaris, FreeBSD
-#   LD_LIBRARY_PATH=$install/lib$llp
-#   #:$here/librdf/.libs:$here/raptor/.libs$llp
-#   export LD_LIBRARY_PATH
-#   echo "$program: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-# fi
 
 gnu_arch=`./config.guess`
 echo "$program: GNU System   $gnu_arch"
