@@ -70,19 +70,19 @@ if test $result -eq 0; then
 fi
 
 here=`pwd`
-if test `uname` = Darwin; then
-  # OSX
-  DYLD_LIBRARY_PATH=$install/lib$llp
-  #:$here/librdf/.libs:$here/raptor/.libs$llp
-  export DYLD_LIBRARY_PATH
-  echo "$program: export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
-else
-  # Linux, Solaris, FreeBSD
-  LD_LIBRARY_PATH=$install/lib$llp
-  #:$here/librdf/.libs:$here/raptor/.libs$llp
-  export LD_LIBRARY_PATH
-  echo "$program: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-fi
+# if test `uname` = Darwin; then
+#   # OSX
+#   DYLD_LIBRARY_PATH=$install/lib$llp
+#   #:$here/librdf/.libs:$here/raptor/.libs$llp
+#   export DYLD_LIBRARY_PATH
+#   echo "$program: export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
+# else
+#   # Linux, Solaris, FreeBSD
+#   LD_LIBRARY_PATH=$install/lib$llp
+#   #:$here/librdf/.libs:$here/raptor/.libs$llp
+#   export LD_LIBRARY_PATH
+#   echo "$program: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+# fi
 
 gnu_arch=`./config.guess`
 echo "$program: GNU System   $gnu_arch"
@@ -90,13 +90,13 @@ echo "$program: GNU System   $gnu_arch"
 configure="./configure --prefix=$install"
 
 # Non-standard JDK places
-for jdkdir in `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se `ls -1dr /usr/lib/java* 2>/dev/null` /System/Library/Frameworks/JavaVM.framework /usr/local/packages/j2sdk; do
-  if [ -d $jdkdir -a -r $jdkdir/bin/java ]; then
-    echo "$program: Adding java JDK in $jdkdir to PATH"
-    PATH=$jdkdir/bin:$PATH
-    break;
-  fi
-done
+# for jdkdir in `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se `ls -1dr /usr/lib/java* 2>/dev/null` /System/Library/Frameworks/JavaVM.framework /usr/local/packages/j2sdk; do
+#   if [ -d $jdkdir -a -r $jdkdir/bin/java ]; then
+#     echo "$program: Adding java JDK in $jdkdir to PATH"
+#     PATH=$jdkdir/bin:$PATH
+#     break;
+#   fi
+# done
 
 hostname=`hostname`
 case $hostname in
