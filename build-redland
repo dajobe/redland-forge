@@ -57,7 +57,7 @@ done
 export MAKE
 
 
-gunzip < $here/$tarball | tar -x -f -
+gunzip < $here/$tarball | tar xf -
 
 cd $build
 
