@@ -46,7 +46,7 @@ cd $working
 
 MAKE=make
 for make in gnumake gmake make; do
-  ($make --version 2>&1 | grep 'GNU Make') >/dev/null
+  ($make --version 2>&1 | grep 'GNU Make') >/dev/null 2>&1
   result=$?
   if test $result -eq 0 ; then
     MAKE=$make
