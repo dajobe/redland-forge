@@ -1,0 +1,124 @@
+#!/bin/sh
+#
+# Build redland and check it works.  Intended to be called via build-redland-on
+#
+# $Id$
+#
+
+program=`basename $0`
+
+tarball=$1
+if [ "X$tarball" = "X" ]; then
+  echo "USAGE $program: PACKAGE-TARBALL" 1>&2
+  exit 1
+fi
+
+if [ ! -r $tarball ]; then
+  echo "$program: $tarball not found"
+  exit 1
+fi
+
+dirname=`echo $tarball | sed -e 's,^.*/,,' -e 's/\.tar.gz$//'`
+package=`echo $dirname | sed -e 's/-.*$//'`
+version=`echo $dirname | sed -e 's/^.*-//'`
+
+here=`pwd`
+
+this=build
+
+# DIRS
+working=$here/$this
+logs=$working/logs
+build=$working/$dirname
+
+# FILES
+log_file=$logs/$program.log
+
+######################################################################
+
+echo "$program: Building $package $version"
+echo "$program: System       `uname -srmn`"
+echo "$program: Working area $working"
+echo "$program: Logs         $logs"
+
+rm -rf $working
+mkdir $working $logs
+cd $working
+
+tar xfz $here/$tarball
+
+cd $build
+
+LD_LIBRARY_PATH=$build/librdf/.libs:$build/raptor/.libs
+export LD_LIBRARY_PATH
+
+gnu_arch=`./config.guess`
+echo "$program: GNU System   $gnu_arch"
+
+configure="./configure"
+# Fink
+if [ -d /sw ]; then
+  PATH=/sw/bin:$PATH
+  dbinc=/sw/include
+  if [ -d $dbinc/db4 ]; then
+    dbinc=$dbinc/db4
+  elif [ -d $dbinc/db3 ]; then
+    dbinc=$dbinc/db3
+  fi
+  configure="$configure --with-bdb-lib=/sw/lib --with-bdb-include=$dbinc"
+  CC="cc -L/sw/lib" 
+  export CC
+fi
+
+MAKE=make
+if [ $gnu_arch = "i386-unknown-freebsd4.7" ]; then
+  MAKE=gmake
+fi
+export MAKE
+
+$configure > $logs/configure.log 2>&1
+status=$?
+if [ $status -ne 0 ]; then
+  echo "$program: '$configure' failed"
+  exit 1;
+fi
+
+echo "$program: '$configure' succeeded"
+
+$MAKE > $logs/make.log 2>&1
+status=$?
+if [ $status -ne 0 ]; then
+  echo "$program: '$MAKE' failed"
+  exit 1;
+fi
+
+echo "$program: '$MAKE' succeeded"
+
+$MAKE check > $logs/make-check.log 2>&1
+status=$?
+if [ $status -ne 0 ]; then
+  echo "$program: '$MAKE check' failed"
+  exit 1;
+fi
+
+echo "$program: '$MAKE check' succeeded"
+
+LANGS_FAILED=
+LANGS_OK=
+for lang in perl python tcl java ruby php; do
+  cd $lang
+  $MAKE test-$lang > $logs/$lang.log 2>&1
+  status=$?
+  if [ $status -ne 0 ]; then
+    LANGS_FAILED="$LANGS_FAILED $lang"
+  else
+    LANGS_OK="$LANGS_OK $lang"
+  fi
+  cd ..
+done
+
+echo "$program: Summary of language interface builds:"
+echo "  OK      $LANGS_OK"
+echo "  FAILED  $LANGS_FAILED"
+
+exit 0
