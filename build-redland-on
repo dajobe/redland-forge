@@ -48,7 +48,13 @@ sub my_system($) {
 }
 
 
-for my $host (@ARGV) {
+for my $h (@ARGV) {
+  my $host;
+  if($h =~ /\@(.+)$/) {
+    $host=$1;
+  } else {
+    $host=$h;
+  }
   my($name,$aliases,$addrtype,$length,@addrs) = gethostbyname($host);
   if(!$name) {
     warn "$program: Host '$host' not found - skipping\n";
@@ -56,6 +62,7 @@ for my $host (@ARGV) {
   }
 
   print "$program: Building on host $host ($name)\n";
+  my_system "ssh -n $host rm -f ./build-redland $tarball";
   my_system "scp -pq $bins/build-redland $host:";
   my_system "scp -pq $tarball $host:";
   print "$program: Starting remote build\n";
