@@ -61,35 +61,18 @@ gunzip < $here/$tarball | tar -x -f -
 
 cd $build
 
-LD_LIBRARY_PATH=$build/librdf/.libs:$build/raptor/.libs
+# Linux, Solaris, FreeBSD
+here=`pwd`
+LD_LIBRARY_PATH=$here/librdf/.libs:$here/raptor/.libs
 export LD_LIBRARY_PATH
+# OSX
+DYLD_LIBRARY_PATH=$here/librdf/.libs:$here/raptor/.libs
+export DYLD_LIBRARY_PATH
 
 gnu_arch=`./config.guess`
 echo "$program: GNU System   $gnu_arch"
 
 configure="./configure"
-
-dbinc=
-dbname=
-dbincdir=/usr/include
-# OSX Fink
-if [ -d /sw ]; then
-  PATH=/sw/bin:$PATH
-  dbincdir=/sw/include
-fi
-
-for version in 4 3 2; do
-  if [ -f $dbincdir/db$version/db.h ]; then
-    dbinc=$dbincdir/db$version
-    dbname=db-$version
-    break
-  fi
-done
-
-if [ "X$dbinc" != "X" ]; then
-  configure="$configure --with-bdb-dbname=$dbname --with-bdb-include=$dbinc"
-fi
-
 
 $configure > $logs/configure.log 2>&1
 status=$?
