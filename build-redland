@@ -40,7 +40,10 @@ echo "$program: System       `uname -srmn`"
 echo "$program: Working area $working"
 echo "$program: Logs         $logs"
 
-rm -rf $working
+if test -d $working; then
+  chmod -R u+w $working
+  rm -rf $working
+fi
 mkdir $working $logs $install
 cd $working
 
@@ -165,7 +168,7 @@ echo "$program: '$MAKE install' succeeded"
 LANGS_FAILED=
 LANGS_OK=
 LANGS=
-for lang in perl python tcl java ruby php; do
+for lang in perl python tcl java ruby php csharp; do
   if [ -d $lang ]; then 
     cd $lang
     $MAKE check > $logs/$lang.log 2>&1
