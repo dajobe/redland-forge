@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+#
+# Build redland on a given set of hosts via build-redland
+#
+# $Id$
+#
+
+use File::Basename;
+
+use strict;
+
+my $bins=$ENV{HOME}."/rdf/redland/admin";
+
+my $program=basename $0;
+
+if(@ARGV <2) {
+  die "USAGE: $program PROGRAM-TARBALL HOSTS...\n";
+}
+
+my $tarball=shift(@ARGV);
+if ($tarball !~ /^\w+-\d\..*tar\.gz$/) {
+  die "$program: $tarball does not look like a package tarball\n";
+}
+if (!-r $tarball) {
+  die "$program: $tarball package tarball not found\n";
+}
+
+my $file=basename $tarball;
+
+
+sub my_system($) {
+  my $cmd=shift;
+  my $r=system($cmd);
+  
+  #warn "Running '$cmd'\n";
+  my $exit_value  = $r >> 8;
+  my $signal_num  = $r & 127;
+  my $dumped_core = $r & 128;
+
+  if($r) {
+    my $msg="'$cmd' failed";
+    $msg.=" - died with signal $signal_num" if $signal_num;
+    $msg.=" (core dumped)" if $dumped_core;
+    warn "$msg\n";
+  }
+
+  return $exit_value;
+}
+
+
+for my $host (@ARGV) {
+  my($name,$aliases,$addrtype,$length,@addrs) = gethostbyname($host);
+  if(!$name) {
+    warn "$program: Host '$host' not found - skipping\n";
+    next;
+  }
+
+  print "$program: Building on host $host ($name)\n";
+  my_system "scp -pq $bins/build-redland $host:";
+  my_system "scp -pq $tarball $host:";
+  print "$program: Starting remote build\n";
+  my_system "ssh -n -x $host ./build-redland $file";
+}
