@@ -77,6 +77,7 @@ configure="./configure"
 for jdkdir in `ls -1dr /usr/local/packages/j2sdk* 2>/dev/null` `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se `ls -1dr /usr/lib/java* 2>/dev/null`; do
   if [ -r $jdkdir/include/jni.h ]; then
     configure="$configure --with-jdk=$jdkdir"
+    PATH=$jdkdir/bin:$PATH
     break
   fi
 done
