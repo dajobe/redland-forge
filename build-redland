@@ -14,7 +14,7 @@ if [ "X$tarball" = "X" ]; then
 fi
 
 if [ ! -r $tarball ]; then
-  echo "$program: $tarball not found"
+  echo "$program: tarball $tarball not found"
   exit 1
 fi
 
@@ -45,7 +45,19 @@ rm -rf $working
 mkdir $working $logs
 cd $working
 
-tar xfz $here/$tarball
+MAKE=make
+for make in gnumake gmake make; do
+  ($make --version 2>&1 | grep 'GNU Make') >/dev/null
+  result=$?
+  if test $result -eq 0 ; then
+    MAKE=$make
+    break
+  fi
+done
+export MAKE
+
+
+gunzip < $here/$tarball | tar -x -f -
 
 cd $build
 
@@ -69,12 +81,6 @@ if [ -d /sw ]; then
   CC="cc -L/sw/lib" 
   export CC
 fi
-
-MAKE=make
-if [ $gnu_arch = "i386-unknown-freebsd4.7" ]; then
-  MAKE=gmake
-fi
-export MAKE
 
 $configure > $logs/configure.log 2>&1
 status=$?
