@@ -9,7 +9,7 @@ use File::Basename;
 
 use strict;
 
-my $bins=$ENV{HOME}."/rdf/redland/admin";
+my $bins=$ENV{HOME}."/dev/redland/admin";
 
 my $program=basename $0;
 
