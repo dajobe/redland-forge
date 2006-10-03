@@ -30,6 +30,12 @@ logs=$working/logs
 build=$working/$dirname
 install=$working/install
 
+if echo $tarball | grep '^/' >/dev/null; then
+  :
+else
+  tarball=$here/$tarball
+fi
+
 # FILES
 log_file=$logs/$program.log
 start_stamp=$logs/start-stamp
@@ -64,7 +70,7 @@ done
 export MAKE
 
 
-gunzip < $here/$tarball | tar xf -
+gunzip < $tarball | tar xf -
 
 cd $build
 
