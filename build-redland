@@ -74,8 +74,21 @@ gunzip < $tarball | tar xf -
 
 cd $build
 
-gnu_arch=`./config.guess`
-echo "$program: GNU System   $gnu_arch"
+cg=no
+for dir in . build; do
+  if [ -r $dir/config.guess ]; then
+    cg=$dir/config.guess;
+    break
+  fi
+done
+
+if test "$cg" != no; then
+  gnu_arch=`./config.guess`
+  echo "$program: GNU System   $gnu_arch"
+else
+  echo "$program: config.guess not found" 1>&2
+  gnu_arch=unknown-unknown-unknown
+fi
 
 configure="./configure --prefix=$install"
 
