@@ -83,7 +83,7 @@ for dir in . build; do
 done
 
 if test "$cg" != no; then
-  gnu_arch=`./config.guess`
+  gnu_arch=`$cg`
   echo "$program: GNU System   $gnu_arch"
 else
   echo "$program: config.guess not found" 1>&2
