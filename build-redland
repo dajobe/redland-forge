@@ -142,7 +142,7 @@ log=$logs/make.log
 touch $stamp
 $MAKE > $log 2>&1
 status=$?
-egrep '^[A-za-z0-9_]+\.c' $log
+egrep '^[A-Za-z0-9_]+\.c' $log
 delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
 if [ $status -ne 0 ]; then
   echo "$program: '$MAKE' failed ($delta secs)"
@@ -155,7 +155,7 @@ log=$logs/make-check.log
 touch $stamp
 $MAKE check > $log 2>&1
 status=$?
-egrep '^[A-za-z0-9_]+\.c' $log
+egrep '^[A-Za-z0-9_]+\.c' $log
 delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
 if [ $status -ne 0 ]; then
   echo "$program: '$MAKE check' failed ($delta secs)"
