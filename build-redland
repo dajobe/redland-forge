@@ -178,6 +178,9 @@ fi
 
 echo "$program: '$MAKE install' succeeded ($delta secs)"
 
+# To prevent parallel 'make check' errors, until all tests are
+# converted to automake parallel test friendly form.
+unset MAKEFLAGS
 
 LANGS_FAILED=
 LANGS_OK=
