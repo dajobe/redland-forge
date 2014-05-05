@@ -92,33 +92,8 @@ fi
 
 configure="./configure --prefix=$install"
 
-# Non-standard JDK places
-# for jdkdir in `ls -1dr /usr/local/jdk* 2>/dev/null` /usr/j2se `ls -1dr /usr/lib/java* 2>/dev/null` /System/Library/Frameworks/JavaVM.framework /usr/local/packages/j2sdk; do
-#   if [ -d $jdkdir -a -r $jdkdir/bin/java ]; then
-#     echo "$program: Adding java JDK in $jdkdir to PATH"
-#     PATH=$jdkdir/bin:$PATH
-#     break;
-#   fi
-# done
-
 hostname=`hostname`
 case $hostname in
-  hedwig.dajobe.org)
-    RUBY=ruby1.8
-    export RUBY
-    # 8.4 does not seem to work
-    TCL=tclsh8.3
-    export TCL
-    ;;
-  tribble.ilrt.bris.ac.uk)
-    # FreeBSD makes you use one version
-    TCL=tclsh8.3
-    export TCL
-    ;;
-  maris)
-    TCL=tclsh8.3
-    export TCL
-    ;;
   *)
     ;;
 esac
@@ -187,7 +162,7 @@ LANGS_OK=
 LANGS=
 lang_log=$logs/lang.log
 touch $stamp
-for lang in perl python tcl java ruby php csharp; do
+for lang in perl python ruby php lua; do
   if [ -d $lang ]; then 
     cd $lang
     log=$logs/$lang.log
