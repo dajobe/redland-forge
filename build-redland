@@ -90,6 +90,9 @@ else
   gnu_arch=unknown-unknown-unknown
 fi
 
+cc_version=`cc --version 2>&1 | head -1`
+echo "$program: CC Version   $cc_version"
+
 configure="./configure --prefix=$install"
 
 hostname=`hostname`
