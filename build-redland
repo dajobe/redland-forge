@@ -1,11 +1,11 @@
 #!/bin/sh
 #
-# Build redland and check it works.  Intended to be called via build-redland-on
+# Build redland tarballs and check they work.
 #
-# $Id$
+# Intended to be called via build-redland-on
 #
 
-program=`basename $0`
+program=$(basename "$0")
 
 tarball=$1
 if [ "X$tarball" = "X" ]; then
@@ -13,16 +13,16 @@ if [ "X$tarball" = "X" ]; then
   exit 1
 fi
 
-if [ ! -r $tarball ]; then
+if [ ! -r "$tarball" ]; then
   echo "$program: tarball $tarball not found"
   exit 1
 fi
 
-dirname=`echo $tarball | sed -e 's,^.*/,,' -e 's/\.tar\..*$//'`
-package=`echo $dirname | sed -e 's/-[0-9].*$//'`
-version=`echo $dirname | sed -e 's/^.*-//'`
+dirname=$(echo "$tarball" | sed -e 's,^.*/,,' -e 's/\.tar\..*$//')
+package=$(echo "$dirname" | sed -e 's/-[0-9].*$//')
+version=$(echo "$dirname" | sed -e 's/^.*-//')
 
-here=`pwd`
+here=$(pwd)
 
 # DIRS
 working=$here/build
@@ -30,83 +30,82 @@ logs=$working/logs
 build=$working/$dirname
 install=$working/install
 
-if echo $tarball | grep '^/' >/dev/null; then
+if echo "$tarball" | grep '^/' >/dev/null; then
   :
 else
-  tarball=$here/$tarball
+  tarball="$here/$tarball"
 fi
 
 # FILES
-log_file=$logs/$program.log
-start_stamp=$logs/start-stamp
-end_stamp=$logs/end-stamp
-stamp=$logs/stamp
+start_stamp="$logs/start-stamp"
+end_stamp="$logs/end-stamp"
+stamp="$logs/stamp"
 
 ######################################################################
 
 echo "$program: Building $package $version"
-echo "$program: System       `uname -srmn`"
+echo "$program: System       $(uname -srmn)"
 echo "$program: Working area $working"
 echo "$program: Logs         $logs"
 
-if test -d $working; then
-  chmod -R u+w $working
-  rm -rf $working
+if test -d "$working"; then
+  chmod -R u+w "$working"
+  rm -rf "$working"
 fi
-mkdir $working $logs $install
-touch $start_stamp
+mkdir "$working" "$logs" "$install"
+touch "$start_stamp"
 
-cd $working
+cd "$working" || exit 1
 
-MAKE=make
+MAKE="make"
 for make in gnumake gmake make; do
-  ($make --version 2>&1 | grep 'GNU Make') >/dev/null 2>&1
+  ("$make" --version 2>&1 | grep 'GNU Make') >/dev/null 2>&1
   result=$?
-  if test $result -eq 0 ; then
-    MAKE=$make
+  if test "$result" -eq 0 ; then
+    MAKE="$make"
     break
   fi
 done
 export MAKE
 
 
-gunzip < $tarball | tar xf -
+gunzip < "$tarball" | tar xf -
 
-cd $build
+cd "$build" || exit 1
 
 cg=no
 for dir in . build; do
-  if [ -r $dir/config.guess ]; then
-    cg=$dir/config.guess;
+  if [ -r "$dir/config.guess" ]; then
+    cg="$dir/config.guess"
     break
   fi
 done
 
 if test "$cg" != no; then
-  gnu_arch=`$cg`
+  gnu_arch=$($cg)
   echo "$program: GNU System   $gnu_arch"
 else
   echo "$program: config.guess not found" 1>&2
   gnu_arch=unknown-unknown-unknown
 fi
 
-cc_version=`cc --version 2>&1 | head -1`
+cc_version=$(cc --version 2>&1 | head -1)
 echo "$program: CC Version   $cc_version"
 
 configure="./configure --prefix=$install"
 
-hostname=`hostname`
+hostname=$(hostname)
 case $hostname in
   *)
     ;;
 esac
 
 
-log=$logs/configure.log
-touch $stamp
-$configure > $log 2>&1
+log="$logs/configure.log"
+touch "$stamp"
+$configure > "$log" 2>&1
 status=$?
-delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
+delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
 if [ $status -ne 0 ]; then
   echo "$program: '$configure' failed ($delta secs)"
   exit 1;
@@ -115,43 +114,43 @@ fi
 echo "$program: '$configure' succeeded ($delta secs)"
 
 # sed -n -e '/^  Berkeley/,/Content digests/p' $log
-sed -n -e '/build summary:$/,/^$/p' $log
+sed -n -e '/build summary:$/,/^$/p' "$log"
 
-log=$logs/make.log
-touch $stamp
-$MAKE > $log 2>&1
+log="$logs/make.log"
+touch "$stamp"
+$MAKE > "$log" 2>&1
 status=$?
-egrep '^[A-Za-z0-9_]+\.c' $log
-delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
-if [ $status -ne 0 ]; then
+grep -E '^[A-Za-z0-9_]+\.c' "$log"
+delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
+if [ "$status" -ne 0 ]; then
   echo "$program: '$MAKE' failed ($delta secs)"
   exit 1;
 fi
 
 echo "$program: '$MAKE' succeeded ($delta secs)"
 
-log=$logs/make-check.log
-touch $stamp
-$MAKE -j1 check > $log 2>&1
+log="$logs/make-check.log"
+touch "$stamp"
+$MAKE -j1 check > "$log" 2>&1
 status=$?
-egrep '^[A-Za-z0-9_]+\.c' $log
-delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
-if [ $status -ne 0 ]; then
+grep -E '^[A-Za-z0-9_]+\.c' "$log"
+delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
+if [ "$status" -ne 0 ]; then
   echo "$program: '$MAKE check' failed ($delta secs)"
-  grep '^FAIL:' $log
+  grep '^FAIL:' "$log"
   exit 1;
 fi
 
 echo "$program: '$MAKE check' succeeded ($delta secs)"
 
-log=$logs/make-install.log
-touch $stamp
-$MAKE install > $log 2>&1
+log="$logs/make-install.log"
+touch "$stamp"
+$MAKE install > "$log" 2>&1
 status=$?
-delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";`
-if [ $status -ne 0 ]; then
+delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
+if [ "$status" -ne 0 ]; then
   echo "$program: '$MAKE install' failed ($delta secs)"
-  grep '^FAIL:' $log
+  grep '^FAIL:' "$log"
   exit 1;
 fi
 
@@ -164,15 +163,15 @@ unset MAKEFLAGS
 LANGS_FAILED=
 LANGS_OK=
 LANGS=
-lang_log=$logs/lang.log
-touch $stamp
+lang_log="$logs/lang.log"
+touch "$stamp"
 for lang in perl python ruby php lua; do
-  if [ -d $lang ]; then 
-    cd $lang
-    log=$logs/$lang.log
-    $MAKE -j1 check > $logs/$lang.log 2>&1
+  if [ -d "$lang" ]; then 
+    cd "$lang" || exit 1
+    log="$logs/$lang.log"
+    $MAKE -j1 check > "$log" 2>&1
     status=$?
-    if [ $status -ne 0 ]; then
+    if [ "$status" -ne 0 ]; then
       LANGS_FAILED="$LANGS_FAILED $lang"
     else
       LANGS_OK="$LANGS_OK $lang"
@@ -182,10 +181,10 @@ for lang in perl python ruby php lua; do
   fi
 done
 if [ "X$LANGS" != X ]; then
-  delta=`perl -e "print int(86000*((-M '$stamp') - (-M '$lang_log')))";`
+  delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$lang_log')))";)
   echo "$program: languages built ($delta secs)"
 fi
-rm -f $lang_log
+rm -f "$lang_log"
 
 # LANGS_INSTALL_FAILED=
 # LANGS_INSTALL_OK=
@@ -203,7 +202,7 @@ rm -f $lang_log
 #   fi
 # done
 
-touch $end_stamp
+touch "$end_stamp"
 
 if [ "X$LANGS" = X ]; then
   echo "$program: No language interfaces to build"
@@ -215,9 +214,9 @@ else
   echo "  FAILED  $LANGS_FAILED"
 fi
 
-delta=`perl -e "print int(86000*((-M '$start_stamp') - (-M '$end_stamp')))";`
+delta=$(perl -e "print int(86000*((-M '$start_stamp') - (-M '$end_stamp')))";)
 echo "$program: Total time taken: $delta secs"
 
-rm -f $stamp $start_stamp $end_stamp
+rm -f "$stamp" "$start_stamp" "$end_stamp"
 
 exit 0
