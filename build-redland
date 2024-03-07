@@ -19,8 +19,8 @@ if [ ! -r "$tarball" ]; then
 fi
 
 dirname=$(echo "$tarball" | sed -e 's,^.*/,,' -e 's/\.tar\..*$//')
-package=$(echo "$dirname" | sed -e 's/-[0-9].*$//')
-version=$(echo "$dirname" | sed -e 's/^.*-//')
+package=${dirname//-[0-9].*$/}
+version=${dirname//^.*-/}
 
 here=$(pwd)
 
@@ -41,10 +41,26 @@ start_stamp="$logs/start-stamp"
 end_stamp="$logs/end-stamp"
 stamp="$logs/stamp"
 
+# CPUs
+if command -v nproc &> /dev/null; then
+  ncpus=$(nproc)
+elif test -f /proc/cpuinfo; then
+  ncpus=$(grep -c ^processor /proc/cpuinfo)
+elif command -v sysctl &> /dev/null; then
+  # OSX
+  ncpus=$(sysctl -n hw.ncpu)
+fi
+# Ensure ncpus is a valid number
+ncpus=${ncpus//[^0-9]+/}
+if test -z "$ncpus"; then
+  ncpus=1
+fi
+
 ######################################################################
 
 echo "$program: Building $package $version"
 echo "$program: System       $(uname -srmn)"
+echo "$program: CPUs         $ncpus"
 echo "$program: Working area $working"
 echo "$program: Logs         $logs"
 
@@ -107,7 +123,8 @@ $configure > "$log" 2>&1
 status=$?
 delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
 if [ $status -ne 0 ]; then
-  echo "$program: '$configure' failed ($delta secs)"
+    echo "$program: '$configure' failed ($delta secs)"
+    grep '^configure: error' "$log"
   exit 1;
 fi
 
@@ -118,7 +135,7 @@ sed -n -e '/build summary:$/,/^$/p' "$log"
 
 log="$logs/make.log"
 touch "$stamp"
-$MAKE > "$log" 2>&1
+$MAKE "-j$ncpus" > "$log" 2>&1
 status=$?
 grep -E '^[A-Za-z0-9_]+\.c' "$log"
 delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
@@ -131,7 +148,7 @@ echo "$program: '$MAKE' succeeded ($delta secs)"
 
 log="$logs/make-check.log"
 touch "$stamp"
-$MAKE -j1 check > "$log" 2>&1
+$MAKE "-j$ncpus" check > "$log" 2>&1
 status=$?
 grep -E '^[A-Za-z0-9_]+\.c' "$log"
 delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
