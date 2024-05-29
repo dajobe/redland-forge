@@ -137,14 +137,15 @@ log="$logs/make.log"
 touch "$stamp"
 $MAKE "-j$ncpus" > "$log" 2>&1
 status=$?
-grep -E '^[A-Za-z0-9_]+\.c' "$log"
+# Look for compiler warnings mentioning filenames
+grep -E '^[A-Za-z0-9_]+\.c' "$log" | sed -e 's/^/    /'
 delta=$(perl -e "print int(86000*((-M '$stamp') - (-M '$log')))";)
 if [ "$status" -ne 0 ]; then
-  echo "$program: '$MAKE' failed ($delta secs)"
+  echo "$program: '$MAKE -j$ncpus' failed ($delta secs)"
   exit 1;
 fi
 
-echo "$program: '$MAKE' succeeded ($delta secs)"
+echo "$program: '$MAKE -j$ncpus' succeeded ($delta secs)"
 
 log="$logs/make-check.log"
 touch "$stamp"
