@@ -6,8 +6,11 @@
 #
 
 use File::Basename;
+use Sys::Hostname;
 
 use strict;
+
+my $my_hostname = hostname();
 
 my $bins=$ENV{HOME}."/dev/redland/admin";
 
@@ -58,6 +61,10 @@ for my $userhost (@ARGV) {
   my($name,$aliases,$addrtype,$length,@addrs) = gethostbyname($host);
   if(!$name) {
     warn "$program: Host '$host' not found - skipping\n";
+    next;
+  }
+  if($name eq $my_hostname) {
+    warn "$program: Host '$host' is this host - skipping\n";
     next;
   }
 
