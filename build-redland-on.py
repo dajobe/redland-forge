@@ -53,7 +53,8 @@ def run_command(cmd, userhost=None, timeout=None):
             if timeout:
                 process.wait(timeout=timeout)
                 if process.returncode is None:
-                    raise TimeoutError(f"Command '{cmd}' timed out after {timeout} seconds")
+                    raise TimeoutError(
+                        f"Command '{cmd}' timed out after {timeout} seconds")
 
             # Stream output with timestamps
             while True:
@@ -75,6 +76,7 @@ def run_command(cmd, userhost=None, timeout=None):
         logging.error(f"{datetime.now().isoformat()}: Error: {e}")
         raise RuntimeError("Command execution failed") from e
 
+
 def transfer_file(local_path, remote_path, host):
     """
     Transfers a file from the local machine to a remote host via SCP.
@@ -92,14 +94,17 @@ def transfer_file(local_path, remote_path, host):
     """
 
     cmd = ['scp', '-pq', local_path, f'{host}:{remote_path}']
-    logging.info(f"Copying {local_path} to {remote_path} on {host} with '{cmd}'")
+    logging.info(
+        f"Copying {local_path} to {remote_path} on {host} with '{cmd}'")
 
     try:
-        process = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        process = subprocess.run(
+            cmd, check=True, capture_output=True, text=True)
         return process.returncode
     except subprocess.CalledProcessError as e:
         logging.info(f"Error transferring {local_path} to {host}: {e.stdout}")
         raise RuntimeError("SCP transfer failed") from e
+
 
 def build_on_host(tarball, userhost):
     """
