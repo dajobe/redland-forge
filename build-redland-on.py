@@ -47,19 +47,21 @@ def run_command(cmd, userhost=None, timeout=None):
     cmd = cmd.split()
     if userhost:
         # Use -x for forwarding X11 if needed
-        cmd = ['ssh', '-n', '-x', userhost] + cmd
+        cmd = ["ssh", "-n", "-x", userhost] + cmd
         logging.info(f"Running '{cmd}' on {userhost}")
     else:
         logging.info(f"Running '{cmd}' locally")
     try:
-        with subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, text=True) as process:
+        with subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        ) as process:
             # Set timeout if provided
             if timeout:
                 process.wait(timeout=timeout)
                 if process.returncode is None:
                     raise TimeoutError(
-                        f"Command '{cmd}' timed out after {timeout} seconds")
+                        f"Command '{cmd}' timed out after {timeout} seconds"
+                    )
 
             # Stream output with timestamps
             while True:
@@ -98,13 +100,11 @@ def transfer_file(local_path, remote_path, host):
         RuntimeError: If the SCP transfer fails.
     """
 
-    cmd = ['scp', '-pq', local_path, f'{host}:{remote_path}']
-    logging.info(
-        f"Copying {local_path} to {remote_path} on {host} with '{cmd}'")
+    cmd = ["scp", "-pq", local_path, f"{host}:{remote_path}"]
+    logging.info(f"Copying {local_path} to {remote_path} on {host} with '{cmd}'")
 
     try:
-        process = subprocess.run(
-            cmd, check=True, capture_output=True, text=True)
+        process = subprocess.run(cmd, check=True, capture_output=True, text=True)
         return process.returncode
     except subprocess.CalledProcessError as e:
         logging.info(f"Error transferring {local_path} to {host}: {e.stdout}")
@@ -120,8 +120,7 @@ def build_on_host(tarball, userhost):
         userhost (str): The username and hostname combination (e.g., "user@host").
     """
 
-    host, username = userhost.split(
-        "@") if "@" in userhost else (userhost, None)
+    host, username = userhost.split("@") if "@" in userhost else (userhost, None)
 
     # Validate package tarball format
     tarball_file = os.path.basename(tarball)
@@ -146,8 +145,8 @@ def build_on_host(tarball, userhost):
     run_command(f"rm -f ./build-redland {tarball}", userhost)
 
     # Transfer build-redland script and tarball
-    transfer_file(f"{bins_dir}/build-redland", '.', userhost)
-    transfer_file(f"{tarball}", '.', userhost)
+    transfer_file(f"{bins_dir}/build-redland", ".", userhost)
+    transfer_file(f"{tarball}", ".", userhost)
 
     logging.info("Starting remote build...")
     start_time = datetime.now()
@@ -157,8 +156,7 @@ def build_on_host(tarball, userhost):
 
     end_time = datetime.now()
     build_time = end_time - start_time
-    logging.info(
-        f"Remote build ended after {build_time.total_seconds():.2f} seconds")
+    logging.info(f"Remote build ended after {build_time.total_seconds():.2f} seconds")
 
 
 def main():
