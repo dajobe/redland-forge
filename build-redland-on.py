@@ -9,8 +9,10 @@ Usage:
     python build_redland.py PROGRAM-TARBALL HOSTS...
 
 Arguments:
-    PROGRAM-TARBALL (str): The name of the Redland package tarball (e.g., redland-1.1.0.tar.gz).
-    HOSTS (str)         : One or more comma-separated username@hostname pairs specifying the remote hosts.
+    PROGRAM-TARBALL (str): The name of the Redland package tarball
+                           (e.g., redland-1.1.0.tar.gz).
+    HOSTS (str)         : One or more comma-separated username@hostname
+                          pairs specifying the remote hosts.
 """
 
 import logging
@@ -30,8 +32,10 @@ def run_command(cmd, userhost=None, timeout=None):
 
     Args:
         cmd (str): The command to execute.
-        userhost (str, optional): The hostname for remote execution. Defaults to None (local).
-        timeout (int, optional): The timeout in seconds for the command execution. Defaults to None (no timeout).
+        userhost (str, optional): The hostname for remote execution.
+                                  Defaults to None (local).
+        timeout (int, optional): The timeout in seconds for the command execution.
+                                 Defaults to None (no timeout).
 
     Returns:
         int: The exit code of the command.
@@ -48,7 +52,8 @@ def run_command(cmd, userhost=None, timeout=None):
     else:
         logging.info(f"Running '{cmd}' locally")
     try:
-        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, text=True) as process:
             # Set timeout if provided
             if timeout:
                 process.wait(timeout=timeout)
@@ -115,7 +120,8 @@ def build_on_host(tarball, userhost):
         userhost (str): The username and hostname combination (e.g., "user@host").
     """
 
-    host, username = userhost.split("@") if "@" in userhost else (userhost, None)
+    host, username = userhost.split(
+        "@") if "@" in userhost else (userhost, None)
 
     # Validate package tarball format
     tarball_file = os.path.basename(tarball)
@@ -124,7 +130,8 @@ def build_on_host(tarball, userhost):
         logging.info(f"Invalid package tarball format: {tarball_file}")
         return
 
-    # Local paths (assuming the program and build-redland script are in the same directory)
+    # Local paths (assuming the program and build-redland script are in the
+    # same directory)
     program_dir = os.path.dirname(os.path.realpath(__file__))
     bins_dir = os.path.join(os.environ["HOME"], "dev/redland/admin")
 
@@ -150,7 +157,9 @@ def build_on_host(tarball, userhost):
 
     end_time = datetime.now()
     build_time = end_time - start_time
-    logging.info(f"Remote build ended after {build_time.total_seconds():.2f} seconds")
+    logging.info(
+        f"Remote build ended after {build_time.total_seconds():.2f} seconds")
+
 
 def main():
     """
@@ -166,6 +175,7 @@ def main():
 
     for userhost in userhosts:
         build_on_host(tarball, userhost)
+
 
 if __name__ == "__main__":
     main()
