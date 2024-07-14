@@ -24,40 +24,20 @@ program_name = os.path.basename(__file__)  # Get program name from filename
 logging.basicConfig(level=logging.INFO, format=f"{program_name}: %(message)s")
 
 
-def rc(cmd, userhost=None):
+def run_command(cmd, userhost=None, timeout=None):
     """
     Executes a command locally or remotely via SSH.
 
     Args:
         cmd (str): The command to execute.
-        host (str, optional): The hostname for remote execution. Defaults to None (local).
+        userhost (str, optional): The hostname for remote execution. Defaults to None (local).
+        timeout (int, optional): The timeout in seconds for the command execution. Defaults to None (no timeout).
 
     Returns:
         int: The exit code of the command.
 
     Raises:
         RuntimeError: If the command fails with a non-zero exit code.
-    """
-
-    cmd = cmd.split()
-    if userhost:
-        # Use -x for forwarding X11 if needed
-        cmd = ['ssh', '-n', '-x', userhost] + cmd
-        logging.info(f"Running '{cmd}' on {userhost}")
-    else:
-        logging.info(f"Running '{cmd}' locally")
-    try:
-        process = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        return process.returncode
-    except subprocess.CalledProcessError as e:
-        logging.info(f"Error: Command '{cmd}' failed with exit code {e.returncode}")
-        logging.info(f"Output:\n{e.stdout}")
-        raise RuntimeError("Command execution failed") from e
-
-
-def run_command(cmd, userhost=None, timeout=None):
-    """
-            timeout (int, optional): The timeout in seconds for the command execution. Defaults to None (no timeout).
     """
 
     cmd = cmd.split()
