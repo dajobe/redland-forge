@@ -48,9 +48,11 @@ def run_command(cmd, userhost=None, timeout=None):
     if userhost:
         # Use -x for forwarding X11 if needed
         cmd = ["ssh", "-n", "-x", userhost] + cmd
-        logging.info(f"Running '{cmd}' on {userhost}")
+        logging.debug(f"Running '{cmd}' on {userhost}")
     else:
-        logging.info(f"Running '{cmd}' locally")
+        logging.debug(f"Running '{cmd}' locally")
+
+    returncode = 0
     try:
         with subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -67,7 +69,7 @@ def run_command(cmd, userhost=None, timeout=None):
             while True:
                 out_line = process.stdout.readline()
                 if out_line:
-                    sys.stdout.write(out_line)
+                    sys.stdout.write(f"{userhost}> {out_line}")
                 err_line = process.stderr.readline()
                 if err_line:
                     sys.stdout.write(err_line)
@@ -76,12 +78,11 @@ def run_command(cmd, userhost=None, timeout=None):
 
             # Check return code after streaming
             returncode = process.wait()
-            if returncode:
-                raise subprocess.CalledProcessError(returncode, cmd)
 
     except (TimeoutError, subprocess.CalledProcessError) as e:
         logging.error(f"{datetime.now().isoformat()}: Error: {e}")
         raise RuntimeError("Command execution failed") from e
+    return returncode 
 
 
 def transfer_file(local_path, remote_path, host):
@@ -101,7 +102,7 @@ def transfer_file(local_path, remote_path, host):
     """
 
     cmd = ["scp", "-pq", local_path, f"{host}:{remote_path}"]
-    logging.info(f"Copying {local_path} to {remote_path} on {host} with '{cmd}'")
+    logging.debug(f"Copying {local_path} to {remote_path} on {host} with '{cmd}'")
 
     try:
         process = subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -121,13 +122,14 @@ def build_on_host(tarball, userhost):
     """
 
     host, username = userhost.split("@") if "@" in userhost else (userhost, None)
+    host_label = f"{host} " + (f"({username})" if username else "")
 
     # Validate package tarball format
     tarball_file = os.path.basename(tarball)
     tarball_pattern = r"^[-\w]+-\d\..*tar\.gz$"
     if not re.match(tarball_pattern, tarball_file):
         logging.info(f"Invalid package tarball format: {tarball_file}")
-        return
+        return 1
 
     # Local paths (assuming the program and build-redland script are in the
     # same directory)
@@ -137,9 +139,9 @@ def build_on_host(tarball, userhost):
     # Check if tarball file exists
     if not os.path.exists(tarball):
         logging.info(f"Package tarball not found: {tarball}")
-        return
+        return 1
 
-    logging.info(f"Building on host {host} ({username})...")
+    logging.info(f"Building on {host_label}...")
 
     # Clear remote build directory
     run_command(f"rm -f ./build-redland {tarball}", userhost)
@@ -152,11 +154,12 @@ def build_on_host(tarball, userhost):
     start_time = datetime.now()
 
     # Execute build script remotely
-    run_command(f"./build-redland {tarball_file}", userhost)
+    rc = run_command(f"./build-redland {tarball_file}", userhost)
 
     end_time = datetime.now()
     build_time = end_time - start_time
-    logging.info(f"Remote build ended after {build_time.total_seconds():.2f} seconds")
+    logging.info(f"Remote build ended after {build_time.total_seconds():.2f} seconds with code {rc}")
+    return rc
 
 
 def main():
@@ -171,8 +174,16 @@ def main():
     tarball = sys.argv[1]
     userhosts = sys.argv[2:]
 
+    results = dict()
     for userhost in userhosts:
-        build_on_host(tarball, userhost)
+        rc = build_on_host(tarball, userhost)
+        results[userhost] = rc
+
+    logging.info(f"Summary of build of {tarball}")
+    for host in sorted(results.keys()):
+        rc = results[host]
+        status = "Success" if not rc else f"FAIL (code {rc})"
+        print(f"  {host:20s}: {status}")
 
 
 if __name__ == "__main__":
