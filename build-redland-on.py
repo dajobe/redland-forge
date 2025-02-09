@@ -26,7 +26,7 @@ program_name = os.path.basename(__file__)  # Get program name from filename
 logging.basicConfig(level=logging.INFO, format=f"{program_name}: %(message)s")
 
 
-def run_command(cmd, userhost=None, timeout=None):
+def run_command(cmd, userhost=None, timeout=None) -> int:
     """
     Executes a command locally or remotely via SSH.
 
@@ -44,7 +44,7 @@ def run_command(cmd, userhost=None, timeout=None):
         RuntimeError: If the command fails with a non-zero exit code.
     """
 
-    cmd = cmd.split()
+    cmd : list[str] = cmd.split()
     if userhost:
         # Use -x for forwarding X11 if needed
         cmd = ["ssh", "-n", "-x", userhost] + cmd
@@ -52,7 +52,7 @@ def run_command(cmd, userhost=None, timeout=None):
     else:
         logging.debug(f"Running '{cmd}' locally")
 
-    returncode = 0
+    returncode: int = 0
     try:
         with subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -67,14 +67,14 @@ def run_command(cmd, userhost=None, timeout=None):
 
             # Stream output with timestamps
             while True:
-                out_line = process.stdout.readline()
-                if out_line:
-                    sys.stdout.write(f"{userhost}> {out_line}")
-                err_line = process.stderr.readline()
-                if err_line:
-                    sys.stdout.write(err_line)
+                out_line : str = process.stdout.readline()
+                err_line : str = process.stderr.readline()
                 if not out_line and not err_line:
                     break
+                if out_line:
+                    sys.stdout.write(f"{userhost}> {out_line}")
+                if err_line:
+                    sys.stdout.write(f"{userhost}>[STDERR] {err_line}")
 
             # Check return code after streaming
             returncode = process.wait()
@@ -85,7 +85,7 @@ def run_command(cmd, userhost=None, timeout=None):
     return returncode 
 
 
-def transfer_file(local_path, remote_path, host):
+def transfer_file(local_path: str, remote_path: str, host: str) -> int:
     """
     Transfers a file from the local machine to a remote host via SCP.
 
@@ -101,7 +101,7 @@ def transfer_file(local_path, remote_path, host):
         RuntimeError: If the SCP transfer fails.
     """
 
-    cmd = ["scp", "-pq", local_path, f"{host}:{remote_path}"]
+    cmd : list[str] = ["scp", "-pq", local_path, f"{host}:{remote_path}"]
     logging.debug(f"Copying {local_path} to {remote_path} on {host} with '{cmd}'")
 
     try:
@@ -112,7 +112,7 @@ def transfer_file(local_path, remote_path, host):
         raise RuntimeError("SCP transfer failed") from e
 
 
-def build_on_host(tarball, userhost):
+def build_on_host(tarball: str, userhost: str) -> int:
     """
     Builds the Redland package on a remote host.
 
@@ -162,29 +162,33 @@ def build_on_host(tarball, userhost):
     return rc
 
 
-def main():
+def main() -> int:
     """
     The main function parses arguments and starts building on specified hosts.
     """
+    final_status : int = 0
 
     if len(sys.argv) < 3:
         logging.error(f"Usage: {sys.argv[0]} PROGRAM-TARBALL HOSTS...")
-        sys.exit(1)
+        return 1
 
-    tarball = sys.argv[1]
-    userhosts = sys.argv[2:]
+    tarball : str = sys.argv[1]
+    userhosts : str = sys.argv[2:]
 
-    results = dict()
+    results : dict[str, int] = dict()
     for userhost in userhosts:
-        rc = build_on_host(tarball, userhost)
-        results[userhost] = rc
+        results[userhost] = build_on_host(tarball, userhost)
 
     logging.info(f"Summary of build of {tarball}")
     for host in sorted(results.keys()):
-        rc = results[host]
-        status = "Success" if not rc else f"FAIL (code {rc})"
+        rc : int = results[host]
+        if not rc:
+            status = "Success"
+        else:
+            status = f"FAIL (code {rc})"
+            final_status = 1
         print(f"  {host:20s}: {status}")
-
+    return final_status
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
