@@ -203,8 +203,8 @@ def run_command(cmd: str, userhost: str = None, timeout: int = None) -> int:
                 flags = fcntl.fcntl(fd, fcntl.F_GETFL)
                 fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
-            # Color the hostname for output
-            host_color = Colors.BRIGHT_MAGENTA
+            # Color the hostname for output - use a light pastel color
+            host_color = Colors.BRIGHT_CYAN
             host_prefix = colorize(f"{userhost}>", host_color)
             stderr_prefix = colorize(f"{userhost}>[STDERR]", Colors.BRIGHT_RED)
 
@@ -339,20 +339,22 @@ def build_on_host(tarball: str, userhost: str) -> int:
         logging.info(f"Package tarball not found: {tarball}")
         return 1
 
-    logging.info(f"Building on {colorize(host_label, Colors.BRIGHT_MAGENTA)}...")
+    logging.info(f"Building on {colorize(host_label, Colors.BRIGHT_CYAN)}...")
 
     # Clear remote build directory
-    run_command(f"rm -f ./build-redland {tarball}", userhost)
+    run_command(f"rm -f ./build-redland.py {tarball}", userhost)
 
-    # Transfer build-redland script and tarball
-    transfer_file(str(bins_dir / "build-redland"), ".", userhost)
+    # Transfer build-redland.py script and tarball
+    transfer_file(str(bins_dir / "build-redland.py"), ".", userhost)
     transfer_file(tarball, ".", userhost)
 
     logging.info(colorize("Starting remote build...", Colors.BRIGHT_BLUE))
     start_time = datetime.now()
 
     # Execute build script remotely
-    rc = run_command(f"./build-redland {tarball_file}", userhost)
+    rc = run_command(
+        f"python3 ./build-redland.py {tarball_file} --no-print-hostname", userhost
+    )
 
     end_time = datetime.now()
     build_time = end_time - start_time
@@ -462,7 +464,7 @@ def main() -> int:
 
     for host in sorted(results.keys()):
         rc = results[host]
-        host_colored = colorize(host, Colors.BRIGHT_MAGENTA)
+        host_colored = colorize(host, Colors.BRIGHT_CYAN)
 
         if not rc:
             status = colorize("✓ Success", Colors.BRIGHT_GREEN)
