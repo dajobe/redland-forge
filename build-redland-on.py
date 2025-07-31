@@ -206,7 +206,7 @@ def run_command(cmd: str, userhost: str = None, timeout: int = None) -> int:
             # Color the hostname for output - use a light pastel color
             host_color = Colors.BRIGHT_CYAN
             host_prefix = colorize(f"{userhost}>", host_color)
-            stderr_prefix = colorize(f"{userhost}>[STDERR]", Colors.BRIGHT_RED)
+            stderr_prefix = colorize(f"{userhost}>[STDERR]", Colors.BRIGHT_YELLOW)
 
             # Read output until process completes
             while process.poll() is None:
