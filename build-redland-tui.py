@@ -1,0 +1,144 @@
+#!/usr/bin/python3
+"""
+Build Redland Text UI - Entry Point
+
+Thin wrapper script for the parallel build monitoring TUI.
+"""
+
+import argparse
+import logging
+import sys
+
+from app import BuildTUI, set_color_mode, read_hosts_from_file
+from config import Config
+
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Build Redland package on remote hosts with TUI monitoring",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s redland-1.1.0.tar.gz user1@host1 user2@host2
+  %(prog)s redland-1.1.0.tar.gz -f hosts.txt
+  %(prog)s redland-1.1.0.tar.gz --max-concurrent 6 user1@host1,user2@host2
+
+Hosts file format:
+  # Comments start with #
+  user1@host1
+  user2@host2
+  # Blank lines are ignored
+  user3@host3
+""",
+    )
+    parser.add_argument(
+        "tarball", help="The Redland package tarball (e.g., redland-1.1.0.tar.gz)"
+    )
+    parser.add_argument(
+        "hosts",
+        nargs="*",
+        help="One or more username@hostname pairs. Can be comma-separated.",
+    )
+    parser.add_argument(
+        "-f",
+        "--hosts-file",
+        help="Read hosts from file, one per line. Lines starting with # or blank lines are ignored.",
+    )
+    parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        help="Maximum concurrent builds (default: auto-detect based on screen size)",
+    )
+    parser.add_argument(
+        "--color",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="Control color output: auto (default), always, or never",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging to debug.log file",
+    )
+
+    args = parser.parse_args()
+
+    # Validate that we have either hosts or hosts-file
+    if not args.hosts and not args.hosts_file:
+        parser.error("Either hosts or --hosts-file must be specified")
+
+    return args
+
+
+def main() -> int:
+    """Main function."""
+    try:
+        args = parse_arguments()
+    except SystemExit:
+        return 1
+
+    # Set up logging to debug.log by default
+    logging.basicConfig(
+        level=Config.DEBUG_LOG_LEVEL if args.debug else Config.DEFAULT_LOG_LEVEL,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(Config.LOG_FILE),
+            # Never add console handler - debug logs only go to file
+            logging.NullHandler(),
+        ],
+    )
+
+    if args.debug:
+        logging.debug("Debug logging enabled")
+    else:
+        logging.info("Logging to debug.log (use --debug for console output)")
+
+    # Set color mode
+    set_color_mode(args.color)
+
+    # Get hosts list
+    if args.hosts_file:
+        try:
+            userhosts = read_hosts_from_file(args.hosts_file)
+        except FileNotFoundError:
+            return 1
+    else:
+        # Split comma-separated hosts if provided as single string
+        userhosts = []
+        for host_arg in args.hosts:
+            userhosts.extend(host_arg.split(","))
+
+    # Clean up hosts list
+    userhosts = [host.strip() for host in userhosts if host.strip()]
+
+    if not userhosts:
+        logging.error("No valid hosts specified")
+        return 1
+
+    # Create and run TUI
+    try:
+        print(
+            f"Starting TUI with {len(userhosts)} hosts: {userhosts[:3]}{'...' if len(userhosts) > 3 else ''}"
+        )
+        logging.debug("About to create BuildTUI instance")
+        tui = BuildTUI(userhosts, args.tarball, args.max_concurrent)
+        logging.debug("BuildTUI instance created successfully, about to call run()")
+        tui.run()
+        logging.debug("BuildTUI.run() completed successfully")
+    except Exception as e:
+        import traceback
+
+        logging.error(f"Error in main function: {e}")
+        logging.error("Full traceback:")
+        logging.error(traceback.format_exc())
+        print(f"Error in main function: {e}")
+        print("Full traceback:")
+        traceback.print_exc()
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
