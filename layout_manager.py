@@ -76,17 +76,30 @@ class LayoutManager:
         available_height = self.term.height - Config.SMALL_TERMINAL_HEADER_FOOTER
         min_host_height = Config.SMALL_TERMINAL_MIN_HOST_HEIGHT
         max_visible_hosts = Config.SMALL_TERMINAL_MAX_VISIBLE_HOSTS
-        # Ensure section fits within terminal bounds (accounting for start_y and footer space)
+
+        # Calculate maximum section height that would fit
         max_section_height = (
             self.term.height
             - Config.HOST_SECTION_START_Y
             - Config.SMALL_TERMINAL_FOOTER_SPACE
         )
-        # Ensure we don't return negative values
-        section_height = max(1, min(available_height, max_section_height))
+
+        # For very small terminals, ensure we can display at least 1 host
+        if max_section_height <= 0:
+            # Terminal is extremely small, use minimal space
+            section_height = 1
+            max_visible_hosts = 1
+        else:
+            # Use the smaller of available_height or max_section_height, but ensure at least 1
+            section_height = max(1, min(available_height, max_section_height))
+            # Ensure we can display at least 1 host if there's any space
+            if section_height >= 1:
+                max_visible_hosts = 1
+            else:
+                max_visible_hosts = 0
 
         logging.debug(
-            f"Small terminal mode: available_height={available_height}, section_height={section_height}, max_section_height={max_section_height}"
+            f"Small terminal mode: available_height={available_height}, section_height={section_height}, max_section_height={max_section_height}, max_visible_hosts={max_visible_hosts}"
         )
 
         return {
