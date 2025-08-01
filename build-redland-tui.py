@@ -126,6 +126,11 @@ def main() -> int:
         logging.debug("BuildTUI instance created successfully, about to call run()")
         tui.run()
         logging.debug("BuildTUI.run() completed successfully")
+    except FileNotFoundError as e:
+        # Handle file not found errors with a clean message
+        logging.error(f"File not found: {e}")
+        print(f"Error: {e}")
+        return 1
     except Exception as e:
         import traceback
 

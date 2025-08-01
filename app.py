@@ -34,6 +34,14 @@ class BuildTUI:
             self.hosts = hosts
             self.tarball = tarball
 
+            # Validate tarball file exists before proceeding
+            if not os.path.exists(tarball):
+                raise FileNotFoundError(
+                    f"Tarball file not found: {tarball}\n"
+                    f"Please check the file path and ensure the file exists."
+                )
+            logging.debug(f"Tarball file validated: {tarball}")
+
             logging.debug("Initializing blessed terminal")
             self.term = Terminal()
             logging.debug("Blessed terminal initialized successfully")
@@ -67,6 +75,9 @@ class BuildTUI:
             logging.debug("Setting up layout")
             self.setup_layout()
             logging.debug("BuildTUI initialization completed successfully")
+        except FileNotFoundError:
+            # Re-raise FileNotFoundError without logging traceback
+            raise
         except Exception as e:
             import traceback
 
