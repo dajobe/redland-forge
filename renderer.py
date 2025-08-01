@@ -58,7 +58,7 @@ class Renderer:
 
         # Get statistics using the statistics manager
         stats = self.statistics_manager.calculate_statistics(host_sections, ssh_results)
-        host_info = f"Hosts: {stats['visible_hosts']}/{stats['total_hosts']} | Active: {stats['active']}"
+        host_info = f"Hosts: {stats['visible_hosts']}/{stats['total_hosts']}"
         subtitle = f"{tarball_info} | {host_info}"
 
         # Use consistent border color (white) for all borders
