@@ -55,8 +55,19 @@ class BuildTUI:
 
             self.ssh_manager = ParallelSSHManager(max_concurrent or min(4, len(hosts)))
 
-            # Set build script path
-            script_path = os.path.join(os.path.dirname(__file__), "build-redland.py")
+            # Set build script path (script lives one level up from build-tui)
+            script_path = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "build-redland.py")
+            )
+            logging.debug(f"Resolved build script path: {script_path}")
+
+            # Validate build script exists early; it's required for operation
+            if not os.path.isfile(script_path):
+                raise FileNotFoundError(
+                    f"Build script not found: {script_path}\n"
+                    f"Expected 'build-redland.py' to exist next to the admin directory."
+                )
+
             self.ssh_manager.set_build_script_path(script_path)
 
             # Initialize managers
@@ -146,10 +157,16 @@ class BuildTUI:
 
                         # Use the new step detection method
                         section.detect_step_from_output(line)
-                        
+
                         # Log state after step detection for debugging
-                        if "make check" in line or "make succeeded" in line or "configure" in line:
-                            logging.info(f"After step detection for {host}: current_step='{section.current_step}' from line: '{line.strip()}'")
+                        if (
+                            "make check" in line
+                            or "make succeeded" in line
+                            or "configure" in line
+                        ):
+                            logging.info(
+                                f"After step detection for {host}: current_step='{section.current_step}' from line: '{line.strip()}'"
+                            )
 
                     # Check if status changed
                     if old_status != section.status:
