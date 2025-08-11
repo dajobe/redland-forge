@@ -143,14 +143,37 @@ class ParallelSSHManager:
                 with self.lock:
                     self.results[hostname]["output"].append(f"CPUs: {cpu_count}")
 
-            # Create build directory
-            ssh.execute_command(f"mkdir -p {Config.BUILD_DIRECTORY}")
+            # Resolve remote build directory to an absolute path for SFTP
+            # Prefer SFTP normalize to get the remote home directory reliably
+            try:
+                if not ssh.sftp:
+                    ssh.sftp = ssh.client.open_sftp()
+                remote_home_dir = ssh.sftp.normalize(".")
+            except Exception:
+                # Fallback: try shell to get HOME
+                exit_code, stdout, _ = ssh.execute_command("pwd")
+                remote_home_dir = stdout.strip() if exit_code == 0 else ""
 
-            # Transfer build script if available
+            remote_build_dir = (
+                f"{remote_home_dir}/build"
+                if remote_home_dir
+                else Config.BUILD_DIRECTORY
+            )
+
+            # Report the discovered/used build directory in the host output
+            with self.lock:
+                self.results[hostname]["output"].append(
+                    f"Using build directory: {remote_build_dir}"
+                )
+
+            # Ensure build directory exists (script will clean/recreate as needed)
+            ssh.execute_command(f"mkdir -p '{remote_build_dir}'")
+
+            # Transfer build script to home directory if available
             if self.build_script_path and os.path.exists(self.build_script_path):
                 if ssh.transfer_file(
                     self.build_script_path,
-                    f"{Config.BUILD_DIRECTORY}/{Config.BUILD_SCRIPT_NAME}",
+                    f"{remote_home_dir}/{Config.BUILD_SCRIPT_NAME}",
                 ):
                     with self.lock:
                         self.results[hostname]["output"].append(
@@ -162,9 +185,9 @@ class ParallelSSHManager:
                             "Failed to transfer build script"
                         )
 
-            # Transfer tarball
+            # Transfer tarball to home directory
             if ssh.transfer_file(
-                tarball, f"{Config.BUILD_DIRECTORY}/{os.path.basename(tarball)}"
+                tarball, f"{remote_home_dir}/{os.path.basename(tarball)}"
             ):
                 with self.lock:
                     self.results[hostname]["status"] = "BUILDING"
@@ -187,8 +210,8 @@ class ParallelSSHManager:
                 .replace(".tar.xz", "")
             )
 
-            # Change to build directory and start build
-            build_cmd = f"cd {Config.BUILD_DIRECTORY} && python3 {Config.BUILD_SCRIPT_NAME} {tarball_name} --no-print-hostname"
+            # Change to home directory and start build so working area is $HOME/build
+            build_cmd = f"cd '{remote_home_dir}' && python3 {Config.BUILD_SCRIPT_NAME} {tarball_name} --no-print-hostname"
 
             # Execute build command with real-time output monitoring
             stdin, stdout, stderr = ssh.client.exec_command(build_cmd)

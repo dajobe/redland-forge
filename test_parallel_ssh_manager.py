@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from parallel_ssh_manager import ParallelSSHManager
+from config import Config
 
 
 class TestParallelSSHManagerInitialization(unittest.TestCase):
@@ -102,6 +103,83 @@ class TestParallelSSHManagerBuildOrchestration(unittest.TestCase):
         # Should only start 2 builds (max_concurrent)
         self.assertEqual(mock_thread.call_count, 2)
         self.assertEqual(len(self.manager.connection_queue), 3)
+
+    @patch("parallel_ssh_manager.SSHConnection")
+    def test_reports_remote_build_directory(self, MockSSH):
+        """Ensure the worker reports the resolved build directory."""
+        # Set up mock SSH connection
+        mock_ssh = Mock()
+        mock_client = Mock()
+        mock_sftp = Mock()
+        MockSSH.return_value = mock_ssh
+        mock_ssh.client = mock_client
+        mock_ssh.sftp = None
+
+        # SFTP normalize('.') returns a fake home dir
+        def open_sftp_side_effect():
+            return mock_sftp
+
+        mock_ssh.connect.return_value = True
+        mock_ssh.client.open_sftp.side_effect = open_sftp_side_effect
+        mock_sftp.normalize.return_value = "/home/testuser"
+
+        # exec_command for uname and nproc and pwd/build, and later build command
+        def exec_command_side_effect(cmd, timeout=None):
+            if cmd.startswith("uname"):
+                stdout = Mock()
+                stderr = Mock()
+                stdout.channel = Mock()
+                stdout.channel.recv_exit_status.return_value = 0
+                stdout.read.return_value = b"Linux\n"
+                stderr.read.return_value = b""
+                return (None, stdout, stderr)
+            if cmd.startswith("nproc"):
+                stdout = Mock()
+                stderr = Mock()
+                stdout.channel = Mock()
+                stdout.channel.recv_exit_status.return_value = 0
+                stdout.read.return_value = b"4\n"
+                stderr.read.return_value = b""
+                return (None, stdout, stderr)
+            # build command returns a channel that quickly completes
+            stdout = Mock()
+            stderr = Mock()
+            stdout.channel = Mock()
+            # Immediately done
+            stdout.channel.exit_status_ready.return_value = True
+            stdout.channel.recv_exit_status.return_value = 0
+            stdout.read.return_value = b""
+            stderr.read.return_value = b""
+            return (None, stdout, stderr)
+
+        mock_client.exec_command.side_effect = exec_command_side_effect
+
+        # Also ensure the SSHConnection.execute_command wrapper returns tuples
+        def ssh_execute_command_side_effect(cmd):
+            if cmd.startswith("uname"):
+                return (0, "Linux\n", "")
+            if cmd.startswith("nproc"):
+                return (0, "4\n", "")
+            if cmd == "pwd":
+                return (0, "/home/testuser\n", "")
+            return (0, "", "")
+
+        mock_ssh.execute_command.side_effect = ssh_execute_command_side_effect
+
+        # transfer_file returns True
+        mock_ssh.transfer_file.return_value = True
+
+        # Run worker directly
+        self.manager._build_worker("user@host1", "/tmp/test.tar.gz")
+
+        # Verify output contains the used build directory
+        output_lines = self.manager.results["user@host1"]["output"]
+        self.assertTrue(
+            any(
+                "Using build directory: /home/testuser/build" in line
+                for line in output_lines
+            )
+        )
 
 
 class TestParallelSSHManagerStatusTracking(unittest.TestCase):

@@ -15,7 +15,9 @@ class Config:
 
     # Build process settings
     BUILD_TIMEOUT_SECONDS = 7200  # 2 hours
-    BUILD_DIRECTORY = "/tmp/build"
+    # Remote build directory (relative to remote user's home)
+    # Use $HOME so shell commands expand it; code resolves an absolute path for SFTP
+    BUILD_DIRECTORY = "$HOME/build"
     BUILD_SCRIPT_NAME = "build-redland.py"
 
     # UI rendering settings
@@ -57,8 +59,6 @@ class Config:
     DEFAULT_LOG_LEVEL = logging.INFO
     DEBUG_LOG_LEVEL = logging.DEBUG
     LOG_FILE = "debug.log"
-
-    
 
     @classmethod
     def get_build_settings(cls) -> Dict[str, Any]:
@@ -145,8 +145,6 @@ class Config:
             "DEBUG_LOG_LEVEL": cls.DEBUG_LOG_LEVEL,
             "LOG_FILE": cls.LOG_FILE,
         }
-
-
 
     @classmethod
     def get_all_settings(cls) -> Dict[str, Any]:

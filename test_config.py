@@ -22,7 +22,7 @@ class TestConfig(unittest.TestCase):
         self.assertIn("BUILD_SCRIPT_NAME", settings)
 
         self.assertEqual(settings["BUILD_TIMEOUT_SECONDS"], 7200)
-        self.assertEqual(settings["BUILD_DIRECTORY"], "/tmp/build")
+        self.assertEqual(settings["BUILD_DIRECTORY"], "$HOME/build")
         self.assertEqual(settings["BUILD_SCRIPT_NAME"], "build-redland.py")
 
     def test_ui_settings(self):
@@ -162,7 +162,7 @@ class TestConfig(unittest.TestCase):
         """Test get_setting method."""
         # Test valid settings
         self.assertEqual(Config.get_setting("BUILD_TIMEOUT_SECONDS"), 7200)
-        self.assertEqual(Config.get_setting("BUILD_DIRECTORY"), "/tmp/build")
+        self.assertEqual(Config.get_setting("BUILD_DIRECTORY"), "$HOME/build")
         self.assertEqual(Config.get_setting("SSH_TIMEOUT_SECONDS"), 30)
         # DEFAULT_BORDER_COLOR is now in ColorManager
         # self.assertEqual(Config.get_setting("DEFAULT_BORDER_COLOR"), "WHITE")
