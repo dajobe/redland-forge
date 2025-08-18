@@ -57,6 +57,12 @@ class Config:
     AUTO_EXIT_ENABLED = True        # Can be disabled via config
     AUTO_EXIT_SHOW_COUNTDOWN = True # Show countdown in UI
 
+    # Timing cache settings
+    TIMING_CACHE_FILE = ".config/build-tui/timing-cache.json"
+    TIMING_CACHE_RETENTION_DAYS = 1
+    TIMING_CACHE_ENABLED = True
+    TIMING_CACHE_SHOW_PROGRESS = True
+
     # File transfer settings
     SFTP_CHUNK_SIZE = 8192
 
@@ -95,6 +101,10 @@ class Config:
             "AUTO_EXIT_DELAY_SECONDS": cls.AUTO_EXIT_DELAY_SECONDS,
             "AUTO_EXIT_ENABLED": cls.AUTO_EXIT_ENABLED,
             "AUTO_EXIT_SHOW_COUNTDOWN": cls.AUTO_EXIT_SHOW_COUNTDOWN,
+            "TIMING_CACHE_FILE": cls.TIMING_CACHE_FILE,
+            "TIMING_CACHE_RETENTION_DAYS": cls.TIMING_CACHE_RETENTION_DAYS,
+            "TIMING_CACHE_ENABLED": cls.TIMING_CACHE_ENABLED,
+            "TIMING_CACHE_SHOW_PROGRESS": cls.TIMING_CACHE_SHOW_PROGRESS,
         }
 
     @classmethod

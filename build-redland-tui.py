@@ -72,6 +72,29 @@ Hosts file format:
         action="store_true",
         help="Disable auto-exit functionality",
     )
+    
+    # Timing cache options
+    parser.add_argument(
+        "--cache-file",
+        type=str,
+        help="Custom cache file location (default: .config/build-tui/timing-cache.json)",
+    )
+    parser.add_argument(
+        "--cache-retention",
+        type=int,
+        default=1,
+        help="Cache retention period in days (default: 1)",
+    )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable timing cache functionality",
+    )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Disable progress display",
+    )
 
     args = parser.parse_args()
 
@@ -138,12 +161,22 @@ def main() -> int:
         auto_exit_delay = None if args.no_auto_exit else args.auto_exit_delay
         auto_exit_enabled = not args.no_auto_exit
         
+        # Prepare timing cache options
+        cache_file = args.cache_file
+        cache_retention = args.cache_retention
+        cache_enabled = not args.no_cache
+        progress_enabled = not args.no_progress
+        
         tui = BuildTUI(
             userhosts, 
             args.tarball, 
             args.max_concurrent,
             auto_exit_delay=auto_exit_delay,
-            auto_exit_enabled=auto_exit_enabled
+            auto_exit_enabled=auto_exit_enabled,
+            cache_file=cache_file,
+            cache_retention=cache_retention,
+            cache_enabled=cache_enabled,
+            progress_enabled=progress_enabled
         )
         logging.debug("BuildTUI instance created successfully, about to call run()")
         tui.run()
