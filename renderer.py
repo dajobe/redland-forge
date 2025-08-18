@@ -21,16 +21,18 @@ from statistics_manager import StatisticsManager
 class Renderer:
     """Handles all UI rendering logic for the TUI."""
 
-    def __init__(self, terminal: Terminal, statistics_manager: StatisticsManager):
+    def __init__(self, terminal: Terminal, statistics_manager: StatisticsManager, auto_exit_manager=None):
         """
         Initialize the renderer.
 
         Args:
             terminal: Blessed terminal object
             statistics_manager: Statistics manager for build data
+            auto_exit_manager: Optional auto-exit manager for countdown display
         """
         self.term = terminal
         self.statistics_manager = statistics_manager
+        self.auto_exit_manager = auto_exit_manager
         self.last_clear = 0
         self.last_render = 0
         self.last_timer_update = 0
@@ -79,6 +81,18 @@ class Renderer:
                     + subtitle
                     + ColorManager.get_ansi_color("RESET")
                 )
+            
+            # Auto-exit countdown for small terminals
+            if self.auto_exit_manager and self.auto_exit_manager.is_countdown_active():
+                countdown_text = self.auto_exit_manager.get_countdown_display()
+                if countdown_text:
+                    logging.debug(f"Small terminal countdown: {countdown_text}")
+                    with self.term.location(0, 2):
+                        print(
+                            ColorManager.get_ansi_color("YELLOW")
+                            + countdown_text
+                            + ColorManager.get_ansi_color("RESET")
+                        )
         else:
             # Full bordered header - use proper cursor positioning
             # Top border
@@ -137,16 +151,65 @@ class Renderer:
             with self.term.location(0, 2):
                 print(subtitle_line)
 
-            # Bottom border
-            bottom_border = (
-                border_color
-                + "└"
-                + "─" * (self.term.width - 2)
-                + "┘"
-                + ColorManager.get_ansi_color("RESET")
-            )
-            with self.term.location(0, 3):
-                print(bottom_border)
+            # Auto-exit countdown line (if enabled and active)
+            if self.auto_exit_manager and self.auto_exit_manager.is_countdown_active():
+                countdown_text = self.auto_exit_manager.get_countdown_display()
+                if countdown_text:
+                    logging.debug(f"Displaying countdown: {countdown_text}")
+                    countdown_content = (
+                        ColorManager.get_ansi_color("YELLOW")
+                        + countdown_text
+                        + ColorManager.get_ansi_color("RESET")
+                    )
+                    countdown_width = visual_length(countdown_content)
+                    left_padding = (available_width - countdown_width) // 2
+                    right_padding = available_width - countdown_width - left_padding
+                    countdown_line = (
+                        border_color
+                        + "│ "
+                        + ColorManager.get_ansi_color("RESET")
+                        + (" " * left_padding)
+                        + countdown_content
+                        + (" " * right_padding)
+                        + border_color
+                        + " │"
+                        + ColorManager.get_ansi_color("RESET")
+                    )
+                    with self.term.location(0, 3):
+                        print(countdown_line)
+                    
+                    # Bottom border moved down one line
+                    bottom_border = (
+                        border_color
+                        + "└"
+                        + "─" * (self.term.width - 2)
+                        + "┘"
+                        + ColorManager.get_ansi_color("RESET")
+                    )
+                    with self.term.location(0, 4):
+                        print(bottom_border)
+                else:
+                    # No countdown text, use normal bottom border
+                    bottom_border = (
+                        border_color
+                        + "└"
+                        + "─" * (self.term.width - 2)
+                        + "┘"
+                        + ColorManager.get_ansi_color("RESET")
+                    )
+                    with self.term.location(0, 3):
+                        print(bottom_border)
+            else:
+                # No countdown, use normal bottom border
+                bottom_border = (
+                    border_color
+                    + "└"
+                    + "─" * (self.term.width - 2)
+                    + "┘"
+                    + ColorManager.get_ansi_color("RESET")
+                )
+                with self.term.location(0, 3):
+                    print(bottom_border)
 
     def render_footer(
         self, host_sections: Dict[str, Any], ssh_results: Dict[str, Dict[str, Any]]
