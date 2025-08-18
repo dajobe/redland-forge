@@ -103,11 +103,16 @@ Hosts file format:
         action="store_true",
         help="Clean up demo/test host data from timing cache and exit",
     )
+    parser.add_argument(
+        "--remove-testing-hosts",
+        action="store_true",
+        help="Remove specific testing hosts from timing cache and exit",
+    )
 
     args = parser.parse_args()
 
     # Validate that we have either hosts or hosts-file (unless cleaning up demo hosts)
-    if not args.cleanup_demo_hosts and not args.hosts and not args.hosts_file:
+    if not args.cleanup_demo_hosts and not args.remove_testing_hosts and not args.hosts and not args.hosts_file:
         parser.error("Either hosts or --hosts-file must be specified")
 
     return args
@@ -131,6 +136,19 @@ def main() -> int:
             return 0
         except Exception as e:
             print(f"Error cleaning up demo hosts: {e}")
+            return 1
+
+    # Handle testing host removal if requested (before logging setup)
+    if args.remove_testing_hosts:
+        try:
+            from build_timing_cache import BuildTimingCache
+
+            cache = BuildTimingCache()
+            cache.remove_testing_hosts()
+            print("Testing host data removed successfully")
+            return 0
+        except Exception as e:
+            print(f"Error removing testing hosts: {e}")
             return 1
 
     # Set up logging to debug.log by default
