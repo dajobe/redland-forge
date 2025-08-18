@@ -587,14 +587,16 @@ The application will maintain a persistent cache of build timing data to provide
       "average_times": {
         "configure": 45.2,
         "make": 187.3,
-        "total": 232.5
+        "make_check": 23.1,
+        "total": 255.6
       },
       "recent_builds": [
         {
           "timestamp": 1703123456,
           "configure_time": 42.1,
           "make_time": 185.2,
-          "total_time": 227.3,
+          "make_check_time": 22.5,
+          "total_time": 249.8,
           "success": true
         }
       ]
@@ -609,7 +611,7 @@ The application will maintain a persistent cache of build timing data to provide
 class BuildTimingCache:
     """Manages persistent build timing data"""
     
-    def __init__(self, cache_file_path="~/.config/build-tui.json", 
+    def __init__(self, cache_file_path="~/.config/build-tui/timing-cache.json", 
                  retention_days=1):
         self.cache_file_path = os.path.expanduser(cache_file_path)
         self.retention_days = retention_days
@@ -764,7 +766,7 @@ class ProgressDisplayManager:
 
 ```python
 # Timing cache settings
-TIMING_CACHE_FILE = "~/.config/build-tui.json"
+TIMING_CACHE_FILE = "~/.config/build-tui/timing-cache.json"
 TIMING_CACHE_RETENTION_DAYS = 1
 TIMING_CACHE_ENABLED = True
 TIMING_CACHE_SHOW_PROGRESS = True
@@ -833,11 +835,12 @@ Application
 
 #### Phase 6: Timing Cache and Progress (Week 10)
 
-##### 6.1 Timing Cache Foundation
+##### 6.1 Timing Cache Foundation ✅ **COMPLETED**
 
-- Implement `BuildTimingCache` class
-- Add cache file management
-- Implement data cleanup and retention
+- ✅ Implement `BuildTimingCache` class
+- ✅ Add cache file management
+- ✅ Implement data cleanup and retention
+- ✅ Add make_check_time support for remote host timing data
 - **Why first**: Foundation for progress estimates
 
 ##### 6.2 Progress Display System
