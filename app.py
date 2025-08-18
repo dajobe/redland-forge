@@ -7,6 +7,7 @@ Main application logic for the parallel build monitoring TUI.
 
 import logging
 import os
+import re
 import sys
 import time
 from typing import Dict, List, Optional
@@ -30,7 +31,9 @@ class BuildTUI:
 
     def __init__(
         self, hosts: List[str], tarball: str, max_concurrent: Optional[int] = None,
-        auto_exit_delay: Optional[int] = None, auto_exit_enabled: Optional[bool] = None
+        auto_exit_delay: Optional[int] = None, auto_exit_enabled: Optional[bool] = None,
+        cache_file: Optional[str] = None, cache_retention: Optional[int] = None,
+        cache_enabled: Optional[bool] = None, progress_enabled: Optional[bool] = None
     ):
         try:
             logging.debug("Initializing BuildTUI")
@@ -99,6 +102,25 @@ class BuildTUI:
             # Set up build start callback for timing tracking
             self.ssh_manager.set_build_start_callback(self._on_build_start)
             
+            # Initialize timing cache if enabled
+            self.timing_cache = None
+            if cache_enabled is None or cache_enabled:
+                cache_file_path = cache_file if cache_file is not None else Config.TIMING_CACHE_FILE
+                cache_retention_days = cache_retention if cache_retention is not None else Config.TIMING_CACHE_RETENTION_DAYS
+                
+                try:
+                    from build_timing_cache import BuildTimingCache
+                    self.timing_cache = BuildTimingCache(
+                        cache_file_path=cache_file_path,
+                        retention_days=cache_retention_days
+                    )
+                    logging.debug(f"Timing cache initialized: {cache_file_path}, retention: {cache_retention_days} days")
+                except ImportError as e:
+                    logging.warning(f"Failed to import BuildTimingCache: {e}")
+                    self.timing_cache = None
+            else:
+                logging.debug("Timing cache disabled")
+            
             # Initialize renderer with auto-exit manager
             self.renderer = Renderer(self.term, self.statistics_manager, self.auto_exit_manager)
 
@@ -132,6 +154,46 @@ class BuildTUI:
         """Called when a build starts on a specific host."""
         logging.debug(f"Build started for {host_name}, starting timing tracking")
         self.build_summary_collector.start_build_tracking(host_name)
+    
+    def _extract_build_timing(self, output_lines: List[str]) -> Dict[str, float]:
+        """
+        Extract build timing data from output lines.
+        
+        Args:
+            output_lines: List of output lines from the build
+            
+        Returns:
+            Dictionary with timing data: {"configure": float, "make": float, "make_check": float}
+        """
+        timing_data = {}
+        
+        for line in output_lines:
+            line = line.strip()
+            # Look for timing patterns like "configure succeeded (8.0 secs)"
+            if "configure succeeded" in line and "secs" in line:
+                try:
+                    # Extract time from "(8.0 secs)" format
+                    time_match = re.search(r'\(([\d.]+)\s*secs?\)', line)
+                    if time_match:
+                        timing_data["configure"] = float(time_match.group(1))
+                except (ValueError, AttributeError):
+                    pass
+            elif "make succeeded" in line and "secs" in line and "check" not in line:
+                try:
+                    time_match = re.search(r'\(([\d.]+)\s*secs?\)', line)
+                    if time_match:
+                        timing_data["make"] = float(time_match.group(1))
+                except (ValueError, AttributeError):
+                    pass
+            elif "make check succeeded" in line and "secs" in line:
+                try:
+                    time_match = re.search(r'\(([\d.]+)\s*secs?\)', line)
+                    if time_match:
+                        timing_data["make_check"] = float(time_match.group(1))
+                except (ValueError, AttributeError):
+                    pass
+        
+        return timing_data
 
     def setup_layout(self) -> None:
         """Calculate and create host sections using LayoutManager."""
@@ -406,6 +468,9 @@ class BuildTUI:
                     if start_time is not None:
                         total_time = time.time() - start_time
                     
+                    # Extract timing data from build output
+                    timing_data = self._extract_build_timing(result.get("output", []))
+                    
                     # Record the build result with calculated total time
                     self.build_summary_collector.record_build_result(
                         host_name=host_name,
@@ -413,6 +478,21 @@ class BuildTUI:
                         error_message=error_message,
                         total_time=total_time
                     )
+                    
+                    # Record timing data in cache if available
+                    if self.timing_cache and timing_data:
+                        try:
+                            self.timing_cache.record_build_timing(
+                                host_name=host_name,
+                                configure_time=timing_data.get("configure", 0.0),
+                                make_time=timing_data.get("make", 0.0),
+                                make_check_time=timing_data.get("make_check", 0.0),
+                                total_time=total_time or 0.0,
+                                success=success
+                            )
+                            logging.debug(f"Recorded timing data for {host_name}: {timing_data}")
+                        except Exception as e:
+                            logging.warning(f"Failed to record timing data for {host_name}: {e}")
                     
                     # Stop tracking build time for this host
                     self.build_summary_collector.stop_build_tracking(host_name)
