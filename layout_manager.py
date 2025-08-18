@@ -17,16 +17,18 @@ from host_section import HostSection
 class LayoutManager:
     """Manages terminal layout and host section positioning."""
 
-    def __init__(self, terminal: Terminal, hosts: List[str]):
+    def __init__(self, terminal: Terminal, hosts: List[str], step_change_callback=None):
         """
         Initialize the layout manager.
 
         Args:
             terminal: Blessed terminal object
             hosts: List of all hosts to be managed
+            step_change_callback: Optional callback function for step changes
         """
         self.term = terminal
         self.hosts = hosts
+        self.step_change_callback = step_change_callback
         self.host_sections: Dict[str, HostSection] = {}
 
     def setup_layout(self) -> Dict[str, HostSection]:
@@ -168,7 +170,7 @@ class LayoutManager:
                     f"Skipping host {host} - would render outside bounds (start_y={start_y}, height={section_height}, term_height={self.term.height})"
                 )
                 continue
-            self.host_sections[host] = HostSection(host, start_y, section_height)
+            self.host_sections[host] = HostSection(host, start_y, section_height, self.step_change_callback)
             logging.debug(
                 f"Created host section for {host}: start_y={start_y}, height={section_height}, end_y={start_y + section_height}"
             )
@@ -252,7 +254,7 @@ class LayoutManager:
             start_y: Starting Y position
             section_height: Height of the section
         """
-        self.host_sections[host] = HostSection(host, start_y, section_height)
+        self.host_sections[host] = HostSection(host, start_y, section_height, self.step_change_callback)
         logging.debug(
             f"Added host section for {host}: start_y={start_y}, height={section_height}"
         )

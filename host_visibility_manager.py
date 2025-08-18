@@ -25,6 +25,7 @@ class HostVisibilityManager:
         terminal: Terminal,
         layout_manager: LayoutManager,
         all_hosts: List[str],
+        step_change_callback=None,
     ):
         """
         Initialize the host visibility manager.
@@ -33,10 +34,12 @@ class HostVisibilityManager:
             terminal: Blessed terminal object
             layout_manager: Layout manager for calculating positions
             all_hosts: List of all hosts to manage
+            step_change_callback: Optional callback function for step changes
         """
         self.term = terminal
         self.layout_manager = layout_manager
         self.all_hosts = all_hosts
+        self.step_change_callback = step_change_callback
         self.host_sections: Dict[str, HostSection] = {}
 
     def update_host_visibility(
@@ -273,9 +276,9 @@ class HostVisibilityManager:
             return
 
         # Create the host section
-        self.host_sections[host] = HostSection(host, start_y, section_height)
+        self.host_sections[host] = HostSection(host, start_y, section_height, self.step_change_callback)
         logging.debug(
-            f"Created host section for {host}: start_y={start_y}, height={section_height}, end_y={start_y + section_height}"
+            f"Created host section for {host}: start_y={start_y}, height={section_height}, end_y={start_y + section_height}, callback={self.step_change_callback is not None}"
         )
 
     def _get_max_visible_hosts(self) -> int:

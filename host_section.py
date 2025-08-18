@@ -104,7 +104,7 @@ class BorderRenderer:
 class HostSection:
     """Represents a host section in the TUI."""
 
-    def __init__(self, hostname: str, start_y: int, height: int):
+    def __init__(self, hostname: str, start_y: int, height: int, step_change_callback=None):
         """
         Initialize a host section.
 
@@ -112,6 +112,7 @@ class HostSection:
             hostname: Name of the host
             start_y: Starting Y position for rendering
             height: Height of the section
+            step_change_callback: Optional callback function for step changes
         """
         self.hostname = hostname
         self.start_y = start_y
@@ -128,6 +129,9 @@ class HostSection:
         self.duration = 0
         self.last_update = time.time()
         self.completion_time = None  # Added for 10-second timeout
+        self.step_change_callback = step_change_callback
+        logging.debug(f"HostSection created for {self.hostname} with step_change_callback: {step_change_callback is not None}")
+        self.progress_info = {}  # Store progress information from progress display manager
 
     def add_output(self, line: str) -> None:
         """
@@ -180,7 +184,12 @@ class HostSection:
         Args:
             line: Output line to analyze
         """
+        # Debug: log the current state before step detection
+        logging.debug(f"Step detection for {self.hostname}: line='{line.strip()}', current_step='{self.current_step}', callback_exists={self.step_change_callback is not None}")
+        
         new_step = detect_build_step(line, self.current_step)
+        logging.debug(f"detect_build_step returned: '{new_step}' for {self.hostname} (current: '{self.current_step}')")
+        
         if new_step:
             old_step = self.current_step
             self.current_step = new_step
@@ -192,6 +201,17 @@ class HostSection:
             logging.info(
                 f"STEP CHANGE: {self.hostname} '{old_step}' -> '{new_step}' from '{line.strip()}'"
             )
+            
+            # Call step change callback if provided
+            if self.step_change_callback:
+                try:
+                    logging.debug(f"Calling step change callback for {self.hostname}: {old_step} -> {new_step}")
+                    self.step_change_callback(self.hostname, new_step)
+                    logging.debug(f"Step change callback completed for {self.hostname}")
+                except Exception as e:
+                    logging.warning(f"Error in step change callback for {self.hostname}: {e}")
+            else:
+                logging.debug(f"No step change callback available for {self.hostname}")
         else:
             # Check if the current step has completed
             if detect_step_completion(line, self.current_step):
@@ -202,6 +222,29 @@ class HostSection:
                 logging.info(
                     f"STEP COMPLETION: {self.hostname} '{self.current_step}' completed from '{line.strip()}'"
                 )
+                
+                # Automatically advance to the next step
+                next_step = self._get_next_step(self.current_step)
+                if next_step:
+                    old_step = self.current_step
+                    self.current_step = next_step
+                    logging.debug(
+                        f"Auto-advanced step from '{old_step}' to '{next_step}' for {self.hostname}"
+                    )
+                    logging.info(
+                        f"STEP AUTO-ADVANCE: {self.hostname} '{old_step}' -> '{next_step}' after completion"
+                    )
+                    
+                    # Call step change callback if provided
+                    if self.step_change_callback:
+                        try:
+                            logging.debug(f"Calling step change callback (auto-advance) for {self.hostname}: {old_step} -> {next_step}")
+                            self.step_change_callback(self.hostname, next_step)
+                            logging.debug(f"Step change callback (auto-advance) completed for {self.hostname}")
+                        except Exception as e:
+                            logging.warning(f"Error in step change callback (auto-advance) for {self.hostname}: {e}")
+                    else:
+                        logging.debug(f"No step change callback available for {self.hostname} (auto-advance)")
             # Debug: log when we don't detect a step change
             elif "completed" in line or "succeeded" in line or "Total time" in line:
                 logging.debug(
@@ -225,6 +268,28 @@ class HostSection:
             Symbol for the current status
         """
         return ColorManager.get_status_symbol(self.status)
+    
+    def _get_next_step(self, current_step: str) -> str:
+        """
+        Get the next step in the build sequence.
+        
+        Args:
+            current_step: Current step name
+            
+        Returns:
+            Next step name, or empty string if no next step
+        """
+        step_sequence = ["extract", "configure", "make", "check", "install", "completed"]
+        
+        try:
+            current_index = step_sequence.index(current_step)
+            if current_index < len(step_sequence) - 1:
+                return step_sequence[current_index + 1]
+        except ValueError:
+            # Current step not in sequence, return empty string
+            pass
+        
+        return ""
 
     def render(self, term: Terminal) -> None:
         """
@@ -311,6 +376,22 @@ class HostSection:
             logging.debug(f"Displaying step '{self.current_step}' in header for {self.hostname}")
         else:
             logging.debug(f"No current step to display for {self.hostname}")
+        
+        # Add progress information if available
+        if self.progress_info:
+            progress_parts = []
+            
+            # Add progress percentage
+            if self.progress_info.get("progress"):
+                progress_parts.append(self.progress_info["progress"])
+            
+            # Add time estimate
+            if self.progress_info.get("time_estimate"):
+                progress_parts.append(self.progress_info["time_estimate"])
+            
+            if progress_parts:
+                header += f" | {' | '.join(progress_parts)}"
+                logging.debug(f"Displaying progress info for {self.hostname}: {progress_parts}")
 
         # Format header with proper coloring and centering
         header_content = status_color + header + ColorManager.get_ansi_color("RESET")
