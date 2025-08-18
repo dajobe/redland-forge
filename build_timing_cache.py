@@ -95,13 +95,43 @@ class BuildTimingCache:
         
         for host_name in list(self.cache_data['hosts'].keys()):
             host_data = self.cache_data['hosts'][host_name]
-            if host_data['last_updated'] < cutoff_time:
+            
+            # Check if this is a demo/test host (very short TTL)
+            if self._is_demo_host(host_name):
+                from config import Config
+                demo_hours = getattr(Config, 'TIMING_CACHE_DEMO_RETENTION_HOURS', 1)
+                demo_cutoff = time.time() - (demo_hours * 60 * 60)  # Configurable TTL for demo hosts
+                if host_data['last_updated'] < demo_cutoff:
+                    del self.cache_data['hosts'][host_name]
+                    removed_hosts.append(host_name)
+                    logging.debug(f"Removed demo host {host_name} (last updated: {host_data['last_updated']}, demo cutoff: {demo_cutoff})")
+            # Regular hosts use normal retention
+            elif host_data['last_updated'] < cutoff_time:
                 del self.cache_data['hosts'][host_name]
                 removed_hosts.append(host_name)
+                logging.debug(f"Removed host {host_name} (last updated: {host_data['last_updated']}, cutoff: {cutoff_time})")
         
         if removed_hosts:
             logging.info(f"Cleaned up old timing data for hosts: {removed_hosts}")
             self._save_cache()
+    
+    def _is_demo_host(self, host_name: str) -> bool:
+        """
+        Check if a host name indicates it's a demo/test host.
+        
+        Args:
+            host_name: Name of the host to check
+            
+        Returns:
+            True if this appears to be a demo/test host
+        """
+        demo_indicators = [
+            'demo', 'test', 'example', 'sample', 'temp', 'tmp',
+            'localhost', '127.0.0.1', '::1', 'dummy', 'fake'
+        ]
+        
+        host_lower = host_name.lower()
+        return any(indicator in host_lower for indicator in demo_indicators)
     
     def record_build_timing(self, host_name: str, configure_time: float, 
                           make_time: float, make_check_time: float, total_time: float, success: bool) -> None:
@@ -172,7 +202,7 @@ class BuildTimingCache:
         
         Args:
             host_name: Name of the host
-            current_step: Current build step ('configure', 'make', or 'make_check')
+            current_step: Current build step ('extract', 'configure', 'make', 'check', 'install', 'completed')
             elapsed_time: Time elapsed since build start in seconds
             
         Returns:
@@ -184,7 +214,13 @@ class BuildTimingCache:
         host_data = self.cache_data['hosts'][host_name]
         avg_times = host_data['average_times']
         
-        if current_step == "configure":
+        if current_step == "extract":
+            # Extract step: progress based on typical extract time (usually 2-10 seconds)
+            # Use a reasonable estimate that accounts for network/tar extraction time
+            extract_time = 8.0  # More realistic estimate
+            progress = min(100, (elapsed_time / extract_time) * 100)
+            return f"{progress:.1f}%"
+        elif current_step == "configure":
             if avg_times['configure'] > 0:
                 progress = min(100, (elapsed_time / avg_times['configure']) * 100)
                 return f"{progress:.1f}%"
@@ -194,12 +230,20 @@ class BuildTimingCache:
                 total_elapsed = elapsed_time + avg_times['configure']
                 progress = min(100, (total_elapsed / avg_times['total']) * 100)
                 return f"{progress:.1f}%"
-        elif current_step == "make_check":
+        elif current_step == "check":
             if avg_times['total'] > 0:
                 # Include configure and make time in total estimate
                 total_elapsed = elapsed_time + avg_times['configure'] + avg_times['make']
                 progress = min(100, (total_elapsed / avg_times['total']) * 100)
                 return f"{progress:.1f}%"
+        elif current_step == "install":
+            if avg_times['total'] > 0:
+                # Include configure, make, and check time in total estimate
+                total_elapsed = elapsed_time + avg_times['configure'] + avg_times['make'] + avg_times['make_check']
+                progress = min(100, (total_elapsed / avg_times['total']) * 100)
+                return f"{progress:.1f}%"
+        elif current_step == "completed":
+            return "100.0%"
         
         return None
     
@@ -255,6 +299,20 @@ class BuildTimingCache:
         self.cache_data['hosts'] = {}
         logging.info("Cleared all timing data from cache")
         self._save_cache()
+    
+    def clear_demo_hosts(self) -> None:
+        """Clear all demo/test host data from cache."""
+        demo_hosts = []
+        for host_name in list(self.cache_data['hosts'].keys()):
+            if self._is_demo_host(host_name):
+                demo_hosts.append(host_name)
+                del self.cache_data['hosts'][host_name]
+        
+        if demo_hosts:
+            logging.info(f"Cleared demo host data for: {demo_hosts}")
+            self._save_cache()
+        else:
+            logging.debug("No demo hosts found to clear")
     
     def get_cache_info(self) -> Dict[str, Any]:
         """

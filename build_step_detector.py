@@ -154,6 +154,12 @@ def detect_step_completion(line: str, current_step: str) -> bool:
         completion_indicators = ["succeeded", "completed", "finished", "done"]
         return any(indicator in line.lower() for indicator in completion_indicators)
     
+    # Special handling for extract step completion
+    if current_step == "extract":
+        # Extract step completes when we see configure-related output
+        if "Running configure" in line or "configure succeeded" in line:
+            return True
+    
     return False
 
 
