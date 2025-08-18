@@ -60,6 +60,7 @@ class Config:
     # Timing cache settings
     TIMING_CACHE_FILE = ".config/build-tui/timing-cache.json"
     TIMING_CACHE_RETENTION_DAYS = 1
+    TIMING_CACHE_DEMO_RETENTION_HOURS = 1  # Demo hosts get 1 hour TTL
     TIMING_CACHE_ENABLED = True
     TIMING_CACHE_SHOW_PROGRESS = True
 
