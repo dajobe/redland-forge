@@ -65,11 +65,11 @@ class ParallelSSHManager:
             script_path: Path to the build script
         """
         self.build_script_path = script_path
-    
+
     def set_build_start_callback(self, callback):
         """
         Set callback function to be called when a build starts.
-        
+
         Args:
             callback: Function to call with hostname when build starts
         """
@@ -100,7 +100,7 @@ class ParallelSSHManager:
                 self.build_start_callback(hostname)
             except Exception as e:
                 logging.error(f"Error in build start callback for {hostname}: {e}")
-        
+
         thread = threading.Thread(target=self._build_worker, args=(hostname, tarball))
         thread.daemon = True
         thread.start()

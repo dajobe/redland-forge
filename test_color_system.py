@@ -45,11 +45,11 @@ class TestColorSystem(unittest.TestCase):
 
     def test_get_ansi_color(self):
         """Test get_ansi_color method."""
-                # Test valid colors
+        # Test valid colors
         self.assertEqual(ColorManager.get_ansi_color("RED"), "\033[31m")
         self.assertEqual(ColorManager.get_ansi_color("BRIGHT_GREEN"), "\033[92m")
         self.assertEqual(ColorManager.get_ansi_color("RESET"), "\033[0m")
-        
+
         # Test invalid color (should return RESET)
         self.assertEqual(ColorManager.get_ansi_color("INVALID_COLOR"), "\033[0m")
 
@@ -73,19 +73,19 @@ class TestColorSystem(unittest.TestCase):
         """Test colorize method."""
         # Force color mode for testing
         ColorManager.set_color_mode("always")
-        
+
         # Test basic colorization
         result = ColorManager.colorize("Hello", "RED")
         self.assertEqual(result, "\033[31mHello\033[0m")
-        
+
         # Test with bright color
         result = ColorManager.colorize("World", "BRIGHT_CYAN")
         self.assertEqual(result, "\033[96mWorld\033[0m")
-        
+
         # Test with invalid color (should use RESET)
         result = ColorManager.colorize("Test", "INVALID")
         self.assertEqual(result, "\033[0mTest\033[0m")
-        
+
         # Reset to auto mode
         ColorManager.set_color_mode("auto")
 
@@ -102,7 +102,9 @@ class TestColorSystem(unittest.TestCase):
         color_settings = ColorManager.get_color_settings()
         self.assertIn("ANSI_COLORS", color_settings)
         self.assertIsInstance(color_settings["ANSI_COLORS"], dict)
-        self.assertEqual(len(color_settings["ANSI_COLORS"]), len(ColorManager.ANSI_COLORS))
+        self.assertEqual(
+            len(color_settings["ANSI_COLORS"]), len(ColorManager.ANSI_COLORS)
+        )
 
 
 if __name__ == "__main__":

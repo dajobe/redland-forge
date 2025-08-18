@@ -141,25 +141,25 @@ def detect_step_completion(line: str, current_step: str) -> bool:
         True if the current step has completed, False otherwise
     """
     line = line.strip()
-    
+
     # Get the current step object
     current_step_obj = get_step_by_name(current_step)
     if not current_step_obj:
         return False
-    
+
     # Check if any of the current step's patterns match this line
     # and if the line contains completion indicators
     if current_step_obj.matches(line):
         # Look for completion indicators in the line
         completion_indicators = ["succeeded", "completed", "finished", "done"]
         return any(indicator in line.lower() for indicator in completion_indicators)
-    
+
     # Special handling for extract step completion
     if current_step == "extract":
         # Extract step completes when we see configure-related output
         if "Running configure" in line or "configure succeeded" in line:
             return True
-    
+
     return False
 
 

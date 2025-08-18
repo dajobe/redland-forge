@@ -54,8 +54,8 @@ class Config:
 
     # Auto-exit settings
     AUTO_EXIT_DELAY_SECONDS = 300  # 5 minutes
-    AUTO_EXIT_ENABLED = True        # Can be disabled via config
-    AUTO_EXIT_SHOW_COUNTDOWN = True # Show countdown in UI
+    AUTO_EXIT_ENABLED = True  # Can be disabled via config
+    AUTO_EXIT_SHOW_COUNTDOWN = True  # Show countdown in UI
 
     # Timing cache settings
     TIMING_CACHE_FILE = ".config/build-tui/timing-cache.json"

@@ -33,9 +33,9 @@ Hosts file format:
 """,
     )
     parser.add_argument(
-        "tarball", 
+        "tarball",
         nargs="?",
-        help="The Redland package tarball (e.g., redland-1.1.0.tar.gz)"
+        help="The Redland package tarball (e.g., redland-1.1.0.tar.gz)",
     )
     parser.add_argument(
         "hosts",
@@ -74,7 +74,7 @@ Hosts file format:
         action="store_true",
         help="Disable auto-exit functionality",
     )
-    
+
     # Timing cache options
     parser.add_argument(
         "--cache-file",
@@ -97,7 +97,7 @@ Hosts file format:
         action="store_true",
         help="Disable progress display",
     )
-    
+
     parser.add_argument(
         "--cleanup-demo-hosts",
         action="store_true",
@@ -124,6 +124,7 @@ def main() -> int:
     if args.cleanup_demo_hosts:
         try:
             from build_timing_cache import BuildTimingCache
+
             cache = BuildTimingCache()
             cache.clear_demo_hosts()
             print("Demo host data cleaned up successfully")
@@ -169,34 +170,34 @@ def main() -> int:
     if not userhosts:
         logging.error("No valid hosts specified")
         return 1
-    
+
     # Create and run TUI
     try:
         print(
             f"Starting TUI with {len(userhosts)} hosts: {userhosts[:3]}{'...' if len(userhosts) > 3 else ''}"
         )
         logging.debug("About to create BuildTUI instance")
-        
+
         # Prepare auto-exit options
         auto_exit_delay = None if args.no_auto_exit else args.auto_exit_delay
         auto_exit_enabled = not args.no_auto_exit
-        
+
         # Prepare timing cache options
         cache_file = args.cache_file
         cache_retention = args.cache_retention
         cache_enabled = not args.no_cache
         progress_enabled = not args.no_progress
-        
+
         tui = BuildTUI(
-            userhosts, 
-            args.tarball, 
+            userhosts,
+            args.tarball,
             args.max_concurrent,
             auto_exit_delay=auto_exit_delay,
             auto_exit_enabled=auto_exit_enabled,
             cache_file=cache_file,
             cache_retention=cache_retention,
             cache_enabled=cache_enabled,
-            progress_enabled=progress_enabled
+            progress_enabled=progress_enabled,
         )
         logging.debug("BuildTUI instance created successfully, about to call run()")
         tui.run()

@@ -170,7 +170,9 @@ class LayoutManager:
                     f"Skipping host {host} - would render outside bounds (start_y={start_y}, height={section_height}, term_height={self.term.height})"
                 )
                 continue
-            self.host_sections[host] = HostSection(host, start_y, section_height, self.step_change_callback)
+            self.host_sections[host] = HostSection(
+                host, start_y, section_height, self.step_change_callback
+            )
             logging.debug(
                 f"Created host section for {host}: start_y={start_y}, height={section_height}, end_y={start_y + section_height}"
             )
@@ -254,7 +256,9 @@ class LayoutManager:
             start_y: Starting Y position
             section_height: Height of the section
         """
-        self.host_sections[host] = HostSection(host, start_y, section_height, self.step_change_callback)
+        self.host_sections[host] = HostSection(
+            host, start_y, section_height, self.step_change_callback
+        )
         logging.debug(
             f"Added host section for {host}: start_y={start_y}, height={section_height}"
         )

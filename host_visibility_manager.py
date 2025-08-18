@@ -276,7 +276,9 @@ class HostVisibilityManager:
             return
 
         # Create the host section
-        self.host_sections[host] = HostSection(host, start_y, section_height, self.step_change_callback)
+        self.host_sections[host] = HostSection(
+            host, start_y, section_height, self.step_change_callback
+        )
         logging.debug(
             f"Created host section for {host}: start_y={start_y}, height={section_height}, end_y={start_y + section_height}, callback={self.step_change_callback is not None}"
         )

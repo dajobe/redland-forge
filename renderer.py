@@ -21,7 +21,12 @@ from statistics_manager import StatisticsManager
 class Renderer:
     """Handles all UI rendering logic for the TUI."""
 
-    def __init__(self, terminal: Terminal, statistics_manager: StatisticsManager, auto_exit_manager=None):
+    def __init__(
+        self,
+        terminal: Terminal,
+        statistics_manager: StatisticsManager,
+        auto_exit_manager=None,
+    ):
         """
         Initialize the renderer.
 
@@ -81,7 +86,7 @@ class Renderer:
                     + subtitle
                     + ColorManager.get_ansi_color("RESET")
                 )
-            
+
             # Auto-exit countdown for small terminals
             if self.auto_exit_manager and self.auto_exit_manager.is_countdown_active():
                 countdown_text = self.auto_exit_manager.get_countdown_display()
@@ -132,7 +137,9 @@ class Renderer:
 
             # Subtitle line - manually center the content
             subtitle_content = (
-                ColorManager.get_ansi_color("DIM") + subtitle + ColorManager.get_ansi_color("RESET")
+                ColorManager.get_ansi_color("DIM")
+                + subtitle
+                + ColorManager.get_ansi_color("RESET")
             )
             subtitle_width = visual_length(subtitle_content)
             left_padding = (available_width - subtitle_width) // 2
@@ -177,7 +184,7 @@ class Renderer:
                     )
                     with self.term.location(0, 3):
                         print(countdown_line)
-                    
+
                     # Bottom border moved down one line
                     bottom_border = (
                         border_color
@@ -342,7 +349,9 @@ class Renderer:
             msg = f"Processing {active_count} hosts"
 
         msg_pad = max(0, (self.term.width - visual_length(msg) - 4) // 2)
-        msg_line = f"│ {msg_pad * ' '}{ColorManager.get_ansi_color('BRIGHT_GREEN')}{msg}"
+        msg_line = (
+            f"│ {msg_pad * ' '}{ColorManager.get_ansi_color('BRIGHT_GREEN')}{msg}"
+        )
         remaining_space = self.term.width - visual_length(msg_line) - 1
         if remaining_space > 0:
             msg_line += " " * remaining_space

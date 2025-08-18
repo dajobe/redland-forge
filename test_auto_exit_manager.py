@@ -40,12 +40,12 @@ class TestAutoExitManager(unittest.TestCase):
         """Test that multiple build completions reset the timer."""
         self.auto_exit_manager.on_build_completed("host1", True)
         first_timer = self.auto_exit_manager.exit_timer
-        
+
         time.sleep(0.1)  # Small delay
-        
+
         self.auto_exit_manager.on_build_completed("host2", False)
         second_timer = self.auto_exit_manager.exit_timer
-        
+
         # Should be different timer objects
         self.assertIsNot(first_timer, second_timer)
 
@@ -53,7 +53,7 @@ class TestAutoExitManager(unittest.TestCase):
         """Test canceling the scheduled exit."""
         self.auto_exit_manager.on_build_completed("test-host", True)
         self.assertIsNotNone(self.auto_exit_manager.exit_timer)
-        
+
         self.auto_exit_manager.cancel_exit()
         self.assertIsNone(self.auto_exit_manager.exit_timer)
 
@@ -75,7 +75,7 @@ class TestAutoExitManager(unittest.TestCase):
     def test_is_countdown_active(self):
         """Test countdown active state."""
         self.assertFalse(self.auto_exit_manager.is_countdown_active())
-        
+
         self.auto_exit_manager.on_build_completed("test-host", True)
         self.assertTrue(self.auto_exit_manager.is_countdown_active())
 
@@ -83,7 +83,7 @@ class TestAutoExitManager(unittest.TestCase):
         """Test that exit callback is called."""
         mock_callback = Mock()
         self.auto_exit_manager.set_exit_callback(mock_callback)
-        
+
         # Manually trigger exit
         self.auto_exit_manager._perform_exit()
         mock_callback.assert_called_once()
@@ -92,17 +92,18 @@ class TestAutoExitManager(unittest.TestCase):
         """Test cleanup method."""
         self.auto_exit_manager.on_build_completed("test-host", True)
         self.assertIsNotNone(self.auto_exit_manager.exit_timer)
-        
+
         self.auto_exit_manager.cleanup()
         self.assertIsNone(self.auto_exit_manager.exit_timer)
 
     def test_exit_callback_error_handling(self):
         """Test error handling in exit callback."""
+
         def failing_callback():
             raise Exception("Test error")
-        
+
         self.auto_exit_manager.set_exit_callback(failing_callback)
-        
+
         # Should not raise exception
         self.auto_exit_manager._perform_exit()
         self.assertTrue(self.auto_exit_manager.is_exiting)

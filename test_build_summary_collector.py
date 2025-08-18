@@ -27,15 +27,15 @@ class TestBuildSummaryCollector(unittest.TestCase):
         self.collector.start_build_tracking("test-host")
         self.assertIn("test-host", self.collector.host_start_times)
         self.assertGreater(self.collector.host_start_times["test-host"], 0)
-    
+
     def test_stop_build_tracking(self):
         """Test stopping build tracking for a host."""
         self.collector.start_build_tracking("test-host")
         self.assertIn("test-host", self.collector.host_start_times)
-        
+
         self.collector.stop_build_tracking("test-host")
         self.assertNotIn("test-host", self.collector.host_start_times)
-        
+
         # Test stopping non-existent host (should not crash)
         self.collector.stop_build_tracking("non-existent-host")
 
@@ -43,14 +43,11 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test recording a successful build result."""
         self.collector.start_build_tracking("test-host")
         time.sleep(0.1)  # Small delay to ensure different timestamps
-        
+
         self.collector.record_build_result(
-            host_name="test-host",
-            success=True,
-            configure_time=10.5,
-            make_time=45.2
+            host_name="test-host", success=True, configure_time=10.5, make_time=45.2
         )
-        
+
         result = self.collector.get_build_result("test-host")
         self.assertIsNotNone(result)
         self.assertTrue(result.success)
@@ -62,13 +59,13 @@ class TestBuildSummaryCollector(unittest.TestCase):
     def test_record_build_result_failure(self):
         """Test recording a failed build result."""
         self.collector.start_build_tracking("test-host")
-        
+
         self.collector.record_build_result(
             host_name="test-host",
             success=False,
-            error_message="Build failed during make step"
+            error_message="Build failed during make step",
         )
-        
+
         result = self.collector.get_build_result("test-host")
         self.assertIsNotNone(result)
         self.assertFalse(result.success)
@@ -78,10 +75,10 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test getting all build results."""
         self.collector.start_build_tracking("host1")
         self.collector.record_build_result("host1", True)
-        
+
         self.collector.start_build_tracking("host2")
         self.collector.record_build_result("host2", False)
-        
+
         all_results = self.collector.get_all_results()
         self.assertEqual(len(all_results), 2)
         self.assertIn("host1", all_results)
@@ -91,10 +88,10 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test getting only successful builds."""
         self.collector.start_build_tracking("host1")
         self.collector.record_build_result("host1", True)
-        
+
         self.collector.start_build_tracking("host2")
         self.collector.record_build_result("host2", False)
-        
+
         successful = self.collector.get_successful_builds()
         self.assertEqual(len(successful), 1)
         self.assertEqual(successful[0].host_name, "host1")
@@ -103,10 +100,10 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test getting only failed builds."""
         self.collector.start_build_tracking("host1")
         self.collector.record_build_result("host1", True)
-        
+
         self.collector.start_build_tracking("host2")
         self.collector.record_build_result("host2", False)
-        
+
         failed = self.collector.get_failed_builds()
         self.assertEqual(len(failed), 1)
         self.assertEqual(failed[0].host_name, "host2")
@@ -115,7 +112,7 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test getting total build time."""
         initial_time = self.collector.get_total_build_time()
         self.assertGreaterEqual(initial_time, 0)
-        
+
         time.sleep(0.1)
         later_time = self.collector.get_total_build_time()
         self.assertGreater(later_time, initial_time)
@@ -124,14 +121,14 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test duration formatting."""
         # Test None case
         self.assertEqual(self.collector._format_duration(None), "unknown")
-        
+
         # Test seconds
         self.assertEqual(self.collector._format_duration(30.5), "30.5s")
-        
+
         # Test minutes
         self.assertEqual(self.collector._format_duration(90), "1m 30s")
         self.assertEqual(self.collector._format_duration(120), "2m")
-        
+
         # Test hours
         self.assertEqual(self.collector._format_duration(3661), "1h 1m")
         self.assertEqual(self.collector._format_duration(7200), "2h")
@@ -146,10 +143,10 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test summary generation with builds."""
         self.collector.start_build_tracking("host1")
         self.collector.record_build_result("host1", True)
-        
+
         self.collector.start_build_tracking("host2")
         self.collector.record_build_result("host2", False, error_message="Test error")
-        
+
         summary = self.collector.generate_summary()
         self.assertIn("BUILD SUMMARY", summary)
         self.assertIn("SUCCESSFUL BUILDS:", summary)
@@ -163,10 +160,10 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test getting statistics summary."""
         self.collector.start_build_tracking("host1")
         self.collector.record_build_result("host1", True)
-        
+
         self.collector.start_build_tracking("host2")
         self.collector.record_build_result("host2", False)
-        
+
         stats = self.collector.get_statistics_summary()
         self.assertEqual(stats["total_builds"], 2)
         self.assertEqual(stats["successful_builds"], 1)
@@ -179,9 +176,9 @@ class TestBuildSummaryCollector(unittest.TestCase):
         """Test printing summary to stdout."""
         self.collector.start_build_tracking("test-host")
         self.collector.record_build_result("test-host", True)
-        
+
         # Mock print to capture output
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             self.collector.print_summary()
             mock_print.assert_called_once()
             # Verify the summary content
