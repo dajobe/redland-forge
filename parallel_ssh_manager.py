@@ -45,6 +45,7 @@ class ParallelSSHManager:
         self.results = {}
         self.lock = threading.Lock()
         self.build_script_path = None
+        self.build_start_callback = None
 
     def add_host(self, hostname: str, tarball: str) -> None:
         """
@@ -64,6 +65,15 @@ class ParallelSSHManager:
             script_path: Path to the build script
         """
         self.build_script_path = script_path
+    
+    def set_build_start_callback(self, callback):
+        """
+        Set callback function to be called when a build starts.
+        
+        Args:
+            callback: Function to call with hostname when build starts
+        """
+        self.build_start_callback = callback
 
     def start_builds(self) -> None:
         """Start builds up to concurrency limit."""
@@ -82,8 +92,15 @@ class ParallelSSHManager:
 
         Args:
             hostname: Hostname to build on
-            tarball: Path to the tarball
+            tarball: Path to the build script
         """
+        # Notify that build is starting
+        if self.build_start_callback:
+            try:
+                self.build_start_callback(hostname)
+            except Exception as e:
+                logging.error(f"Error in build start callback for {hostname}: {e}")
+        
         thread = threading.Thread(target=self._build_worker, args=(hostname, tarball))
         thread.daemon = True
         thread.start()
