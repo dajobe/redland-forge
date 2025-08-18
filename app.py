@@ -21,13 +21,16 @@ from input_handler import InputHandler
 from host_visibility_manager import HostVisibilityManager
 from parallel_ssh_manager import ParallelSSHManager
 from color_manager import ColorManager, set_color_mode, supports_color, colorize
+from auto_exit_manager import AutoExitManager
+from build_summary_collector import BuildSummaryCollector
 
 
 class BuildTUI:
     """Main TUI application for parallel build monitoring."""
 
     def __init__(
-        self, hosts: List[str], tarball: str, max_concurrent: Optional[int] = None
+        self, hosts: List[str], tarball: str, max_concurrent: Optional[int] = None,
+        auto_exit_delay: Optional[int] = None, auto_exit_enabled: Optional[bool] = None
     ):
         try:
             logging.debug("Initializing BuildTUI")
@@ -73,11 +76,31 @@ class BuildTUI:
             # Initialize managers
             self.statistics_manager = StatisticsManager(hosts)
             self.layout_manager = LayoutManager(self.term, hosts)
-            self.renderer = Renderer(self.term, self.statistics_manager)
             self.input_handler = InputHandler(self.term)
             self.host_visibility_manager = HostVisibilityManager(
                 self.term, self.layout_manager, hosts
             )
+            
+            # Initialize build summary collector
+            self.build_summary_collector = BuildSummaryCollector()
+            
+            # Use command-line parameters if provided, otherwise use config defaults
+            auto_exit_delay = auto_exit_delay if auto_exit_delay is not None else Config.AUTO_EXIT_DELAY_SECONDS
+            auto_exit_enabled = auto_exit_enabled if auto_exit_enabled is not None else Config.AUTO_EXIT_ENABLED
+            
+            self.auto_exit_manager = AutoExitManager(
+                exit_delay_seconds=auto_exit_delay,
+                enabled=auto_exit_enabled
+            )
+            
+            # Set up auto-exit callback
+            self.auto_exit_manager.set_exit_callback(self._trigger_exit)
+            
+            # Set up build start callback for timing tracking
+            self.ssh_manager.set_build_start_callback(self._on_build_start)
+            
+            # Initialize renderer with auto-exit manager
+            self.renderer = Renderer(self.term, self.statistics_manager, self.auto_exit_manager)
 
             self.host_sections = {}
             self.running = True
@@ -99,6 +122,16 @@ class BuildTUI:
             print("Full traceback:")
             traceback.print_exc()
             raise
+    
+    def _trigger_exit(self) -> None:
+        """Trigger application exit (called by auto-exit manager)."""
+        logging.info("Auto-exit triggered, setting running to False")
+        self.running = False
+    
+    def _on_build_start(self, host_name: str) -> None:
+        """Called when a build starts on a specific host."""
+        logging.debug(f"Build started for {host_name}, starting timing tracking")
+        self.build_summary_collector.start_build_tracking(host_name)
 
     def setup_layout(self) -> None:
         """Calculate and create host sections using LayoutManager."""
@@ -284,6 +317,9 @@ class BuildTUI:
                         # Update host visibility - hide completed hosts and show new ones
                         self._update_host_visibility()
 
+                        # Check for build completion and trigger auto-exit if needed
+                        self._check_build_completion()
+
                         # Render UI
                         self.render()
 
@@ -314,6 +350,14 @@ class BuildTUI:
         finally:
             # Clean up
             try:
+                # Print build summary before cleanup
+                if hasattr(self, 'build_summary_collector'):
+                    self.build_summary_collector.print_summary()
+                
+                # Clean up auto-exit manager
+                if hasattr(self, 'auto_exit_manager'):
+                    self.auto_exit_manager.cleanup()
+                
                 print(self.term.normal_cursor())
                 print(self.term.exit_fullscreen())
             except Exception as e:
@@ -331,6 +375,57 @@ class BuildTUI:
 
         # Update our host_sections reference to match the manager's state
         self.host_sections = self.host_visibility_manager.get_host_sections()
+    
+    def _check_build_completion(self) -> None:
+        """Check for build completion and trigger auto-exit if needed."""
+        # Check if any new builds have completed
+        current_results = self.ssh_manager.get_results()
+        
+        for host_name, result in current_results.items():
+            # Check if this is a newly completed build
+            if result["status"] in ["SUCCESS", "FAILED"]:
+                # Check if we already have a result for this host
+                existing_result = self.build_summary_collector.get_build_result(host_name)
+                if existing_result is None:
+                    # This is a new completion, record it
+                    success = result["status"] == "SUCCESS"
+                    error_message = None
+                    
+                    # Try to extract error message from output
+                    if not success and result.get("output"):
+                        # Look for error messages in the output
+                        output_lines = result["output"]
+                        for line in reversed(output_lines):  # Start from end
+                            if line.startswith("✗") or "error" in line.lower() or "failed" in line.lower():
+                                error_message = line.strip()
+                                break
+                    
+                    # Calculate total time before stopping tracking
+                    total_time = None
+                    start_time = self.build_summary_collector.host_start_times.get(host_name)
+                    if start_time is not None:
+                        total_time = time.time() - start_time
+                    
+                    # Record the build result with calculated total time
+                    self.build_summary_collector.record_build_result(
+                        host_name=host_name,
+                        success=success,
+                        error_message=error_message,
+                        total_time=total_time
+                    )
+                    
+                    # Stop tracking build time for this host
+                    self.build_summary_collector.stop_build_tracking(host_name)
+                    
+                    logging.debug(f"Build completed for {host_name}: success={success}, total_time={total_time:.2f}s")
+        
+        # Check if ALL builds are now complete and trigger auto-exit
+        if self.ssh_manager.is_build_complete():
+            # Only trigger auto-exit if we haven't already
+            if not self.auto_exit_manager.is_countdown_active():
+                logging.info("All builds completed, starting auto-exit countdown")
+                # Trigger auto-exit for the overall completion
+                self.auto_exit_manager.on_build_completed("all_builds", True)
 
 
 def read_hosts_from_file(filename: str) -> List[str]:
