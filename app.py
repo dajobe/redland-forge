@@ -24,6 +24,7 @@ from parallel_ssh_manager import ParallelSSHManager
 from color_manager import ColorManager, set_color_mode, supports_color, colorize
 from auto_exit_manager import AutoExitManager
 from build_summary_collector import BuildSummaryCollector
+from progress_display_manager import ProgressDisplayManager
 
 
 class BuildTUI:
@@ -78,7 +79,11 @@ class BuildTUI:
 
             # Initialize managers
             self.statistics_manager = StatisticsManager(hosts)
-            self.layout_manager = LayoutManager(self.term, hosts)
+            
+            # Create step change callback for progress tracking (will be updated after progress_display_manager is initialized)
+            self.step_change_callback = None
+            
+            self.layout_manager = LayoutManager(self.term, hosts, None)  # Will be set after progress_display_manager is initialized
             self.input_handler = InputHandler(self.term)
             self.host_visibility_manager = HostVisibilityManager(
                 self.term, self.layout_manager, hosts
@@ -121,6 +126,44 @@ class BuildTUI:
             else:
                 logging.debug("Timing cache disabled")
             
+            # Initialize progress display manager if timing cache is available
+            self.progress_display_manager = None
+            if self.timing_cache and (progress_enabled is None or progress_enabled):
+                try:
+                    self.progress_display_manager = ProgressDisplayManager(self.timing_cache)
+                    logging.debug("Progress display manager initialized")
+                except Exception as e:
+                    logging.warning(f"Failed to initialize ProgressDisplayManager: {e}")
+                    self.progress_display_manager = None
+            else:
+                logging.debug("Progress display manager disabled")
+            
+            # Now that progress_display_manager is initialized, set up the step change callback
+            self.step_change_callback = self._create_step_change_callback()
+            logging.debug(f"Created step change callback: {self.step_change_callback is not None}")
+            
+            # Update the layout manager with the step change callback
+            self.layout_manager.step_change_callback = self.step_change_callback
+            logging.debug(f"Updated layout manager step change callback: {self.layout_manager.step_change_callback is not None}")
+            
+            # Update the host visibility manager with the step change callback
+            self.host_visibility_manager.step_change_callback = self.step_change_callback
+            logging.debug(f"Updated host visibility manager step change callback: {self.host_visibility_manager.step_change_callback is not None}")
+            
+            # Update existing host sections to use the step change callback
+            for host_section in self.layout_manager.host_sections.values():
+                host_section.step_change_callback = self.step_change_callback
+                logging.debug(f"Updated host section {host_section.hostname} step change callback: {host_section.step_change_callback is not None}")
+            
+            # Initialize progress info for all host sections after they're created
+            if self.progress_display_manager and hasattr(self, 'layout_manager'):
+                for host_name in hosts:
+                    if host_name in self.layout_manager.host_sections:
+                        host_section = self.layout_manager.host_sections[host_name]
+                        if hasattr(host_section, 'progress_info'):
+                            host_section.progress_info = self.progress_display_manager.get_host_progress_info(host_name)
+                            logging.debug(f"Initialized progress info for {host_name}: {host_section.progress_info}")
+            
             # Initialize renderer with auto-exit manager
             self.renderer = Renderer(self.term, self.statistics_manager, self.auto_exit_manager)
 
@@ -145,6 +188,35 @@ class BuildTUI:
             traceback.print_exc()
             raise
     
+    def _create_step_change_callback(self):
+        """Create the step change callback function."""
+        logging.debug("Creating step change callback function")
+        
+        def step_change_callback(host_name: str, step: str) -> None:
+            """Callback for when build steps change on a host."""
+            logging.debug(f"Step change callback called for {host_name}: {step}")
+            
+            if self.progress_display_manager:
+                self.progress_display_manager.update_build_step(host_name, step)
+                logging.debug(f"Updated build step for {host_name}: {step}")
+            else:
+                logging.debug(f"No progress display manager available for {host_name}")
+            
+            # Also update the host section's progress info
+            if hasattr(self, 'host_visibility_manager') and self.host_visibility_manager:
+                if host_name in self.host_visibility_manager.host_sections:
+                    host_section = self.host_visibility_manager.host_sections[host_name]
+                    if hasattr(host_section, 'progress_info'):
+                        host_section.progress_info = self.progress_display_manager.get_host_progress_info(host_name) if self.progress_display_manager else {}
+                        logging.debug(f"Updated progress info for {host_name}: {host_section.progress_info}")
+                else:
+                    logging.debug(f"Host {host_name} not found in host visibility manager host sections")
+            else:
+                logging.debug("No host visibility manager available")
+        
+        logging.debug(f"Step change callback function created: {step_change_callback is not None}")
+        return step_change_callback
+
     def _trigger_exit(self) -> None:
         """Trigger application exit (called by auto-exit manager)."""
         logging.info("Auto-exit triggered, setting running to False")
@@ -154,6 +226,19 @@ class BuildTUI:
         """Called when a build starts on a specific host."""
         logging.debug(f"Build started for {host_name}, starting timing tracking")
         self.build_summary_collector.start_build_tracking(host_name)
+        
+        # Start progress tracking if enabled
+        if self.progress_display_manager:
+            self.progress_display_manager.start_build_tracking(host_name)
+            logging.debug(f"Started progress tracking for {host_name}")
+            
+            # Update the host section's progress info
+            if hasattr(self, 'layout_manager') and self.layout_manager:
+                if host_name in self.layout_manager.host_sections:
+                    host_section = self.layout_manager.host_sections[host_name]
+                    if hasattr(host_section, 'progress_info'):
+                        host_section.progress_info = self.progress_display_manager.get_host_progress_info(host_name)
+                        logging.debug(f"Updated initial progress info for {host_name}: {host_section.progress_info}")
     
     def _extract_build_timing(self, output_lines: List[str]) -> Dict[str, float]:
         """
@@ -379,6 +464,9 @@ class BuildTUI:
                         # Update host visibility - hide completed hosts and show new ones
                         self._update_host_visibility()
 
+                        # Continuously update progress info for all active builds
+                        self._update_progress_info()
+
                         # Check for build completion and trigger auto-exit if needed
                         self._check_build_completion()
 
@@ -419,6 +507,10 @@ class BuildTUI:
                 # Clean up auto-exit manager
                 if hasattr(self, 'auto_exit_manager'):
                     self.auto_exit_manager.cleanup()
+                
+                # Clean up progress display manager
+                if hasattr(self, 'progress_display_manager') and self.progress_display_manager:
+                    self.progress_display_manager.cleanup()
                 
                 print(self.term.normal_cursor())
                 print(self.term.exit_fullscreen())
@@ -497,6 +589,11 @@ class BuildTUI:
                     # Stop tracking build time for this host
                     self.build_summary_collector.stop_build_tracking(host_name)
                     
+                    # Complete progress tracking if enabled
+                    if self.progress_display_manager:
+                        self.progress_display_manager.complete_build_tracking(host_name)
+                        logging.debug(f"Completed progress tracking for {host_name}")
+                    
                     logging.debug(f"Build completed for {host_name}: success={success}, total_time={total_time:.2f}s")
         
         # Check if ALL builds are now complete and trigger auto-exit
@@ -506,6 +603,38 @@ class BuildTUI:
                 logging.info("All builds completed, starting auto-exit countdown")
                 # Trigger auto-exit for the overall completion
                 self.auto_exit_manager.on_build_completed("all_builds", True)
+
+    def _handle_step_change(self, host_name: str, step: str) -> None:
+        """
+        Handle step changes from host sections.
+        
+        Args:
+            host_name: Name of the host
+            step: New step name
+        """
+        if self.step_change_callback:
+            self.step_change_callback(host_name, step)
+        else:
+            logging.debug(f"Step change callback not available for {host_name} -> {step}")
+
+    def _update_progress_info(self) -> None:
+        """Continuously update progress info for all active builds."""
+        if not self.progress_display_manager:
+            return
+        
+        # Update progress info for all active builds
+        for host_name in self.host_visibility_manager.host_sections:
+            host_section = self.host_visibility_manager.host_sections[host_name]
+            
+            # Only update if this host is actively building
+            if host_name in self.ssh_manager.active_connections:
+                if hasattr(host_section, 'progress_info'):
+                    # Get current progress info
+                    current_progress = self.progress_display_manager.get_host_progress_info(host_name)
+                    if current_progress:
+                        # Update the host section's progress info
+                        host_section.progress_info = current_progress
+                        logging.debug(f"Updated continuous progress info for {host_name}: {current_progress}")
 
 
 def read_hosts_from_file(filename: str) -> List[str]:

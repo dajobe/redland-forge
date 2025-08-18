@@ -33,7 +33,9 @@ Hosts file format:
 """,
     )
     parser.add_argument(
-        "tarball", help="The Redland package tarball (e.g., redland-1.1.0.tar.gz)"
+        "tarball", 
+        nargs="?",
+        help="The Redland package tarball (e.g., redland-1.1.0.tar.gz)"
     )
     parser.add_argument(
         "hosts",
@@ -95,11 +97,17 @@ Hosts file format:
         action="store_true",
         help="Disable progress display",
     )
+    
+    parser.add_argument(
+        "--cleanup-demo-hosts",
+        action="store_true",
+        help="Clean up demo/test host data from timing cache and exit",
+    )
 
     args = parser.parse_args()
 
-    # Validate that we have either hosts or hosts-file
-    if not args.hosts and not args.hosts_file:
+    # Validate that we have either hosts or hosts-file (unless cleaning up demo hosts)
+    if not args.cleanup_demo_hosts and not args.hosts and not args.hosts_file:
         parser.error("Either hosts or --hosts-file must be specified")
 
     return args
@@ -111,6 +119,18 @@ def main() -> int:
         args = parse_arguments()
     except SystemExit:
         return 1
+
+    # Handle demo host cleanup if requested (before logging setup)
+    if args.cleanup_demo_hosts:
+        try:
+            from build_timing_cache import BuildTimingCache
+            cache = BuildTimingCache()
+            cache.clear_demo_hosts()
+            print("Demo host data cleaned up successfully")
+            return 0
+        except Exception as e:
+            print(f"Error cleaning up demo hosts: {e}")
+            return 1
 
     # Set up logging to debug.log by default
     logging.basicConfig(
@@ -149,7 +169,7 @@ def main() -> int:
     if not userhosts:
         logging.error("No valid hosts specified")
         return 1
-
+    
     # Create and run TUI
     try:
         print(
