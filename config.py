@@ -52,6 +52,11 @@ class Config:
     # Status update settings
     STATUS_UPDATE_INTERVAL_SECONDS = 0.1
 
+    # Auto-exit settings
+    AUTO_EXIT_DELAY_SECONDS = 300  # 5 minutes
+    AUTO_EXIT_ENABLED = True        # Can be disabled via config
+    AUTO_EXIT_SHOW_COUNTDOWN = True # Show countdown in UI
+
     # File transfer settings
     SFTP_CHUNK_SIZE = 8192
 
@@ -87,6 +92,9 @@ class Config:
             "TIMER_UPDATE_INTERVAL_SECONDS": cls.TIMER_UPDATE_INTERVAL_SECONDS,
             "HOST_VISIBILITY_TIMEOUT_SECONDS": cls.HOST_VISIBILITY_TIMEOUT_SECONDS,
             "HOST_VISIBILITY_TIMEOUT_WINDOW_SECONDS": cls.HOST_VISIBILITY_TIMEOUT_WINDOW_SECONDS,
+            "AUTO_EXIT_DELAY_SECONDS": cls.AUTO_EXIT_DELAY_SECONDS,
+            "AUTO_EXIT_ENABLED": cls.AUTO_EXIT_ENABLED,
+            "AUTO_EXIT_SHOW_COUNTDOWN": cls.AUTO_EXIT_SHOW_COUNTDOWN,
         }
 
     @classmethod
