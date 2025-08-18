@@ -112,7 +112,12 @@ Hosts file format:
     args = parser.parse_args()
 
     # Validate that we have either hosts or hosts-file (unless cleaning up demo hosts)
-    if not args.cleanup_demo_hosts and not args.remove_testing_hosts and not args.hosts and not args.hosts_file:
+    if (
+        not args.cleanup_demo_hosts
+        and not args.remove_testing_hosts
+        and not args.hosts
+        and not args.hosts_file
+    ):
         parser.error("Either hosts or --hosts-file must be specified")
 
     return args

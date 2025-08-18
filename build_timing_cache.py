@@ -56,79 +56,85 @@ class BuildTimingCache:
 
     def _normalize_hostname(self, hostname: str) -> str:
         """Normalize hostname to canonical form $USER@$HOST.
-        
+
         Args:
             hostname: Raw hostname (e.g., 'sid', 'dajobe@sid', '192.168.1.1')
-            
+
         Returns:
             Canonical hostname in form 'username@hostname'
         """
         # If already in canonical form, return as-is
-        if '@' in hostname:
+        if "@" in hostname:
             return hostname
-        
+
         # Get current username
-        username = os.getenv('USER', os.getenv('USERNAME', 'unknown'))
-        
+        username = os.getenv("USER", os.getenv("USERNAME", "unknown"))
+
         # Handle IP addresses and special cases
-        if hostname in ['localhost', '127.0.0.1', '::1']:
+        if hostname in ["localhost", "127.0.0.1", "::1"]:
             return f"{username}@localhost"
-        
+
         # For regular hostnames, just prepend username
         return f"{username}@{hostname}"
-    
+
     def _get_cache_key(self, hostname: str) -> str:
         """Get the normalized cache key for a hostname.
-        
+
         Args:
             hostname: Raw hostname
-            
+
         Returns:
             Normalized cache key
         """
         return self._normalize_hostname(hostname)
-    
+
     def _migrate_old_keys(self) -> None:
         """Migrate old unnormalized cache keys to canonical form."""
-        if not self.cache_data.get('hosts'):
+        if not self.cache_data.get("hosts"):
             return
-            
+
         migrated = []
         old_keys = []
-        
-        for old_key in list(self.cache_data['hosts'].keys()):
+
+        for old_key in list(self.cache_data["hosts"].keys()):
             new_key = self._normalize_hostname(old_key)
-            
+
             if old_key != new_key:
                 # Move data to new key
-                if new_key in self.cache_data['hosts']:
+                if new_key in self.cache_data["hosts"]:
                     # Merge data if new key already exists
-                    old_data = self.cache_data['hosts'][old_key]
-                    new_data = self.cache_data['hosts'][new_key]
-                    
+                    old_data = self.cache_data["hosts"][old_key]
+                    new_data = self.cache_data["hosts"][new_key]
+
                     # Merge build records
-                    if 'builds' in old_data and 'builds' in new_data:
-                        new_data['builds'].extend(old_data['builds'])
-                    
+                    if "builds" in old_data and "builds" in new_data:
+                        new_data["builds"].extend(old_data["builds"])
+
                     # Update statistics
-                    if 'total_builds' in old_data and 'total_builds' in new_data:
-                        new_data['total_builds'] += old_data['total_builds']
-                    
+                    if "total_builds" in old_data and "total_builds" in new_data:
+                        new_data["total_builds"] += old_data["total_builds"]
+
                     # Use most recent last_updated
-                    if 'last_updated' in old_data and 'last_updated' in new_data:
-                        new_data['last_updated'] = max(old_data['last_updated'], new_data['last_updated'])
-                    
-                    logging.info(f"Merged data from '{old_key}' into existing '{new_key}'")
+                    if "last_updated" in old_data and "last_updated" in new_data:
+                        new_data["last_updated"] = max(
+                            old_data["last_updated"], new_data["last_updated"]
+                        )
+
+                    logging.info(
+                        f"Merged data from '{old_key}' into existing '{new_key}'"
+                    )
                 else:
                     # Move data to new key
-                    self.cache_data['hosts'][new_key] = self.cache_data['hosts'][old_key]
+                    self.cache_data["hosts"][new_key] = self.cache_data["hosts"][
+                        old_key
+                    ]
                     logging.info(f"Migrated '{old_key}' -> '{new_key}'")
-                
+
                 # Remove old key
-                del self.cache_data['hosts'][old_key]
+                del self.cache_data["hosts"][old_key]
                 migrated.append((old_key, new_key))
                 old_keys.append(old_key)
-        
+
         if migrated:
             logging.info(f"Migrated {len(migrated)} cache keys: {migrated}")
             self._save_cache()
