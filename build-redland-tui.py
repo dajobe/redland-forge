@@ -61,6 +61,17 @@ Hosts file format:
         action="store_true",
         help="Enable debug logging to debug.log file",
     )
+    parser.add_argument(
+        "--auto-exit-delay",
+        type=int,
+        default=300,
+        help="Auto-exit delay in seconds after last build completes (default: 300 = 5 minutes)",
+    )
+    parser.add_argument(
+        "--no-auto-exit",
+        action="store_true",
+        help="Disable auto-exit functionality",
+    )
 
     args = parser.parse_args()
 
@@ -122,7 +133,18 @@ def main() -> int:
             f"Starting TUI with {len(userhosts)} hosts: {userhosts[:3]}{'...' if len(userhosts) > 3 else ''}"
         )
         logging.debug("About to create BuildTUI instance")
-        tui = BuildTUI(userhosts, args.tarball, args.max_concurrent)
+        
+        # Prepare auto-exit options
+        auto_exit_delay = None if args.no_auto_exit else args.auto_exit_delay
+        auto_exit_enabled = not args.no_auto_exit
+        
+        tui = BuildTUI(
+            userhosts, 
+            args.tarball, 
+            args.max_concurrent,
+            auto_exit_delay=auto_exit_delay,
+            auto_exit_enabled=auto_exit_enabled
+        )
         logging.debug("BuildTUI instance created successfully, about to call run()")
         tui.run()
         logging.debug("BuildTUI.run() completed successfully")
