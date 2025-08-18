@@ -414,8 +414,448 @@ This order ensures that:
 - Proper cleanup of resources
 - Graceful handling of edge cases
 
+## New Features Specification
+
+### 14. Auto-Exit After Build Completion
+
+#### Overview
+
+The application will automatically exit 5 minutes after the last build finishes, providing a hands-free experience for automated build monitoring.
+
+#### Implementation Details
+
+##### Auto-Exit Timer Management
+
+```python
+class AutoExitManager:
+    """Manages automatic exit after build completion"""
+    
+    def __init__(self, exit_delay_seconds=300):  # 5 minutes default
+        self.exit_delay_seconds = exit_delay_seconds
+        self.last_build_completion_time = None
+        self.exit_timer = None
+        self.is_exiting = False
+    
+    def on_build_completed(self, host_name, success):
+        """Called when any build completes (success or failure)"""
+        self.last_build_completion_time = time.time()
+        self._schedule_exit()
+    
+    def _schedule_exit(self):
+        """Schedule exit after configured delay"""
+        if self.exit_timer:
+            self.exit_timer.cancel()
+        
+        self.exit_timer = threading.Timer(
+            self.exit_delay_seconds, 
+            self._perform_exit
+        )
+        self.exit_timer.start()
+    
+    def _perform_exit(self):
+        """Perform the actual exit"""
+        self.is_exiting = True
+        # Trigger exit sequence
+```
+
+##### Configuration Options
+
+```python
+# Auto-exit settings
+AUTO_EXIT_DELAY_SECONDS = 300  # 5 minutes
+AUTO_EXIT_ENABLED = True        # Can be disabled via config
+AUTO_EXIT_SHOW_COUNTDOWN = True # Show countdown in UI
+```
+
+##### User Experience
+
+- **Countdown display**: Show remaining time in header/footer
+- **Override capability**: User can still manually exit before auto-exit
+- **Configurable delay**: Adjustable via configuration file
+- **Visual indication**: Clear indication that auto-exit is active
+
+### 15. Build Summary Output
+
+#### Overview
+
+When the application terminates (either manually or via auto-exit), it will print a comprehensive summary of all build results to stdout, including success/failure states and total time taken.
+
+#### Implementation Details
+
+##### Summary Data Collection
+
+```python
+class BuildSummaryCollector:
+    """Collects build results and timing data"""
+    
+    def __init__(self):
+        self.build_start_time = time.time()
+        self.host_results = {}  # host_name -> BuildResult
+    
+    def record_build_result(self, host_name, success, error_message=None, 
+                          configure_time=None, make_time=None, total_time=None):
+        """Record the result of a build for a specific host"""
+        self.host_results[host_name] = BuildResult(
+            host_name=host_name,
+            success=success,
+            error_message=error_message,
+            configure_time=configure_time,
+            make_time=make_time,
+            total_time=total_time
+        )
+    
+    def generate_summary(self):
+        """Generate formatted summary for stdout output"""
+        total_time = time.time() - self.build_start_time
+        
+        summary = []
+        summary.append("=" * 60)
+        summary.append("BUILD SUMMARY")
+        summary.append("=" * 60)
+        summary.append(f"Total time: {self._format_duration(total_time)}")
+        summary.append("")
+        
+        # Group by status
+        successful = [r for r in self.host_results.values() if r.success]
+        failed = [r for r in self.host_results.values() if not r.success]
+        
+        if successful:
+            summary.append("SUCCESSFUL BUILDS:")
+            for result in successful:
+                summary.append(f"  ✓ {result.host_name} ({self._format_duration(result.total_time)})")
+            summary.append("")
+        
+        if failed:
+            summary.append("FAILED BUILDS:")
+            for result in failed:
+                summary.append(f"  ✗ {result.host_name} ({self._format_duration(result.total_time)})")
+                if result.error_message:
+                    summary.append(f"    Error: {result.error_message}")
+            summary.append("")
+        
+        summary.append(f"Overall: {len(successful)}/{len(self.host_results)} builds successful")
+        summary.append("=" * 60)
+        
+        return "\n".join(summary)
+```
+
+##### Summary Output Format
+
+```
+============================================================
+BUILD SUMMARY
+============================================================
+Total time: 12m 34s
+
+SUCCESSFUL BUILDS:
+  ✓ dajobe@berlin (3m 12s)
+  ✓ dajobe@fedora (4m 45s)
+  ✓ dajobe@stable (2m 18s)
+
+FAILED BUILDS:
+  ✗ dajobe@gentoo (1m 23s)
+    Error: Build failed during make step
+
+Overall: 3/4 builds successful
+============================================================
+```
+
+##### Integration Points
+
+- **Exit sequence**: Called during both manual and auto-exit
+- **Data collection**: Integrated with build monitoring system
+- **Error handling**: Graceful handling of missing or incomplete data
+
+### 16. Build Timing Cache System
+
+#### Overview
+
+The application will maintain a persistent cache of build timing data to provide progress estimates for ongoing builds, improving user experience with realistic time expectations.
+
+#### Implementation Details
+
+##### Cache File Structure
+
+```json
+{
+  "version": "1.0",
+  "cache_retention_days": 1,
+  "hosts": {
+    "dajobe@berlin": {
+      "last_updated": 1703123456,
+      "total_builds": 15,
+      "average_times": {
+        "configure": 45.2,
+        "make": 187.3,
+        "total": 232.5
+      },
+      "recent_builds": [
+        {
+          "timestamp": 1703123456,
+          "configure_time": 42.1,
+          "make_time": 185.2,
+          "total_time": 227.3,
+          "success": true
+        }
+      ]
+    }
+  }
+}
+```
+
+##### Cache Management Class
+
+```python
+class BuildTimingCache:
+    """Manages persistent build timing data"""
+    
+    def __init__(self, cache_file_path="~/.config/build-tui.json", 
+                 retention_days=1):
+        self.cache_file_path = os.path.expanduser(cache_file_path)
+        self.retention_days = retention_days
+        self.cache_data = self._load_cache()
+        self._cleanup_old_data()
+    
+    def _load_cache(self):
+        """Load cache from file, create if doesn't exist"""
+        try:
+            if os.path.exists(self.cache_file_path):
+                with open(self.cache_file_path, 'r') as f:
+                    data = json.load(f)
+                    # Validate version and structure
+                    if data.get('version') == '1.0':
+                        return data
+        except (json.JSONDecodeError, IOError) as e:
+            logger.warning(f"Failed to load cache: {e}")
+        
+        # Return default structure
+        return {
+            "version": "1.0",
+            "cache_retention_days": self.retention_days,
+            "hosts": {}
+        }
+    
+    def _save_cache(self):
+        """Save cache to file"""
+        try:
+            os.makedirs(os.path.dirname(self.cache_file_path), exist_ok=True)
+            with open(self.cache_file_path, 'w') as f:
+                json.dump(self.cache_data, f, indent=2)
+        except IOError as e:
+            logger.error(f"Failed to save cache: {e}")
+    
+    def _cleanup_old_data(self):
+        """Remove data older than retention period"""
+        cutoff_time = time.time() - (self.retention_days * 24 * 3600)
+        
+        for host_name in list(self.cache_data['hosts'].keys()):
+            host_data = self.cache_data['hosts'][host_name]
+            if host_data['last_updated'] < cutoff_time:
+                del self.cache_data['hosts'][host_name]
+        
+        self._save_cache()
+    
+    def record_build_timing(self, host_name, configure_time, make_time, 
+                          total_time, success):
+        """Record timing data for a completed build"""
+        if host_name not in self.cache_data['hosts']:
+            self.cache_data['hosts'][host_name] = {
+                "last_updated": time.time(),
+                "total_builds": 0,
+                "average_times": {"configure": 0, "make": 0, "total": 0},
+                "recent_builds": []
+            }
+        
+        host_data = self.cache_data['hosts'][host_name]
+        host_data['last_updated'] = time.time()
+        host_data['total_builds'] += 1
+        
+        # Update averages
+        current_avg = host_data['average_times']
+        total_builds = host_data['total_builds']
+        
+        current_avg['configure'] = (
+            (current_avg['configure'] * (total_builds - 1) + configure_time) / total_builds
+        )
+        current_avg['make'] = (
+            (current_avg['make'] * (total_builds - 1) + make_time) / total_builds
+        )
+        current_avg['total'] = (
+            (current_avg['total'] * (total_builds - 1) + total_time) / total_builds
+        )
+        
+        # Add to recent builds (keep last 10)
+        recent_build = {
+            "timestamp": time.time(),
+            "configure_time": configure_time,
+            "make_time": make_time,
+            "total_time": total_time,
+            "success": success
+        }
+        
+        host_data['recent_builds'].append(recent_build)
+        if len(host_data['recent_builds']) > 10:
+            host_data['recent_builds'] = host_data['recent_builds'][-10:]
+        
+        self._save_cache()
+    
+    def get_progress_estimate(self, host_name, current_step, elapsed_time):
+        """Get progress estimate for ongoing build"""
+        if host_name not in self.cache_data['hosts']:
+            return None
+        
+        host_data = self.cache_data['hosts'][host_name]
+        avg_times = host_data['average_times']
+        
+        if current_step == "configure":
+            if avg_times['configure'] > 0:
+                progress = min(100, (elapsed_time / avg_times['configure']) * 100)
+                return f"{progress:.1f}%"
+        elif current_step == "make":
+            if avg_times['total'] > 0:
+                # Include configure time in total estimate
+                total_elapsed = elapsed_time + avg_times['configure']
+                progress = min(100, (total_elapsed / avg_times['total']) * 100)
+                return f"{progress:.1f}%"
+        
+        return None
+```
+
+##### Progress Display Integration
+
+```python
+class ProgressDisplayManager:
+    """Manages progress display for ongoing builds"""
+    
+    def __init__(self, timing_cache):
+        self.timing_cache = timing_cache
+        self.build_start_times = {}  # host_name -> start_time
+    
+    def start_build_tracking(self, host_name):
+        """Start tracking build time for a host"""
+        self.build_start_times[host_name] = time.time()
+    
+    def update_progress_display(self, host_name, current_step):
+        """Update progress display for a host"""
+        if host_name not in self.build_start_times:
+            return None
+        
+        elapsed_time = time.time() - self.build_start_times[host_name]
+        progress = self.timing_cache.get_progress_estimate(
+            host_name, current_step, elapsed_time
+        )
+        
+        if progress:
+            return f"Progress: {progress}"
+        return None
+    
+    def complete_build_tracking(self, host_name, configure_time, make_time, 
+                              total_time, success):
+        """Complete tracking and record timing data"""
+        if host_name in self.build_start_times:
+            del self.build_start_times[host_name]
+        
+        self.timing_cache.record_build_timing(
+            host_name, configure_time, make_time, total_time, success
+        )
+```
+
+##### Configuration Options
+
+```python
+# Timing cache settings
+TIMING_CACHE_FILE = "~/.config/build-tui.json"
+TIMING_CACHE_RETENTION_DAYS = 1
+TIMING_CACHE_ENABLED = True
+TIMING_CACHE_SHOW_PROGRESS = True
+
+# Command line options
+# --cache-file PATH          # Custom cache file location
+# --cache-retention DAYS     # Custom retention period
+# --no-cache                # Disable timing cache
+# --no-progress             # Disable progress display
+```
+
+##### User Experience
+
+- **Progress indicators**: Show percentage completion based on historical data
+- **Time estimates**: Display expected completion times
+- **Fallback behavior**: Gracefully handle missing historical data
+- **Configuration**: Easy customization of cache behavior
+
+### 17. Integration with Existing Architecture
+
+#### New Class Relationships
+
+```
+Application
+├── AutoExitManager          # Manages auto-exit timing
+├── BuildSummaryCollector    # Collects build results
+├── BuildTimingCache        # Manages timing data
+├── ProgressDisplayManager   # Shows progress estimates
+└── Existing classes...
+```
+
+#### Data Flow
+
+1. **Build start**: `ProgressDisplayManager.start_build_tracking()`
+2. **Build progress**: `ProgressDisplayManager.update_progress_display()`
+3. **Build completion**:
+   - `BuildSummaryCollector.record_build_result()`
+   - `ProgressDisplayManager.complete_build_tracking()`
+   - `AutoExitManager.on_build_completed()`
+4. **Application exit**: `BuildSummaryCollector.generate_summary()`
+
+#### Configuration Integration
+
+- **Environment variables**: Override default settings
+- **Command line options**: Runtime configuration
+- **Config file**: Persistent user preferences
+- **Fallback values**: Sensible defaults for all options
+
+### 18. Implementation Priority for New Features
+
+#### Phase 5: Auto-Exit and Summary (Week 9)
+
+##### 5.1 Auto-Exit System
+
+- Implement `AutoExitManager` class
+- Integrate with build completion events
+- Add countdown display in UI
+- **Why first**: Provides hands-free operation capability
+
+##### 5.2 Build Summary System
+
+- Implement `BuildSummaryCollector` class
+- Integrate with exit sequence
+- Add stdout output formatting
+- **Why second**: Essential for understanding build results
+
+#### Phase 6: Timing Cache and Progress (Week 10)
+
+##### 6.1 Timing Cache Foundation
+
+- Implement `BuildTimingCache` class
+- Add cache file management
+- Implement data cleanup and retention
+- **Why first**: Foundation for progress estimates
+
+##### 6.2 Progress Display System
+
+- Implement `ProgressDisplayManager` class
+- Integrate with build monitoring
+- Add progress percentage display
+- **Why second**: Provides user value through progress estimates
+
+#### Success Criteria for New Features
+
+- **Phase 5**: Auto-exit works reliably, summary output is comprehensive
+- **Phase 6**: Progress estimates are accurate, cache management is robust
+
 ## Conclusion
 
 This enhanced navigation system will transform the Build TUI from a passive monitoring tool into an interactive build exploration platform. The design prioritizes usability, performance, and maintainability while building upon the existing solid architecture.
 
 The implementation will be incremental, allowing for testing and refinement at each phase while maintaining backward compatibility with existing functionality.
+
+The new features (auto-exit, build summary, and timing cache) provide additional value for automated build monitoring and user experience improvements, making the tool more suitable for both interactive and hands-free operation scenarios.
