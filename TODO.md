@@ -504,3 +504,76 @@ The implementation will be incremental, allowing for testing and refinement at e
 Based on my code analysis, the foundation work (Phases 1-2) should be prioritized as it addresses technical debt and provides the most immediate user value with the lowest risk. The advanced features can be implemented incrementally once the foundation is solid.
 
 The proposed navigation features have significant implications for the current codebase architecture. The existing code is well-structured but will require careful refactoring to integrate the new navigation capabilities while maintaining the current functionality and addressing the file size concerns identified in the initial assessment.
+
+## Future Enhancement: Build Script Integration
+
+### Current Architecture Decision
+
+After careful analysis, the decision has been made to **maintain separation** between `build-tui` and `../build-redland.py` rather than integrating them into a single ownership model.
+
+#### **Why Keep Separation**
+
+1. **Architectural Purity**: Maintains clear separation of concerns between build tool and monitoring tool
+2. **Reusability**: `build-redland.py` remains independent and usable outside of TUI context
+3. **Maintainability**: Each component can evolve independently without affecting the other
+4. **Testing**: Components can be tested in isolation
+5. **Risk Management**: Changes to one component don't cascade to the other
+
+#### **Current Integration Point**
+
+```python
+# From app.py - current well-architected integration
+script_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "build-redland.py")
+)
+```
+
+The build script is **used** by build-tui (scp-ed to remote hosts) but not **owned** by it, maintaining proper separation.
+
+### Future Enhancement Opportunities
+
+#### **Interface Contract Improvements**
+
+Instead of full integration, focus on enhancing the interface between components:
+
+1. **Structured Output Format**
+   - Define clear output format standards for build script
+   - Add optional TUI-friendly output modes
+   - Create parsing utilities in the TUI
+
+2. **Optional TUI Mode**
+   - Build script could support `--tui-mode` flag
+   - Enable structured progress reporting
+   - Add clear step boundary markers
+   - Provide detailed timing data
+
+3. **Configuration-Driven Cooperation**
+   - Build script reads TUI configuration if present
+   - Falls back to normal behavior if not
+   - No hard coupling required
+
+#### **TUI Enhancement Areas**
+
+1. **Improved Parsing**
+   - Better step detection from existing output
+   - More robust error parsing and categorization
+   - Enhanced timing extraction and analysis
+
+2. **Configuration Integration**
+   - TUI could configure build script behavior
+   - Build script could read TUI preferences
+   - Maintain independence while improving coordination
+
+### Implementation Priority
+
+This enhancement is **low priority** and should be considered only after:
+- Core navigation features are implemented
+- Current code refactoring is complete
+- User feedback indicates interface improvements are needed
+
+### Success Criteria
+
+- **Maintain Independence**: Both components remain independently usable
+- **Improved Coordination**: Better data flow between build script and TUI
+- **Enhanced User Experience**: More reliable progress tracking and error reporting
+- **No Performance Impact**: Integration doesn't slow down either component
