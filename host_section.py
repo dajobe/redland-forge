@@ -353,7 +353,6 @@ class HostSection:
         self._draw_borders(term, box_width)
         self._render_header(term, box_width)
         self._render_output_lines(term, box_width)
-        self._render_footer(term, box_width)
 
     def _should_render(self, term: Terminal) -> bool:
         """
@@ -476,7 +475,7 @@ class HostSection:
             box_width: Width of the box
         """
         output_start = self.start_y + 3
-        max_lines = self.height - 4  # Leave room for header and bottom border
+        max_lines = self.height - 3  # Leave room for header and bottom border
         available_width = box_width - Config.BORDER_PADDING
 
         # Get recent lines to display
@@ -486,7 +485,7 @@ class HostSection:
         # Render each line
         for i, line in enumerate(display_lines):
             if (
-                output_start + i >= self.start_y + self.height - 2
+                output_start + i >= self.start_y + self.height - 1
             ):  # Leave room for bottom border
                 break
 
@@ -581,36 +580,11 @@ class HostSection:
         """
         for i in range(lines_rendered, max_lines):
             if (
-                output_start + i >= self.start_y + self.height - 2
+                output_start + i >= self.start_y + self.height - 1
             ):  # Leave room for bottom border
                 break
             BorderRenderer.draw_empty_line(term, output_start + i, box_width)
 
-    def _render_footer(self, term: Terminal, box_width: int) -> None:
-        """
-        Render the footer line with status information.
-
-        Args:
-            term: Terminal object
-            box_width: Width of the box
-        """
-        status_line = f"Lines: {self.total_lines_processed} | Step: {self.current_step or 'Initializing'}"
-
-        # Format footer with proper coloring and centering
-        footer_content = (
-            ColorManager.get_ansi_color("BRIGHT_CYAN")
-            + status_line
-            + ColorManager.get_ansi_color("RESET")
-        )
-        available_width = box_width - Config.BORDER_PADDING
-
-        # Center the footer content
-        footer_content = TextFormatter.center_text(footer_content, available_width)
-
-        # Draw the footer line
-        BorderRenderer.draw_content_line(
-            term, self.start_y + self.height - 2, footer_content, box_width
-        )
 
     def get_display_hostname(self) -> str:
         """
