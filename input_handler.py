@@ -72,25 +72,26 @@ class InputHandler:
             on_end: Callback function to call when end key is pressed
             timeout: Timeout for input reading in seconds
         """
-        with self.term.cbreak():
-            key = self.term.inkey(timeout=timeout)
-            if key:
-                self._handle_key(
-                    key,
-                    on_quit=on_quit,
-                    on_navigate_up=on_navigate_up,
-                    on_navigate_down=on_navigate_down,
-                    on_show_help=on_show_help,
-                    on_navigate_left=on_navigate_left,
-                    on_navigate_right=on_navigate_right,
-                    on_toggle_fullscreen=on_toggle_fullscreen,
-                    on_escape=on_escape,
-                    on_toggle_menu=on_toggle_menu,
-                    on_page_up=on_page_up,
-                    on_page_down=on_page_down,
-                    on_home=on_home,
-                    on_end=on_end,
-                )
+        # Use non-blocking input to avoid interfering with the main loop
+        # The terminal is already in cbreak mode from the app's main loop
+        key = self.term.inkey(timeout=0.0)  # Always non-blocking
+        if key:
+            self._handle_key(
+                key,
+                on_quit=on_quit,
+                on_navigate_up=on_navigate_up,
+                on_navigate_down=on_navigate_down,
+                on_show_help=on_show_help,
+                on_navigate_left=on_navigate_left,
+                on_navigate_right=on_navigate_right,
+                on_toggle_fullscreen=on_toggle_fullscreen,
+                on_escape=on_escape,
+                on_toggle_menu=on_toggle_menu,
+                on_page_up=on_page_up,
+                on_page_down=on_page_down,
+                on_home=on_home,
+                on_end=on_end,
+            )
 
     def _handle_key(
         self,

@@ -569,8 +569,8 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
             timeout=0.5,
         )
 
-        # Verify timeout was passed to inkey
-        mock_inkey.assert_called_with(timeout=0.5)
+        # Verify timeout was passed to inkey (now always 0.0 for non-blocking)
+        mock_inkey.assert_called_with(timeout=0.0)
 
     def test_handle_input_left_key(self):
         """Test input handling for left arrow key."""
