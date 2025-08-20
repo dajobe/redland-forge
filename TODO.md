@@ -101,7 +101,7 @@ class ScrollState:
 
 #### Menu Design
 
-```
+```terminal
 ┌─ Host Selection ──────────────────────────────────────┐
 │ [1] dajobe@berlin     [SUCCESS] Completed 2m ago      │
 │ [2] dajobe@fedora     [BUILDING] Configure step       │
@@ -134,10 +134,10 @@ class ScrollState:
 
 #### Minimized Display
 
-```
+```terminal
 ┌─ Completed Builds ────────────────────────────────────┐
 │ dajobe@berlin [SUCCESS] ✓ dajobe@fedora [BUILDING] 🔨 │
-│ dajobe@gentoo [FAILED] ✗ dajobe@stable [SUCCESS] ✓   │
+│ dajobe@gentoo [FAILED]  ✗ dajobe@stable [SUCCESS] ✓   │
 └───────────────────────────────────────────────────────┘
 ```
 
