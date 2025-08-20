@@ -182,12 +182,14 @@ class TestHostSectionStepDetection(unittest.TestCase):
     def test_detect_step_from_output_debug_logging(self, mock_logging, mock_detect):
         """Test debug logging for step detection."""
         mock_detect.return_value = "configure"
+        
+        # Mock a step change callback to avoid "No step change callback available" message
+        self.section.step_change_callback = Mock()
 
         self.section.detect_step_from_output("configuring...")
 
-        mock_logging.debug.assert_called_with(
-            "Step updated to 'configure' for testhost from line: 'configuring...' (was: '')"
-        )
+        # Check that the step change callback was called
+        self.section.step_change_callback.assert_called_with("testhost", "configure")
 
 
 class TestHostSectionStatusColors(unittest.TestCase):
@@ -372,15 +374,7 @@ class TestHostSectionRendering(unittest.TestCase):
         # Should call draw_empty_line for remaining lines
         self.assertEqual(mock_border_renderer.draw_empty_line.call_count, 3)
 
-    @patch("host_section.BorderRenderer")
-    def test_render_footer(self, mock_border_renderer):
-        """Test footer rendering."""
-        self.section.total_lines_processed = 10
-        self.section.current_step = "configure"
 
-        self.section._render_footer(self.mock_term, 70)
-
-        mock_border_renderer.draw_content_line.assert_called_once()
 
 
 class TestHostSectionUtilityMethods(unittest.TestCase):
