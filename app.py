@@ -504,6 +504,15 @@ class BuildTUI:
             on_navigate_up=self._on_navigate_up,
             on_navigate_down=self._on_navigate_down,
             on_show_help=self._on_show_help,
+            on_navigate_left=self._on_navigate_left,
+            on_navigate_right=self._on_navigate_right,
+            on_toggle_fullscreen=self._on_toggle_fullscreen,
+            on_escape=self._on_escape,
+            on_toggle_menu=self._on_toggle_menu,
+            on_page_up=self._on_page_up,
+            on_page_down=self._on_page_down,
+            on_home=self._on_home,
+            on_end=self._on_end,
         )
 
     def _on_quit(self) -> None:
@@ -521,6 +530,51 @@ class BuildTUI:
     def _on_show_help(self) -> None:
         """Handle help request."""
         self.show_help()
+
+    def _on_navigate_left(self) -> None:
+        """Handle left navigation between all hosts."""
+        # Navigate to previous host (including completed ones)
+        self.focused_host = (self.focused_host - 1) % len(self.hosts)
+
+    def _on_navigate_right(self) -> None:
+        """Handle right navigation between all hosts."""
+        # Navigate to next host (including completed ones)
+        self.focused_host = (self.focused_host + 1) % len(self.hosts)
+
+    def _on_toggle_fullscreen(self) -> None:
+        """Handle full-screen toggle for current host."""
+        # TODO: Implement full-screen mode
+        logging.debug(f"Full-screen toggle requested for host {self.focused_host}")
+
+    def _on_escape(self) -> None:
+        """Handle escape key press."""
+        # TODO: Implement escape functionality based on current mode
+        logging.debug("Escape key pressed")
+
+    def _on_toggle_menu(self) -> None:
+        """Handle menu toggle."""
+        # TODO: Implement menu system
+        logging.debug("Menu toggle requested")
+
+    def _on_page_up(self) -> None:
+        """Handle page up for log scrolling."""
+        # TODO: Implement log scrolling
+        logging.debug("Page up requested")
+
+    def _on_page_down(self) -> None:
+        """Handle page down for log scrolling."""
+        # TODO: Implement log scrolling
+        logging.debug("Page down requested")
+
+    def _on_home(self) -> None:
+        """Handle home key for log navigation."""
+        # TODO: Implement log navigation
+        logging.debug("Home key pressed")
+
+    def _on_end(self) -> None:
+        """Handle end key for log navigation."""
+        # TODO: Implement log navigation
+        logging.debug("End key pressed")
 
     def show_help(self) -> None:
         """Show help screen using InputHandler."""
