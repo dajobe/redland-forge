@@ -13,14 +13,16 @@ from typing import Dict, Optional
 class ProgressDisplayManager:
     """Manages progress display for ongoing builds"""
 
-    def __init__(self, timing_cache):
+    def __init__(self, timing_cache, cache_key_func=None):
         """
         Initialize the progress display manager.
 
         Args:
             timing_cache: BuildTimingCache instance for timing data
+            cache_key_func: Optional function to get cache key from host name
         """
         self.timing_cache = timing_cache
+        self.cache_key_func = cache_key_func or (lambda host: host)
         self.build_start_times = {}  # host_name -> start_time
         self.build_steps = {}  # host_name -> current_step
         logging.debug("ProgressDisplayManager initialized")
@@ -64,9 +66,10 @@ class ProgressDisplayManager:
         current_step = self.build_steps.get(host_name, "extract")
         elapsed_time = time.time() - self.build_start_times[host_name]
 
-        # Get progress estimate from timing cache
+        # Get progress estimate from timing cache using cache key
+        cache_key = self.cache_key_func(host_name)
         progress = self.timing_cache.get_progress_estimate(
-            host_name, current_step, elapsed_time
+            cache_key, current_step, elapsed_time
         )
 
         if progress:
@@ -90,8 +93,9 @@ class ProgressDisplayManager:
         current_step = self.build_steps.get(host_name, "extract")
         elapsed_time = time.time() - self.build_start_times[host_name]
 
-        # Get host statistics for time estimates
-        stats = self.timing_cache.get_host_statistics(host_name)
+        # Get host statistics for time estimates using cache key
+        cache_key = self.cache_key_func(host_name)
+        stats = self.timing_cache.get_host_statistics(cache_key)
         if not stats:
             return None
 
@@ -156,9 +160,10 @@ class ProgressDisplayManager:
         current_step = self.build_steps.get(host_name, "extract")
         elapsed_time = time.time() - self.build_start_times[host_name]
 
-        # Get progress percentage
+        # Get progress percentage using cache key
+        cache_key = self.cache_key_func(host_name)
         progress = self.timing_cache.get_progress_estimate(
-            host_name, current_step, elapsed_time
+            cache_key, current_step, elapsed_time
         )
 
         # Get time estimate

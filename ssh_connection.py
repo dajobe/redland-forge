@@ -148,6 +148,42 @@ class SSHConnection:
             logging.error(f"Failed to connect to {self.hostname}: {e}")
             raise SSHConnectionError(self.hostname, f"Connection failed: {str(e)}", e)
 
+    def get_effective_username(self) -> Optional[str]:
+        """
+        Get the effective username being used for the SSH connection.
+        
+        Returns:
+            Username string or None if not connected or unable to determine
+        """
+        if not self.client or not self.client.get_transport():
+            return None
+            
+        # If username was explicitly provided, return it
+        if self.username:
+            return self.username
+            
+        # Try to get username from the SSH transport
+        try:
+            transport = self.client.get_transport()
+            if transport:
+                return transport.get_username()
+        except:
+            pass
+            
+        return None
+
+    def get_effective_connection_string(self) -> str:
+        """
+        Get the effective connection string in user@hostname format.
+        
+        Returns:
+            Connection string in user@hostname format, or just hostname if username unavailable
+        """
+        effective_username = self.get_effective_username()
+        if effective_username:
+            return f"{effective_username}@{self.hostname}"
+        return self.hostname
+
     def execute_command(self, command: str) -> Tuple[int, str, str]:
         """
         Execute a command and return (exit_code, stdout, stderr).

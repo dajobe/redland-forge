@@ -5,6 +5,7 @@ Build Redland Text UI - Main Application
 Main application logic for the parallel build monitoring TUI.
 """
 
+import getpass
 import logging
 import os
 import re
@@ -46,6 +47,10 @@ class BuildTUI:
             logging.debug("Initializing BuildTUI")
             self.hosts = hosts
             self.tarball = tarball
+            
+            # Get current user for cache key construction
+            self.current_user = getpass.getuser()
+            logging.debug(f"Current user: {self.current_user}")
 
             # Validate tarball file exists before proceeding
             if not os.path.exists(tarball):
@@ -155,7 +160,7 @@ class BuildTUI:
             if self.timing_cache and (progress_enabled is None or progress_enabled):
                 try:
                     self.progress_display_manager = ProgressDisplayManager(
-                        self.timing_cache
+                        self.timing_cache, self._get_cache_key
                     )
                     logging.debug("Progress display manager initialized")
                 except Exception as e:
@@ -275,6 +280,22 @@ class BuildTUI:
             f"Step change callback function created: {step_change_callback is not None}"
         )
         return step_change_callback
+
+    def _get_cache_key(self, host_name: str) -> str:
+        """
+        Get the proper cache key for a host in user@hostname format.
+        
+        Args:
+            host_name: Host name as provided (may or may not include username)
+            
+        Returns:
+            Cache key in user@hostname format
+        """
+        # If host_name already contains @, return as-is
+        if "@" in host_name:
+            return host_name
+        # Otherwise, prepend current user
+        return f"{self.current_user}@{host_name}"
 
     def _trigger_exit(self) -> None:
         """Trigger application exit (called by auto-exit manager)."""
@@ -650,8 +671,10 @@ class BuildTUI:
                     # Record timing data in cache if available
                     if self.timing_cache and timing_data:
                         try:
+                            # Get proper cache key in user@hostname format
+                            cache_key = self._get_cache_key(host_name)
                             self.timing_cache.record_build_timing(
-                                host_name=host_name,
+                                host_name=cache_key,
                                 configure_time=timing_data.get("configure", 0.0),
                                 make_time=timing_data.get("make", 0.0),
                                 make_check_time=timing_data.get("make_check", 0.0),
@@ -659,7 +682,7 @@ class BuildTUI:
                                 success=success,
                             )
                             logging.debug(
-                                f"Recorded timing data for {host_name}: {timing_data}"
+                                f"Recorded timing data for {cache_key} (original: {host_name}): {timing_data}"
                             )
                         except Exception as e:
                             logging.warning(
