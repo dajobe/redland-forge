@@ -497,23 +497,7 @@ class BuildTUI:
                     print(f"  {line}")
             print()
 
-    def handle_input(self) -> None:
-        """Handle keyboard input using InputHandler."""
-        self.input_handler.handle_input(
-            on_quit=self._on_quit,
-            on_navigate_up=self._on_navigate_up,
-            on_navigate_down=self._on_navigate_down,
-            on_show_help=self._on_show_help,
-            on_navigate_left=self._on_navigate_left,
-            on_navigate_right=self._on_navigate_right,
-            on_toggle_fullscreen=self._on_toggle_fullscreen,
-            on_escape=self._on_escape,
-            on_toggle_menu=self._on_toggle_menu,
-            on_page_up=self._on_page_up,
-            on_page_down=self._on_page_down,
-            on_home=self._on_home,
-            on_end=self._on_end,
-        )
+
 
     def _on_quit(self) -> None:
         """Handle quit request."""
@@ -580,6 +564,25 @@ class BuildTUI:
         """Show help screen using InputHandler."""
         self.input_handler.show_help()
 
+    def _handle_input_key(self, key) -> None:
+        """Handle a single key press using the InputHandler."""
+        self.input_handler._handle_key(
+            key,
+            on_quit=self._on_quit,
+            on_navigate_up=self._on_navigate_up,
+            on_navigate_down=self._on_navigate_down,
+            on_show_help=self._on_show_help,
+            on_navigate_left=self._on_navigate_left,
+            on_navigate_right=self._on_navigate_right,
+            on_toggle_fullscreen=self._on_toggle_fullscreen,
+            on_escape=self._on_escape,
+            on_toggle_menu=self._on_toggle_menu,
+            on_page_up=self._on_page_up,
+            on_page_down=self._on_page_down,
+            on_home=self._on_home,
+            on_end=self._on_end,
+        )
+
     def run(self) -> None:
         """Main UI loop."""
         try:
@@ -595,8 +598,12 @@ class BuildTUI:
                 # Main loop
                 while self.running:
                     try:
-                        # Handle input
-                        self.handle_input()
+                        # Handle input with proper terminal mode
+                        with self.term.cbreak():
+                            # Check for input with a very short timeout
+                            key = self.term.inkey(timeout=0.05)
+                            if key:
+                                self._handle_input_key(key)
 
                         # Start new builds if slots are available
                         self.ssh_manager.start_builds()
@@ -614,7 +621,7 @@ class BuildTUI:
                         self.render()
 
                         # Small delay to prevent high CPU usage and reduce flickering
-                        time.sleep(0.1)  # Back to 0.1 to reduce flickering
+                        time.sleep(0.05)  # Reduced delay for more responsive input
                     except Exception as e:
                         import traceback
 
@@ -623,7 +630,7 @@ class BuildTUI:
                         logging.error(traceback.format_exc())
                         print(f"Error in main loop: {e}")
                         print("Full traceback:")
-                        traceback.print_exc()
+                        print(traceback.format_exc())
                         break
 
         except KeyboardInterrupt:

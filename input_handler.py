@@ -72,8 +72,7 @@ class InputHandler:
             on_end: Callback function to call when end key is pressed
             timeout: Timeout for input reading in seconds
         """
-        # Use non-blocking input to avoid interfering with the main loop
-        # The terminal is already in cbreak mode from the app's main loop
+        # Use non-blocking input with proper terminal mode
         key = self.term.inkey(timeout=0.0)  # Always non-blocking
         if key:
             self._handle_key(
