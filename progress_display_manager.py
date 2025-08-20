@@ -9,6 +9,8 @@ import logging
 import time
 from typing import Dict, Optional
 
+from text_formatter import format_duration
+
 
 class ProgressDisplayManager:
     """Manages progress display for ongoing builds"""
@@ -140,7 +142,7 @@ class ProgressDisplayManager:
             remaining = 0
 
         if remaining > 0:
-            return f"ETA: {remaining:.0f}s"
+            return f"ETA: {format_duration(remaining)}"
 
         return None
 
@@ -179,7 +181,7 @@ class ProgressDisplayManager:
             parts.append(time_est)
 
         if elapsed_time > 0:
-            parts.append(f"Elapsed: {elapsed_time:.0f}s")
+            parts.append(f"Elapsed: {format_duration(elapsed_time)}")
 
         return " | ".join(parts)
 

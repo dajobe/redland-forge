@@ -122,15 +122,15 @@ class TestBuildSummaryCollector(unittest.TestCase):
         # Test None case
         self.assertEqual(self.collector._format_duration(None), "unknown")
 
-        # Test seconds
-        self.assertEqual(self.collector._format_duration(30.5), "30.5s")
+        # Test seconds (now using whole seconds)
+        self.assertEqual(self.collector._format_duration(30.6), "31s")
 
-        # Test minutes
-        self.assertEqual(self.collector._format_duration(90), "1m 30s")
+        # Test minutes (now without spaces)
+        self.assertEqual(self.collector._format_duration(90), "1m30s")
         self.assertEqual(self.collector._format_duration(120), "2m")
 
-        # Test hours
-        self.assertEqual(self.collector._format_duration(3661), "1h 1m")
+        # Test hours (now without spaces)
+        self.assertEqual(self.collector._format_duration(3661), "1h1m")
         self.assertEqual(self.collector._format_duration(7200), "2h")
 
     def test_generate_summary_no_builds(self):

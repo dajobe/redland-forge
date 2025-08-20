@@ -185,3 +185,39 @@ class TextFormatter:
         color_codes = ansi_escape.findall(text)
         clean_text = ansi_escape.sub("", text)
         return color_codes, clean_text
+
+
+def format_duration(seconds: float) -> str:
+    """
+    Format duration in seconds to human-readable string in consistent format.
+    
+    Uses whole seconds and shows:
+    - Under 1 minute: "Ns" 
+    - 1+ minutes: "NmNs" or "Nm" if no remaining seconds
+    - 1+ hours: "NhNm" or "Nh" if no remaining minutes
+    
+    Args:
+        seconds: Duration in seconds
+        
+    Returns:
+        Formatted duration string (e.g., "45s", "2m30s", "1h15m")
+    """
+    # Round to nearest second first
+    total_seconds = int(round(seconds))
+    
+    if total_seconds < 60:
+        return f"{total_seconds}s"
+    elif total_seconds < 3600:
+        minutes = total_seconds // 60
+        remaining_seconds = total_seconds % 60
+        if remaining_seconds == 0:
+            return f"{minutes}m"
+        else:
+            return f"{minutes}m{remaining_seconds}s"
+    else:
+        hours = total_seconds // 3600
+        remaining_minutes = (total_seconds % 3600) // 60
+        if remaining_minutes == 0:
+            return f"{hours}h"
+        else:
+            return f"{hours}h{remaining_minutes}m"

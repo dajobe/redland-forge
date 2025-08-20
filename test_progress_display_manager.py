@@ -122,7 +122,7 @@ class TestProgressDisplayManager(unittest.TestCase):
         self.mock_timing_cache.get_host_statistics.return_value = mock_stats
 
         result = self.progress_manager.get_time_estimate(host_name)
-        self.assertEqual(result, "ETA: 95s")  # 30 + 60 + (10 - 5) = 95s
+        self.assertEqual(result, "ETA: 1m35s")  # 30 + 60 + (10 - 5) = 95s
 
     def test_get_time_estimate_make_step(self):
         """Test getting time estimate for make step."""
@@ -138,7 +138,7 @@ class TestProgressDisplayManager(unittest.TestCase):
 
         result = self.progress_manager.get_time_estimate(host_name)
         self.assertEqual(
-            result, "ETA: 60s"
+            result, "ETA: 1m"
         )  # 60 (make_check only, since we're past make time)
 
     def test_get_time_estimate_check_step(self):

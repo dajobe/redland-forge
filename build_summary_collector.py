@@ -10,6 +10,8 @@ import time
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 
+from text_formatter import format_duration
+
 
 @dataclass
 class BuildResult:
@@ -169,23 +171,8 @@ class BuildSummaryCollector:
         """
         if seconds is None:
             return "unknown"
-
-        if seconds < 60:
-            return f"{seconds:.1f}s"
-        elif seconds < 3600:
-            minutes = int(seconds // 60)
-            remaining_seconds = seconds % 60
-            if remaining_seconds < 1:
-                return f"{minutes}m"
-            else:
-                return f"{minutes}m {remaining_seconds:.0f}s"
-        else:
-            hours = int(seconds // 3600)
-            remaining_minutes = int((seconds % 3600) // 60)
-            if remaining_minutes == 0:
-                return f"{hours}h"
-            else:
-                return f"{hours}h {remaining_minutes}m"
+        
+        return format_duration(seconds)
 
     def generate_summary(self) -> str:
         """

@@ -12,7 +12,7 @@ from typing import List
 from blessed import Terminal
 
 from output_buffer import OutputBuffer
-from text_formatter import TextFormatter, visual_length
+from text_formatter import TextFormatter, visual_length, format_duration
 from config import Config
 from build_step_detector import detect_build_step, detect_step_completion
 from color_manager import ColorManager, Colors
@@ -410,7 +410,7 @@ class HostSection:
 
         # Add duration and current step
         if self.duration > 0:
-            header += f" ({self.duration:.1f}s)"
+            header += f" ({format_duration(self.duration)})"
         if self.current_step:
             header += f" - {self.current_step}"
             # Add debug logging for step display
