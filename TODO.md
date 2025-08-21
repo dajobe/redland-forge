@@ -7,6 +7,7 @@ This document outlines the design for significant enhancements to the Build TUI 
 ## **🎯 Overall Progress: 7/7 Phases COMPLETED**
 
 ### **✅ Completed Phases:**
+
 1. **Phase 1**: Extended Key Support ✅
 2. **Phase 2**: Navigation Modes ✅  
 3. **Phase 3**: Full-Screen Toggle ✅
@@ -176,7 +177,7 @@ This document outlines the design for significant enhancements to the Build TUI 
 
 1. **Enter Full-Screen**: Press ENTER on any host to enter full-screen mode
 2. **Auto-Scroll Mode**: Initially shows latest output (scroll_offset = 0)
-3. **Manual Scrolling**: 
+3. **Manual Scrolling**:
    - **PAGE_UP**: Scroll up by one page (enters scroll mode)
    - **PAGE_DOWN**: Scroll down by one page (exits scroll mode when at bottom)
    - **HOME**: Jump to beginning of log (enters scroll mode)
