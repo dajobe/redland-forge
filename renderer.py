@@ -7,7 +7,7 @@ A module for handling all UI rendering logic in the TUI.
 
 import logging
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from blessed import Terminal
 
@@ -498,6 +498,8 @@ class Renderer:
         connection_queue: list,
         active_connections: Dict[str, Any],
         has_updates: bool = False,
+        full_screen_mode: bool = False,
+        full_screen_host: Optional[str] = None,
     ) -> None:
         """
         Render the complete UI.
@@ -509,6 +511,8 @@ class Renderer:
             connection_queue: List of hosts in queue
             active_connections: Dictionary of active connections
             has_updates: Whether there are content updates
+            full_screen_mode: Whether to render in full-screen mode
+            full_screen_host: Host to show in full-screen mode
         """
         try:
             # Update timers for all sections
@@ -524,19 +528,24 @@ class Renderer:
             # Always do a full render to prevent corruption
             self.clear_screen()
 
-            # Render header
-            self.render_header(tarball, host_sections, ssh_results)
+            if full_screen_mode and full_screen_host:
+                # Full-screen mode: show only the focused host
+                self.render_full_screen_host(full_screen_host, host_sections, ssh_results)
+            else:
+                # Normal mode: show all hosts
+                # Render header
+                self.render_header(tarball, host_sections, ssh_results)
 
-            # Render host sections
-            visible_hosts = self.render_host_sections(host_sections, ssh_results)
+                # Render host sections
+                visible_hosts = self.render_host_sections(host_sections, ssh_results)
 
-            # Render completion message if no hosts visible
-            self.render_completion_message(
-                visible_hosts, ssh_results, connection_queue, active_connections
-            )
+                # Render completion message if no hosts visible
+                self.render_completion_message(
+                    visible_hosts, ssh_results, connection_queue, active_connections
+                )
 
-            # Render footer
-            self.render_footer(host_sections, ssh_results)
+                # Render footer
+                self.render_footer(host_sections, ssh_results)
 
             # Flush output
             self.flush_output()
@@ -550,7 +559,7 @@ class Renderer:
 
             print(f"TUI Error: {e}")
             print("Full traceback:")
-            traceback.print_exc()
+            print(traceback.format_exc())
             print("Falling back to simple output mode...")
             self._simple_output_mode(host_sections, ssh_results)
 
@@ -580,3 +589,124 @@ class Renderer:
                 for line in result["output"][-5:]:  # Show last 5 lines
                     print(f"  {line}")
             print()
+
+    def render_full_screen_host(
+        self,
+        host_name: str,
+        host_sections: Dict[str, Any],
+        ssh_results: Dict[str, Dict[str, Any]],
+    ) -> None:
+        """
+        Render a single host in full-screen mode.
+
+        Args:
+            host_name: Name of the host to render
+            host_sections: Dictionary of host sections
+            ssh_results: Dictionary of SSH results
+        """
+        if host_name not in host_sections:
+            return
+
+        section = host_sections[host_name]
+        result = ssh_results.get(host_name, {})
+
+        # Clear screen for full-screen mode
+        self.term.clear()
+
+        # Render full-screen header
+        header = f"=== FULL-SCREEN MODE: {host_name} ==="
+        if result.get("status"):
+            header += f" | Status: {result['status']}"
+        if section.current_step:
+            header += f" | Step: {section.current_step}"
+        
+        print(self.term.bold(header))
+        print("=" * self.term.width)
+        print()
+
+        # Show host information
+        if result:
+            status = result.get("status", "UNKNOWN")
+            print(f"Host: {host_name}")
+            print(f"Status: {status}")
+            if section.current_step:
+                print(f"Current Step: {section.current_step}")
+            print()
+
+        # Show output (last 30 lines for full-screen)
+        if result and "output" in result:
+            output_lines = result["output"]
+            if len(output_lines) > 30:
+                # Show last 30 lines with scroll indicator
+                print(f"--- Showing last 30 of {len(output_lines)} lines ---")
+                output_lines = output_lines[-30:]
+            
+            for line in output_lines:
+                print(line.rstrip())
+
+        # Show full-screen footer
+        print()
+        print("=" * self.term.width)
+        print("Press ESC or ENTER to exit full-screen mode")
+        print(f"Press q to quit | Press h for help")
+
+
+    def render_full_screen_host(
+        self,
+        host_name: str,
+        host_sections: Dict[str, Any],
+        ssh_results: Dict[str, Dict[str, Any]],
+    ) -> None:
+        """
+        Render a single host in full-screen mode.
+
+        Args:
+            host_name: Name of the host to render
+            host_sections: Dictionary of host sections
+            ssh_results: Dictionary of SSH results
+        """
+        if host_name not in host_sections:
+            return
+
+        section = host_sections[host_name]
+        result = ssh_results.get(host_name, {})
+
+        # Clear screen for full-screen mode
+        self.term.clear()
+
+        # Render full-screen header
+        header = f"=== FULL-SCREEN MODE: {host_name} ==="
+        if result.get("status"):
+            header += f" | Status: {result['status']}"
+        if section.current_step:
+            header += f" | Step: {section.current_step}"
+        
+        print(self.term.bold(header))
+        print("=" * self.term.width)
+        print()
+
+        # Show host information
+        if result:
+            status = result.get("status", "UNKNOWN")
+            print(f"Host: {host_name}")
+            print(f"Status: {status}")
+            if section.current_step:
+                print(f"Current Step: {section.current_step}")
+            print()
+
+        # Show output (last 30 lines for full-screen)
+        if result and "output" in result:
+            output_lines = result["output"]
+            if len(output_lines) > 30:
+                # Show last 30 lines with scroll indicator
+                print(f"--- Showing last 30 of {len(output_lines)} lines ---")
+                output_lines = output_lines[-30:]
+            
+            for line in output_lines:
+                print(line.rstrip())
+
+        # Show full-screen footer
+        print()
+        print("=" * self.term.width)
+        print("Press ESC or ENTER to exit full-screen mode")
+        print(f"Press q to quit | Press h for help")

@@ -52,6 +52,11 @@ class BuildTUI:
             self.current_user = getpass.getuser()
             logging.debug(f"Current user: {self.current_user}")
 
+            # Initialize full-screen state
+            self.full_screen_mode = False
+            self.full_screen_host = None
+            logging.debug("Full-screen state initialized")
+
             # Validate tarball file exists before proceeding
             if not os.path.exists(tarball):
                 raise FileNotFoundError(
@@ -466,6 +471,8 @@ class BuildTUI:
                 self.ssh_manager.connection_queue,
                 self.ssh_manager.active_connections,
                 has_updates,
+                full_screen_mode=self.full_screen_mode,
+                full_screen_host=self.full_screen_host,
             )
 
         except Exception as e:
@@ -527,13 +534,33 @@ class BuildTUI:
 
     def _on_toggle_fullscreen(self) -> None:
         """Handle full-screen toggle for current host."""
-        # TODO: Implement full-screen mode
-        logging.debug(f"Full-screen toggle requested for host {self.focused_host}")
+        if self.full_screen_mode:
+            # Exit full-screen mode
+            self.full_screen_mode = False
+            self.full_screen_host = None
+            logging.debug(f"Exited full-screen mode for host {self.focused_host}")
+        else:
+            # Enter full-screen mode
+            self.full_screen_mode = True
+            self.full_screen_host = self.focused_host
+            logging.debug(f"Entered full-screen mode for host {self.focused_host}")
+        
+        # Update input handler navigation mode
+        if self.full_screen_mode:
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.FULL_SCREEN)
+        else:
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.HOST_NAVIGATION)
 
     def _on_escape(self) -> None:
         """Handle escape key press."""
-        # TODO: Implement escape functionality based on current mode
-        logging.debug("Escape key pressed")
+        if self.full_screen_mode:
+            # Exit full-screen mode
+            self.full_screen_mode = False
+            self.full_screen_host = None
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.HOST_NAVIGATION)
+            logging.debug(f"Exited full-screen mode via escape key")
+        else:
+            logging.debug("Escape key pressed (no action in current mode)")
 
     def _on_toggle_menu(self) -> None:
         """Handle menu toggle."""
@@ -595,43 +622,43 @@ class BuildTUI:
                 # Start initial builds up to concurrency limit
                 self.ssh_manager.start_builds()
 
-                # Main loop
-                while self.running:
-                    try:
-                        # Handle input with proper terminal mode
-                        with self.term.cbreak():
-                            # Check for input with a very short timeout
+                # Set terminal to cbreak mode once at the start
+                with self.term.cbreak():
+                    # Main loop
+                    while self.running:
+                        try:
+                            # Handle input with non-blocking check
                             key = self.term.inkey(timeout=0.05)
                             if key:
                                 self._handle_input_key(key)
 
-                        # Start new builds if slots are available
-                        self.ssh_manager.start_builds()
+                            # Start new builds if slots are available
+                            self.ssh_manager.start_builds()
 
-                        # Update host visibility - hide completed hosts and show new ones
-                        self._update_host_visibility()
+                            # Update host visibility - hide completed hosts and show new ones
+                            self._update_host_visibility()
 
-                        # Continuously update progress info for all active builds
-                        self._update_progress_info()
+                            # Continuously update progress info for all active builds
+                            self._update_progress_info()
 
-                        # Check for build completion and trigger auto-exit if needed
-                        self._check_build_completion()
+                            # Check for build completion and trigger auto-exit if needed
+                            self._check_build_completion()
 
-                        # Render UI
-                        self.render()
+                            # Render UI
+                            self.render()
 
-                        # Small delay to prevent high CPU usage and reduce flickering
-                        time.sleep(0.05)  # Reduced delay for more responsive input
-                    except Exception as e:
-                        import traceback
+                            # Small delay to prevent high CPU usage and reduce flickering
+                            time.sleep(0.05)  # Reduced delay for more responsive input
+                        except Exception as e:
+                            import traceback
 
-                        logging.error(f"Error in main loop: {e}")
-                        logging.error("Full traceback:")
-                        logging.error(traceback.format_exc())
-                        print(f"Error in main loop: {e}")
-                        print("Full traceback:")
-                        print(traceback.format_exc())
-                        break
+                            logging.error(f"Error in main loop: {e}")
+                            logging.error("Full traceback:")
+                            logging.error(traceback.format_exc())
+                            print(f"Error in main loop: {e}")
+                            print("Full traceback:")
+                            print(traceback.format_exc())
+                            break
 
         except KeyboardInterrupt:
             print("\nBuild interrupted by user")
