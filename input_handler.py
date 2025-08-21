@@ -142,7 +142,7 @@ class InputHandler:
             )
         elif self.navigation_mode == NavigationMode.MENU:
             self._handle_menu_key(
-                key, on_navigate_up, on_navigate_down, on_toggle_menu, on_escape
+                key, on_navigate_up, on_navigate_down, on_toggle_menu, on_escape, on_toggle_fullscreen
             )
         else:
             # Fallback: try to handle the key in host navigation mode if no specific mode is set
@@ -381,7 +381,8 @@ class InputHandler:
         on_navigate_up: Callable[[], None],
         on_navigate_down: Callable[[], None],
         on_toggle_menu: Optional[Callable[[], None]],
-        on_escape: Optional[Callable[[], None]]
+        on_escape: Optional[Callable[[], None]],
+        on_toggle_fullscreen: Optional[Callable[[], None]]
     ) -> None:
         """Handle key presses in menu mode."""
         if key.code == self.term.KEY_UP:
@@ -390,6 +391,12 @@ class InputHandler:
         elif key.code == self.term.KEY_DOWN:
             logging.debug("Navigate down in menu")
             on_navigate_down()
+        elif key.code == self.term.KEY_ENTER or key == "\r" or key == "\n":
+            logging.debug("Select menu option")
+            # In menu mode, ENTER should select the current option
+            # We'll use the toggle_fullscreen callback as a menu selection callback
+            if on_toggle_fullscreen:
+                on_toggle_fullscreen()
         elif key == "\t" or key.code == self.term.KEY_ESCAPE:
             logging.debug("Exit menu mode")
             if on_toggle_menu or on_escape:

@@ -500,6 +500,9 @@ class Renderer:
         has_updates: bool = False,
         full_screen_mode: bool = False,
         full_screen_host: Optional[str] = None,
+        menu_mode: bool = False,
+        menu_options: Optional[list] = None,
+        menu_selection: int = 0,
     ) -> None:
         """
         Render the complete UI.
@@ -528,7 +531,10 @@ class Renderer:
             # Always do a full render to prevent corruption
             self.clear_screen()
 
-            if full_screen_mode and full_screen_host:
+            if menu_mode and menu_options:
+                # Menu mode: show the menu
+                self.render_menu(menu_options, menu_selection)
+            elif full_screen_mode and full_screen_host:
                 # Full-screen mode: show only the focused host
                 self.render_full_screen_host(full_screen_host, host_sections, ssh_results)
             else:
@@ -710,3 +716,43 @@ class Renderer:
         print("=" * self.term.width)
         print("Press ESC or ENTER to exit full-screen mode")
         print(f"Press q to quit | Press h for help")
+
+    def render_menu(
+        self,
+        menu_options: list,
+        menu_selection: int,
+    ) -> None:
+        """
+        Render the menu overlay.
+
+        Args:
+            menu_options: List of menu options
+            menu_selection: Currently selected menu option index
+        """
+        # Clear screen for menu mode
+        self.term.clear()
+
+        # Render menu header
+        header = "=== BUILD TUI MENU ==="
+        print(self.term.bold(header))
+        print("=" * self.term.width)
+        print()
+
+        # Render menu options
+        for i, option in enumerate(menu_options):
+            if option["type"] == "separator":
+                # Render separator line
+                print(f"  {option['text']}")
+            else:
+                # Render selectable option
+                if i == menu_selection:
+                    # Highlight selected option
+                    print(f"  > {option['text']} <")
+                else:
+                    print(f"    {option['text']}")
+
+        # Render menu footer
+        print()
+        print("=" * self.term.width)
+        print("Navigation: UP/DOWN arrows | Selection: ENTER | Exit: ESC or TAB")
+        print("Press q to quit | Press h for help")

@@ -57,6 +57,12 @@ class BuildTUI:
             self.full_screen_host = None
             logging.debug("Full-screen state initialized")
 
+            # Initialize menu state
+            self.menu_mode = False
+            self.menu_selection = 0
+            self.menu_options = []
+            logging.debug("Menu state initialized")
+
             # Validate tarball file exists before proceeding
             if not os.path.exists(tarball):
                 raise FileNotFoundError(
@@ -473,6 +479,9 @@ class BuildTUI:
                 has_updates,
                 full_screen_mode=self.full_screen_mode,
                 full_screen_host=self.full_screen_host,
+                menu_mode=self.menu_mode,
+                menu_options=self.menu_options,
+                menu_selection=self.menu_selection,
             )
 
         except Exception as e:
@@ -532,9 +541,46 @@ class BuildTUI:
         # Navigate to next host (including completed ones)
         self.focused_host = (self.focused_host + 1) % len(self.hosts)
 
+    def _on_menu_navigate_up(self) -> None:
+        """Handle up navigation in menu mode."""
+        if self.menu_mode and self.menu_options:
+            self.menu_selection = (self.menu_selection - 1) % len(self.menu_options)
+            logging.debug(f"Menu selection moved up to {self.menu_selection}")
+
+    def _on_menu_navigate_down(self) -> None:
+        """Handle down navigation in menu mode."""
+        if self.menu_mode and self.menu_options:
+            self.menu_selection = (self.menu_selection + 1) % len(self.menu_options)
+            logging.debug(f"Menu selection moved down to {self.menu_selection}")
+
+    def _on_menu_select(self) -> None:
+        """Handle menu selection (ENTER key in menu mode)."""
+        if not self.menu_mode or not self.menu_options:
+            return
+        
+        selected_option = self.menu_options[self.menu_selection]
+        logging.debug(f"Menu option selected: {selected_option}")
+        
+        if selected_option["type"] == "host":
+            # Select the host and exit menu
+            self.focused_host = selected_option["index"]
+            self.menu_mode = False
+            self.menu_selection = 0
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.HOST_NAVIGATION)
+            logging.debug(f"Selected host: {selected_option['host']}")
+        
+        elif selected_option["type"] == "action":
+            if selected_option["action"] == "show_help":
+                self.show_help()
+            elif selected_option["action"] == "quit":
+                self._on_quit()
+
     def _on_toggle_fullscreen(self) -> None:
-        """Handle full-screen toggle for current host."""
-        if self.full_screen_mode:
+        """Handle full-screen toggle for current host or menu selection."""
+        if self.menu_mode:
+            # In menu mode, ENTER selects the current menu option
+            self._on_menu_select()
+        elif self.full_screen_mode:
             # Exit full-screen mode
             self.full_screen_mode = False
             self.full_screen_host = None
@@ -548,6 +594,8 @@ class BuildTUI:
         # Update input handler navigation mode
         if self.full_screen_mode:
             self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.FULL_SCREEN)
+        elif self.menu_mode:
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.MENU)
         else:
             self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.HOST_NAVIGATION)
 
@@ -559,13 +607,30 @@ class BuildTUI:
             self.full_screen_host = None
             self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.HOST_NAVIGATION)
             logging.debug(f"Exited full-screen mode via escape key")
+        elif self.menu_mode:
+            # Exit menu mode
+            self.menu_mode = False
+            self.menu_selection = 0
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.HOST_NAVIGATION)
+            logging.debug("Exited menu mode via escape key")
         else:
             logging.debug("Escape key pressed (no action in current mode)")
 
     def _on_toggle_menu(self) -> None:
         """Handle menu toggle."""
-        # TODO: Implement menu system
-        logging.debug("Menu toggle requested")
+        if self.menu_mode:
+            # Exit menu mode
+            self.menu_mode = False
+            self.menu_selection = 0
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.HOST_NAVIGATION)
+            logging.debug("Exited menu mode")
+        else:
+            # Enter menu mode
+            self.menu_mode = True
+            self.menu_selection = 0
+            self._build_menu_options()
+            self.input_handler.set_navigation_mode(self.input_handler.NavigationMode.MENU)
+            logging.debug("Entered menu mode")
 
     def _on_page_up(self) -> None:
         """Handle page up for log scrolling."""
@@ -591,13 +656,63 @@ class BuildTUI:
         """Show help screen using InputHandler."""
         self.input_handler.show_help()
 
+    def _build_menu_options(self) -> None:
+        """Build the list of menu options based on current state."""
+        self.menu_options = []
+        
+        # Add host-related options
+        for i, host in enumerate(self.hosts):
+            status = "IDLE"
+            if host in self.ssh_manager.results:
+                status = self.ssh_manager.results[host]["status"]
+            
+            # Add host selection option
+            self.menu_options.append({
+                "type": "host",
+                "host": host,
+                "index": i,
+                "text": f"Host: {host} ({status})",
+                "action": "select_host"
+            })
+        
+        # Add separator
+        self.menu_options.append({
+            "type": "separator",
+            "text": "─" * 40
+        })
+        
+        # Add action options
+        self.menu_options.append({
+            "type": "action",
+            "text": "Show Help",
+            "action": "show_help"
+        })
+        
+        self.menu_options.append({
+            "type": "action",
+            "text": "Quit Application",
+            "action": "quit"
+        })
+        
+        logging.debug(f"Built menu with {len(self.menu_options)} options")
+
     def _handle_input_key(self, key) -> None:
         """Handle a single key press using the InputHandler."""
+        # Choose the appropriate navigation callbacks based on current mode
+        if self.menu_mode:
+            # In menu mode, use menu navigation callbacks
+            on_navigate_up = self._on_menu_navigate_up
+            on_navigate_down = self._on_menu_navigate_down
+        else:
+            # In normal mode, use host navigation callbacks
+            on_navigate_up = self._on_navigate_up
+            on_navigate_down = self._on_navigate_down
+
         self.input_handler._handle_key(
             key,
             on_quit=self._on_quit,
-            on_navigate_up=self._on_navigate_up,
-            on_navigate_down=self._on_navigate_down,
+            on_navigate_up=on_navigate_up,
+            on_navigate_down=on_navigate_down,
             on_show_help=self._on_show_help,
             on_navigate_left=self._on_navigate_left,
             on_navigate_right=self._on_navigate_right,
