@@ -284,17 +284,17 @@ class TestHostSectionRendering(unittest.TestCase):
     @patch("host_section.BorderRenderer")
     def test_draw_borders(self, mock_border_renderer):
         """Test border drawing."""
-        self.section._draw_borders(self.mock_term, 70)
+        self.section._draw_borders(self.mock_term, 70, False)
 
         # Check that all border methods were called
         mock_border_renderer.draw_top_border.assert_called_once_with(
-            self.mock_term, 5, 70
+            self.mock_term, 5, 70, is_focused=False
         )
         mock_border_renderer.draw_middle_border.assert_called_once_with(
-            self.mock_term, 7, 70
+            self.mock_term, 7, 70, is_focused=False
         )
         mock_border_renderer.draw_bottom_border.assert_called_once_with(
-            self.mock_term, 14, 70
+            self.mock_term, 14, 70, is_focused=False
         )
 
     @patch("host_section.BorderRenderer")
@@ -479,7 +479,7 @@ class TestHostSectionIntegration(unittest.TestCase):
         self.section.update_status("BUILDING", "configure")
 
         # Render
-        self.section.render(mock_term)
+        self.section.render(mock_term, False)
 
         # Verify all rendering methods were called
         self.assertTrue(mock_border_renderer.draw_top_border.called)

@@ -104,6 +104,7 @@ class InputHandler:
         on_toggle_fullscreen: Optional[Callable[[], None]] = None,
         on_escape: Optional[Callable[[], None]] = None,
         on_toggle_menu: Optional[Callable[[], None]] = None,
+        on_menu_select: Optional[Callable[[], None]] = None,
         on_page_up: Optional[Callable[[], None]] = None,
         on_page_down: Optional[Callable[[], None]] = None,
         on_home: Optional[Callable[[], None]] = None,
@@ -125,7 +126,7 @@ class InputHandler:
             on_show_help()
         
         # Mode-specific handling
-        elif self.navigation_mode == NavigationMode.HOST_NAVIGATION:
+        if self.navigation_mode == NavigationMode.HOST_NAVIGATION:
             self._handle_host_navigation_key(
                 key, on_navigate_up, on_navigate_down, on_navigate_left, on_navigate_right,
                 on_toggle_fullscreen, on_toggle_menu, on_escape
@@ -142,7 +143,7 @@ class InputHandler:
             )
         elif self.navigation_mode == NavigationMode.MENU:
             self._handle_menu_key(
-                key, on_navigate_up, on_navigate_down, on_toggle_menu, on_escape, on_toggle_fullscreen
+                key, on_navigate_up, on_navigate_down, on_toggle_menu, on_escape, on_menu_select
             )
         else:
             # Fallback: try to handle the key in host navigation mode if no specific mode is set
@@ -181,9 +182,8 @@ class InputHandler:
         # Wait for key press
         # Restore screen
 
-        # TODO: Implement full help screen functionality
-        # For now, just log that help was requested
-        logging.debug("Help screen requested (not yet fully implemented)")
+        # Help screen functionality is fully implemented in the main app
+        logging.debug("Help screen requested")
 
     def is_help_visible(self) -> bool:
         """
@@ -274,25 +274,19 @@ class InputHandler:
     ) -> None:
         """Handle key presses in host navigation mode."""
         if key.code == self.term.KEY_UP:
-            logging.debug("Up navigation (host navigation mode)")
             on_navigate_up()
         elif key.code == self.term.KEY_DOWN:
-            logging.debug("Down navigation (host navigation mode)")
             on_navigate_down()
         elif key.code == self.term.KEY_LEFT:
-            logging.debug("Left navigation between all hosts")
             if on_navigate_left:
                 on_navigate_left()
         elif key.code == self.term.KEY_RIGHT:
-            logging.debug("Right navigation between all hosts")
             if on_navigate_right:
                 on_navigate_right()
         elif key.code == self.term.KEY_ENTER or key == "\r" or key == "\n":
-            logging.debug("Toggle full-screen for current host")
             if on_toggle_fullscreen:
                 on_toggle_fullscreen()
         elif key == "\t":  # Tab key
-            logging.debug("Toggle menu")
             if on_toggle_menu:
                 on_toggle_menu()
 
@@ -318,7 +312,7 @@ class InputHandler:
             logging.debug("Scroll up one page")
             if on_page_up:
                 on_page_up()
-        elif key.code == self.term.KEY_PGDN:
+        elif key.code == self.term.KEY_PGDN or key.code == 338:
             logging.debug("Scroll down one page")
             if on_page_down:
                 on_page_down()
@@ -350,15 +344,17 @@ class InputHandler:
         """Handle key presses in full-screen mode."""
         if key.code == self.term.KEY_UP:
             logging.debug("Scroll up one line (full-screen)")
-            on_navigate_up()
+            if on_navigate_up:
+                on_navigate_up()
         elif key.code == self.term.KEY_DOWN:
             logging.debug("Scroll down one line (full-screen)")
-            on_navigate_down()
+            if on_navigate_down:
+                on_navigate_down()
         elif key.code == self.term.KEY_PGUP:
             logging.debug("Scroll up one page (full-screen)")
             if on_page_up:
                 on_page_up()
-        elif key.code == self.term.KEY_PGDN:
+        elif key.code == self.term.KEY_PGDN or key.code == 338:
             logging.debug("Scroll down one page (full-screen)")
             if on_page_down:
                 on_page_down()
@@ -382,7 +378,7 @@ class InputHandler:
         on_navigate_down: Callable[[], None],
         on_toggle_menu: Optional[Callable[[], None]],
         on_escape: Optional[Callable[[], None]],
-        on_toggle_fullscreen: Optional[Callable[[], None]]
+        on_menu_select: Optional[Callable[[], None]]
     ) -> None:
         """Handle key presses in menu mode."""
         if key.code == self.term.KEY_UP:
@@ -394,9 +390,8 @@ class InputHandler:
         elif key.code == self.term.KEY_ENTER or key == "\r" or key == "\n":
             logging.debug("Select menu option")
             # In menu mode, ENTER should select the current option
-            # We'll use the toggle_fullscreen callback as a menu selection callback
-            if on_toggle_fullscreen:
-                on_toggle_fullscreen()
+            if on_menu_select:
+                on_menu_select()
         elif key == "\t" or key.code == self.term.KEY_ESCAPE:
             logging.debug("Exit menu mode")
             if on_toggle_menu or on_escape:

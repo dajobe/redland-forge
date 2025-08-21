@@ -163,10 +163,10 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "BUILDING"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results)
+        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
 
         self.assertEqual(visible_count, 1)
-        mock_section.render.assert_called_once_with(self.mock_terminal)
+        mock_section.render.assert_called_once_with(self.mock_terminal, False)
 
     def test_render_host_sections_success_recent(self):
         """Test rendering host sections with recent success."""
@@ -178,10 +178,10 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "SUCCESS"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results)
+        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
 
         self.assertEqual(visible_count, 1)
-        mock_section.render.assert_called_once_with(self.mock_terminal)
+        mock_section.render.assert_called_once_with(self.mock_terminal, False)
 
     def test_render_host_sections_success_old(self):
         """Test rendering host sections with old success."""
@@ -193,7 +193,7 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "SUCCESS"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results)
+        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
 
         self.assertEqual(visible_count, 0)
         mock_section.render.assert_not_called()
@@ -208,10 +208,10 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "FAILED"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results)
+        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
 
         self.assertEqual(visible_count, 1)
-        mock_section.render.assert_called_once_with(self.mock_terminal)
+        mock_section.render.assert_called_once_with(self.mock_terminal, False)
 
     def test_render_host_sections_failed_old(self):
         """Test rendering host sections with old failure."""
@@ -223,7 +223,7 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "FAILED"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results)
+        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
 
         self.assertEqual(visible_count, 0)
         mock_section.render.assert_not_called()
@@ -234,7 +234,7 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results)
+        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
 
         self.assertEqual(visible_count, 0)
         mock_section.render.assert_not_called()
@@ -368,6 +368,7 @@ class TestRendererIntegration(unittest.TestCase):
                 ssh_results,
                 connection_queue,
                 active_connections,
+                focused_host=None,
             )
             # Should call print multiple times for the UI
             self.assertGreater(mock_print.call_count, 0)
@@ -390,6 +391,7 @@ class TestRendererIntegration(unittest.TestCase):
                 ssh_results,
                 connection_queue,
                 active_connections,
+                focused_host=None,
             )
             # Should call print for error message and fallback
             self.assertGreater(mock_print.call_count, 0)

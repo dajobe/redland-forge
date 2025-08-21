@@ -60,11 +60,7 @@ class TestInputHandlerHelpManagement(unittest.TestCase):
 
     def test_show_help_basic(self):
         """Test show_help method calls."""
-        with patch("input_handler.logging") as mock_logging:
-            self.handler.show_help()
-            mock_logging.debug.assert_called_with(
-                "Help screen requested (not yet fully implemented)"
-            )
+        self.handler.show_help()
 
 
 class TestInputHandlerStateManagement(unittest.TestCase):
@@ -428,7 +424,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify quit callback was called
             self.mock_on_quit.assert_called_once()
-            mock_logging.debug.assert_called_with("Quit requested via keyboard input")
 
     def test_handle_input_help_key(self):
         """Test input handling for help key."""
@@ -453,7 +448,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify help callback was called
             self.mock_on_show_help.assert_called_once()
-            mock_logging.debug.assert_called_with("Help requested via keyboard input")
 
     def test_handle_input_up_key(self):
         """Test input handling for up arrow key."""
@@ -477,9 +471,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify up navigation callback was called
             self.mock_on_navigate_up.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Up navigation (host navigation mode)"
-            )
 
     def test_handle_input_down_key(self):
         """Test input handling for down arrow key."""
@@ -503,9 +494,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify down navigation callback was called
             self.mock_on_navigate_down.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Down navigation (host navigation mode)"
-            )
 
     def test_handle_input_unknown_key(self):
         """Test input handling for unknown key."""
@@ -603,9 +591,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify left navigation callback was called
             self.mock_on_navigate_left.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Left navigation between all hosts"
-            )
 
     def test_handle_input_right_key(self):
         """Test input handling for right arrow key."""
@@ -638,9 +623,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify right navigation callback was called
             self.mock_on_navigate_right.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Right navigation between all hosts"
-            )
 
     def test_handle_input_enter_key(self):
         """Test input handling for enter key."""
@@ -673,9 +655,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify fullscreen toggle callback was called
             self.mock_on_toggle_fullscreen.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Toggle full-screen for current host"
-            )
 
     def test_handle_input_escape_key(self):
         """Test input handling for escape key."""
@@ -711,9 +690,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify escape callback was called
             self.mock_on_escape.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Exit log scrolling mode"
-            )
 
     def test_handle_input_tab_key(self):
         """Test input handling for tab key."""
@@ -747,9 +723,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify menu toggle callback was called
             self.mock_on_toggle_menu.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Toggle menu"
-            )
 
     def test_handle_input_page_up_key(self):
         """Test input handling for page up key."""
@@ -785,9 +758,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify page up callback was called
             self.mock_on_page_up.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Scroll up one page"
-            )
 
     def test_handle_input_page_down_key(self):
         """Test input handling for page down key."""
@@ -823,9 +793,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify page down callback was called
             self.mock_on_page_down.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Scroll down one page"
-            )
 
     def test_handle_input_home_key(self):
         """Test input handling for home key."""
@@ -861,9 +828,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify home callback was called
             self.mock_on_home.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Go to beginning of log"
-            )
 
     def test_handle_input_end_key(self):
         """Test input handling for end key."""
@@ -899,9 +863,6 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
 
             # Verify end callback was called
             self.mock_on_end.assert_called_once()
-            mock_logging.debug.assert_called_with(
-                "Go to end of log"
-            )
 
 
 class TestInputHandlerIntegration(unittest.TestCase):

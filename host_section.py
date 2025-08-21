@@ -23,13 +23,18 @@ class BorderRenderer:
 
     @staticmethod
     def draw_top_border(
-        term: Terminal, y: int, width: int, border_color: str = None
+        term: Terminal, y: int, width: int, border_color: str = None, is_focused: bool = False
     ) -> None:
         """Draw a top border line."""
         if border_color is None:
             border_color = ColorManager.get_ansi_color(
                 ColorManager.DEFAULT_BORDER_COLOR
             )
+        
+        # Use bright color for focused host
+        if is_focused:
+            border_color = ColorManager.get_ansi_color("BRIGHT_YELLOW")
+        
         border = (
             border_color
             + "┌"
@@ -42,13 +47,18 @@ class BorderRenderer:
 
     @staticmethod
     def draw_bottom_border(
-        term: Terminal, y: int, width: int, border_color: str = None
+        term: Terminal, y: int, width: int, border_color: str = None, is_focused: bool = False
     ) -> None:
         """Draw a bottom border line."""
         if border_color is None:
             border_color = ColorManager.get_ansi_color(
                 ColorManager.DEFAULT_BORDER_COLOR
             )
+        
+        # Use bright color for focused host
+        if is_focused:
+            border_color = ColorManager.get_ansi_color("BRIGHT_YELLOW")
+        
         border = (
             border_color
             + "└"
@@ -61,13 +71,18 @@ class BorderRenderer:
 
     @staticmethod
     def draw_middle_border(
-        term: Terminal, y: int, width: int, border_color: str = None
+        term: Terminal, y: int, width: int, border_color: str = None, is_focused: bool = False
     ) -> None:
         """Draw a middle border line."""
         if border_color is None:
             border_color = ColorManager.get_ansi_color(
                 ColorManager.DEFAULT_BORDER_COLOR
             )
+        
+        # Use bright color for focused host
+        if is_focused:
+            border_color = ColorManager.get_ansi_color("BRIGHT_YELLOW")
+        
         border = (
             border_color
             + "├"
@@ -330,12 +345,13 @@ class HostSection:
 
         return ""
 
-    def render(self, term: Terminal) -> None:
+    def render(self, term: Terminal, is_focused: bool = False) -> None:
         """
         Render the host section with a drawn box.
 
         Args:
             term: Terminal object for rendering
+            is_focused: Whether this host is currently focused
         """
         if not self._should_render(term):
             return
@@ -350,8 +366,8 @@ class HostSection:
             self._last_state_log = current_time
 
         box_width = term.width - Config.TERMINAL_MARGIN
-        self._draw_borders(term, box_width)
-        self._render_header(term, box_width)
+        self._draw_borders(term, box_width, is_focused)
+        self._render_header(term, box_width, is_focused)
         self._render_output_lines(term, box_width)
 
     def _should_render(self, term: Terminal) -> bool:
@@ -372,32 +388,34 @@ class HostSection:
             return False
         return True
 
-    def _draw_borders(self, term: Terminal, box_width: int) -> None:
+    def _draw_borders(self, term: Terminal, box_width: int, is_focused: bool = False) -> None:
         """
         Draw the border lines for this section.
 
         Args:
             term: Terminal object
             box_width: Width of the box
+            is_focused: Whether this host is currently focused
         """
         # Top border
-        BorderRenderer.draw_top_border(term, self.start_y, box_width)
+        BorderRenderer.draw_top_border(term, self.start_y, box_width, is_focused=is_focused)
 
         # Middle border
-        BorderRenderer.draw_middle_border(term, self.start_y + 2, box_width)
+        BorderRenderer.draw_middle_border(term, self.start_y + 2, box_width, is_focused=is_focused)
 
         # Bottom border
         BorderRenderer.draw_bottom_border(
-            term, self.start_y + self.height - 1, box_width
+            term, self.start_y + self.height - 1, box_width, is_focused=is_focused
         )
 
-    def _render_header(self, term: Terminal, box_width: int) -> None:
+    def _render_header(self, term: Terminal, box_width: int, is_focused: bool = False) -> None:
         """
         Render the header line with status information.
 
         Args:
             term: Terminal object
             box_width: Width of the box
+            is_focused: Whether this host is currently focused
         """
         status_color = self.get_status_color()
         symbol = self.get_status_symbol()
@@ -406,7 +424,10 @@ class HostSection:
         display_hostname = (
             self.hostname.split("@")[-1] if "@" in self.hostname else self.hostname
         )
-        header = f"{symbol} {display_hostname} [{self.status}]"
+        
+        # Add focus indicator
+        focus_indicator = "▶ " if is_focused else "  "
+        header = f"{focus_indicator}{symbol} {display_hostname} [{self.status}]"
 
         # Add duration and current step
         if self.duration > 0:
@@ -454,16 +475,6 @@ class HostSection:
         # Draw the header line
         BorderRenderer.draw_content_line(
             term, self.start_y + 1, header_content, box_width
-        )
-
-        # Middle border
-        print(
-            term.move(self.start_y + 2, 1)
-            + ColorManager.get_ansi_color(ColorManager.DEFAULT_BORDER_COLOR)
-            + "├"
-            + "─" * (box_width - 2)
-            + "┤"
-            + ColorManager.get_ansi_color("RESET")
         )
 
     def _render_output_lines(self, term: Terminal, box_width: int) -> None:
