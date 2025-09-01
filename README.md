@@ -15,6 +15,7 @@ Build TUI provides real-time monitoring of parallel build processes with a clean
 - **Terminal UI**: Responsive interface that adapts to terminal size
 - **SSH Integration**: Secure remote execution with comprehensive error handling
 - **Build Step Detection**: Automatic detection of build phases (configure, make, install, etc.)
+- **Build Timing Cache**: Persistent storage of build timing data for progress estimates
 - **Auto-Exit**: Automatically exits after builds complete with configurable delay
 - **Build Summary**: Comprehensive build result summaries with success/failure reporting
 
@@ -57,6 +58,82 @@ The application automatically exits after a configurable delay once all builds c
 ```bash
 --auto-exit-delay SECONDS    # Custom delay (default: 300 = 5 minutes)
 --no-auto-exit               # Disable auto-exit entirely
+```
+
+## Command Line Options
+
+### Build and Host Configuration
+```bash
+tarball                      # The Redland package tarball (e.g., redland-1.1.0.tar.gz)
+hosts                        # One or more username@hostname pairs (can be comma-separated)
+-f, --hosts-file FILE        # Read hosts from file, one per line
+--max-concurrent N           # Maximum concurrent builds (default: auto-detect based on screen size)
+```
+
+### Auto-Exit Configuration
+```bash
+--auto-exit-delay SECONDS    # Auto-exit delay in seconds (default: 300 = 5 minutes)
+--no-auto-exit               # Disable auto-exit functionality
+```
+
+### Build Timing Cache Configuration
+```bash
+--cache-file PATH            # Custom cache file location (default: ~/.config/build-tui/timing-cache.json)
+--cache-retention DAYS       # Cache retention period in days (default: 30)
+--cache-keep-builds N        # Number of recent builds to keep in cache (default: 5)
+--no-cache                   # Disable timing cache functionality
+--no-progress                # Disable progress display
+```
+
+### Output and Debug Options
+```bash
+--color MODE                 # Control color output: auto (default), always, or never
+--debug                      # Enable debug logging to debug.log file
+```
+
+### Cache Management
+```bash
+--cleanup-demo-hosts         # Clean up demo/test host data from timing cache and exit
+--remove-testing-hosts       # Remove specific testing hosts from timing cache and exit
+```
+
+## Build Timing Cache
+
+The Build Timing Cache system provides intelligent progress estimation by storing historical build timing data. This enables accurate progress estimates for ongoing builds based on previous performance data from the same hosts.
+
+### Key Features
+
+- **Progress Estimation**: Real-time progress estimates based on historical data
+- **Host-Specific Data**: Separate timing statistics for each remote host
+- **Global Build Retention**: Configurable limit on the number of recent builds to keep
+- **Time-Based Cleanup**: Automatic removal of data older than the retention period
+- **Demo Host Management**: Special handling for temporary/testing hosts with shorter retention
+
+### Cache Configuration
+
+The cache system supports both count-based and time-based retention:
+
+- **Count-Based**: Keep only the last N builds globally (default: 5)
+- **Time-Based**: Remove data older than X days (default: 30 days)
+- **Demo Hosts**: Automatically cleaned after 1 hour
+
+### Cache Usage Examples
+
+```bash
+# Default cache settings (5 builds, 30 days retention)
+./build-redland-tui.py redland-1.1.0.tar.gz user@host1
+
+# Keep more build history
+./build-redland-tui.py redland-1.1.0.tar.gz --cache-keep-builds 10 user@host1
+
+# Longer retention period
+./build-redland-tui.py redland-1.1.0.tar.gz --cache-retention 90 user@host1
+
+# Custom cache location
+./build-redland-tui.py redland-1.1.0.tar.gz --cache-file ~/.my-build-cache.json user@host1
+
+# Disable caching entirely
+./build-redland-tui.py redland-1.1.0.tar.gz --no-cache user@host1
 ```
 
 ### Build Summary Output
