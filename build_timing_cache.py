@@ -28,13 +28,19 @@ class BuildTimingRecord:
 class BuildTimingCache:
     """Manages persistent build timing data for progress estimates"""
 
-    def __init__(self, cache_file_path: str = None, retention_days: int = 1):
+    def __init__(
+        self,
+        cache_file_path: str = None,
+        retention_days: int = 30,
+        keep_builds: int = 5,
+    ):
         """
         Initialize the build timing cache.
 
         Args:
             cache_file_path: Path to cache file relative to ~ (default: .config/build-tui/timing-cache.json)
-            retention_days: Number of days to retain timing data (default: 1)
+            retention_days: Number of days to retain timing data (default: 30)
+            keep_builds: Number of recent builds to keep globally (default: 5)
         """
         # Set default path if none provided
         if cache_file_path is None:
@@ -46,12 +52,13 @@ class BuildTimingCache:
             cache_file_path = os.path.expanduser(f"~/{cache_file_path}")
         self.cache_file_path = cache_file_path
         self.retention_days = retention_days
+        self.keep_builds = keep_builds
         self.cache_data = self._load_cache()
         self._cleanup_old_data()
 
         logging.debug(
             f"BuildTimingCache initialized: {self.cache_file_path}, "
-            f"retention: {retention_days} days"
+            f"retention: {retention_days} days, keep builds: {keep_builds}"
         )
 
     def _normalize_hostname(self, hostname: str) -> str:
@@ -152,6 +159,9 @@ class BuildTimingCache:
                     data = json.load(f)
                     # Validate version and structure
                     if data.get("version") == "1.0":
+                        # Update cache settings to current values
+                        data["cache_retention_days"] = self.retention_days
+                        data["cache_keep_builds"] = self.keep_builds
                         logging.debug(
                             f"Loaded existing cache from {self.cache_file_path}"
                         )
@@ -165,6 +175,7 @@ class BuildTimingCache:
         default_cache = {
             "version": "1.0",
             "cache_retention_days": self.retention_days,
+            "cache_keep_builds": self.keep_builds,
             "hosts": {},
         }
         logging.debug("Created new default cache structure")
@@ -306,8 +317,8 @@ class BuildTimingCache:
         )
 
         host_data["recent_builds"].append(asdict(recent_build))
-        if len(host_data["recent_builds"]) > 10:
-            host_data["recent_builds"] = host_data["recent_builds"][-10:]
+        if len(host_data["recent_builds"]) > self.keep_builds:
+            host_data["recent_builds"] = host_data["recent_builds"][-self.keep_builds:]
 
         logging.debug(
             f"Recorded timing for {host_name}: configure={configure_time:.1f}s, "
@@ -460,6 +471,7 @@ class BuildTimingCache:
             "version": self.cache_data["version"],
             "cache_file": self.cache_file_path,
             "retention_days": self.retention_days,
+            "keep_builds": self.keep_builds,
             "total_hosts": total_hosts,
             "total_builds": total_builds,
             "cache_size_bytes": (

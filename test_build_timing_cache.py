@@ -171,9 +171,9 @@ class TestBuildTimingCache(unittest.TestCase):
         self.assertEqual(len(host_data["recent_builds"]), 2)
 
     def test_recent_builds_limit(self):
-        """Test that recent builds are limited to 10."""
-        # Record 12 builds
-        for i in range(12):
+        """Test that recent builds are limited to keep_builds setting."""
+        # The default keep_builds is 5, so record 8 builds to test the limit
+        for i in range(8):
             self.cache.record_build_timing(
                 host_name="limit-test-host",
                 configure_time=float(i),
@@ -183,13 +183,17 @@ class TestBuildTimingCache(unittest.TestCase):
                 success=True,
             )
 
-        # Should only keep last 10
+        # Should only keep last 5 (the default keep_builds value)
         host_data = self.cache.cache_data["hosts"]["limit-test-host"]
-        self.assertEqual(len(host_data["recent_builds"]), 10)
+        self.assertEqual(len(host_data["recent_builds"]), 5)
 
-        # Last build should be the 12th one (index 11)
+        # Last build should be the 8th one (index 7)
         last_build = host_data["recent_builds"][-1]
-        self.assertEqual(last_build["configure_time"], 11.0)
+        self.assertEqual(last_build["configure_time"], 7.0)
+        
+        # First build in the list should be the 4th one (index 3) since we keep last 5
+        first_build = host_data["recent_builds"][0]
+        self.assertEqual(first_build["configure_time"], 3.0)
 
     def test_get_progress_estimate_configure(self):
         """Test progress estimate for configure step."""

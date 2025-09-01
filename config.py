@@ -59,7 +59,8 @@ class Config:
 
     # Timing cache settings
     TIMING_CACHE_FILE = ".config/build-tui/timing-cache.json"
-    TIMING_CACHE_RETENTION_DAYS = 1
+    TIMING_CACHE_RETENTION_DAYS = 30
+    TIMING_CACHE_KEEP_BUILDS = 5  # Number of recent builds to keep
     TIMING_CACHE_DEMO_RETENTION_HOURS = 1  # Demo hosts get 1 hour TTL
     TIMING_CACHE_ENABLED = True
     TIMING_CACHE_SHOW_PROGRESS = True
@@ -104,6 +105,7 @@ class Config:
             "AUTO_EXIT_SHOW_COUNTDOWN": cls.AUTO_EXIT_SHOW_COUNTDOWN,
             "TIMING_CACHE_FILE": cls.TIMING_CACHE_FILE,
             "TIMING_CACHE_RETENTION_DAYS": cls.TIMING_CACHE_RETENTION_DAYS,
+            "TIMING_CACHE_KEEP_BUILDS": cls.TIMING_CACHE_KEEP_BUILDS,
             "TIMING_CACHE_ENABLED": cls.TIMING_CACHE_ENABLED,
             "TIMING_CACHE_SHOW_PROGRESS": cls.TIMING_CACHE_SHOW_PROGRESS,
         }

@@ -40,6 +40,7 @@ class BuildTUI:
         auto_exit_enabled: Optional[bool] = None,
         cache_file: Optional[str] = None,
         cache_retention: Optional[int] = None,
+        cache_keep_builds: Optional[int] = None,
         cache_enabled: Optional[bool] = None,
         progress_enabled: Optional[bool] = None,
     ):
@@ -47,7 +48,7 @@ class BuildTUI:
             logging.debug("Initializing BuildTUI")
             self.hosts = hosts
             self.tarball = tarball
-            
+
             # Get current user for cache key construction
             self.current_user = getpass.getuser()
             logging.debug(f"Current user: {self.current_user}")
@@ -62,11 +63,11 @@ class BuildTUI:
             self.menu_selection = 0
             self.menu_options = []
             logging.debug("Menu state initialized")
-            
+
             # Initialize log scrolling state
-            self.scroll_offset = 0          # Lines scrolled up from bottom
-            self.max_scroll_offset = 0      # Maximum possible scroll offset
-            self.scroll_mode = False        # Whether currently in scroll mode
+            self.scroll_offset = 0  # Lines scrolled up from bottom
+            self.max_scroll_offset = 0  # Maximum possible scroll offset
+            self.scroll_mode = False  # Whether currently in scroll mode
             logging.debug("Log scrolling state initialized")
 
             # Validate tarball file exists before proceeding
@@ -155,6 +156,11 @@ class BuildTUI:
                     if cache_retention is not None
                     else Config.TIMING_CACHE_RETENTION_DAYS
                 )
+                cache_keep_builds_count = (
+                    cache_keep_builds
+                    if cache_keep_builds is not None
+                    else Config.TIMING_CACHE_KEEP_BUILDS
+                )
 
                 try:
                     from build_timing_cache import BuildTimingCache
@@ -162,9 +168,10 @@ class BuildTUI:
                     self.timing_cache = BuildTimingCache(
                         cache_file_path=cache_file_path,
                         retention_days=cache_retention_days,
+                        keep_builds=cache_keep_builds_count,
                     )
                     logging.debug(
-                        f"Timing cache initialized: {cache_file_path}, retention: {cache_retention_days} days"
+                        f"Timing cache initialized: {cache_file_path}, retention: {cache_retention_days} days, keep builds: {cache_keep_builds_count}"
                     )
                 except ImportError as e:
                     logging.warning(f"Failed to import BuildTimingCache: {e}")
@@ -301,10 +308,10 @@ class BuildTUI:
     def _get_cache_key(self, host_name: str) -> str:
         """
         Get the proper cache key for a host in user@hostname format.
-        
+
         Args:
             host_name: Host name as provided (may or may not include username)
-            
+
         Returns:
             Cache key in user@hostname format
         """
@@ -476,20 +483,24 @@ class BuildTUI:
                         has_updates = True
 
             # Debug logging for render state
-            logging.debug(f"Render state: full_screen_mode={self.full_screen_mode}, full_screen_host={self.full_screen_host}, menu_mode={self.menu_mode}")
-            
+            logging.debug(
+                f"Render state: full_screen_mode={self.full_screen_mode}, full_screen_host={self.full_screen_host}, menu_mode={self.menu_mode}"
+            )
+
             # Update scroll limits if in full-screen mode
             if self.full_screen_mode and self.full_screen_host:
                 if self.full_screen_host in self.ssh_manager.results:
                     result = self.ssh_manager.results[self.full_screen_host]
                     if "output" in result:
                         self._update_scroll_limits(result["output"])
-                        logging.debug(f"Updated scroll limits for {self.full_screen_host}: output_lines={len(result['output'])}")
+                        logging.debug(
+                            f"Updated scroll limits for {self.full_screen_host}: output_lines={len(result['output'])}"
+                        )
                     else:
                         logging.debug(f"No output found for {self.full_screen_host}")
                 else:
                     logging.debug(f"No results found for {self.full_screen_host}")
-            
+
             # Use the renderer to handle all UI rendering
             self.renderer.render_full_ui(
                 self.tarball,
@@ -503,7 +514,11 @@ class BuildTUI:
                 menu_mode=self.menu_mode,
                 menu_options=self.menu_options,
                 menu_selection=self.menu_selection,
-                focused_host=self.hosts[self.focused_host] if self.focused_host < len(self.hosts) else None,
+                focused_host=(
+                    self.hosts[self.focused_host]
+                    if self.focused_host < len(self.hosts)
+                    else None
+                ),
                 scroll_offset=self.scroll_offset,
                 scroll_mode=self.scroll_mode,
                 max_scroll_offset=self.max_scroll_offset,
@@ -538,23 +553,27 @@ class BuildTUI:
                     print(f"  {line}")
             print()
 
-
-
     def _on_quit(self) -> None:
         """Handle quit request."""
         self.running = False
 
     def _on_navigate_up(self) -> None:
         """Handle up navigation."""
-        logging.debug(f"UP navigation called, current focused_host: {self.focused_host}")
+        logging.debug(
+            f"UP navigation called, current focused_host: {self.focused_host}"
+        )
         self.focused_host = max(0, self.focused_host - 1)
         logging.debug(f"UP navigation completed, new focused_host: {self.focused_host}")
 
     def _on_navigate_down(self) -> None:
         """Handle down navigation."""
-        logging.debug(f"DOWN navigation called, current focused_host: {self.focused_host}")
+        logging.debug(
+            f"DOWN navigation called, current focused_host: {self.focused_host}"
+        )
         self.focused_host = min(len(self.host_sections) - 1, self.focused_host + 1)
-        logging.debug(f"DOWN navigation completed, new focused_host: {self.focused_host}")
+        logging.debug(
+            f"DOWN navigation completed, new focused_host: {self.focused_host}"
+        )
 
     def _on_show_help(self) -> None:
         """Handle help request."""
@@ -586,10 +605,10 @@ class BuildTUI:
         """Handle menu selection (ENTER key in menu mode)."""
         if not self.menu_mode or not self.menu_options:
             return
-        
+
         selected_option = self.menu_options[self.menu_selection]
         logging.debug(f"Menu option selected: {selected_option}")
-        
+
         if selected_option["type"] == "host":
             # Select the host and exit menu
             self.focused_host = selected_option["index"]
@@ -597,7 +616,7 @@ class BuildTUI:
             self.menu_selection = 0
             self.input_handler.set_navigation_mode(NavigationMode.HOST_NAVIGATION)
             logging.debug(f"Selected host: {selected_option['host']}")
-        
+
         elif selected_option["type"] == "action":
             if selected_option["action"] == "show_help":
                 self.show_help()
@@ -616,11 +635,15 @@ class BuildTUI:
         else:
             # Enter full-screen mode
             self.full_screen_mode = True
-            self.full_screen_host = self.hosts[self.focused_host]  # Get actual host name, not index
+            self.full_screen_host = self.hosts[
+                self.focused_host
+            ]  # Get actual host name, not index
             self.scroll_offset = 0  # Start at bottom (latest output)
             self.scroll_mode = False  # Start in auto-scroll mode
-            logging.debug(f"Entered full-screen mode for host {self.full_screen_host}, scroll_offset={self.scroll_offset}, scroll_mode={self.scroll_mode}")
-        
+            logging.debug(
+                f"Entered full-screen mode for host {self.full_screen_host}, scroll_offset={self.scroll_offset}, scroll_mode={self.scroll_mode}"
+            )
+
         # Update input handler navigation mode
         if self.full_screen_mode:
             self.input_handler.set_navigation_mode(NavigationMode.FULL_SCREEN)
@@ -668,10 +691,16 @@ class BuildTUI:
         """Handle page up for log scrolling."""
         if self.full_screen_mode and self.full_screen_host:
             # Calculate page size (terminal height minus header/footer)
-            page_size = self.term.height - 8  # Leave room for header/footer (same as renderer)
-            self.scroll_offset = min(self.scroll_offset + page_size, self.max_scroll_offset)
+            page_size = (
+                self.term.height - 8
+            )  # Leave room for header/footer (same as renderer)
+            self.scroll_offset = min(
+                self.scroll_offset + page_size, self.max_scroll_offset
+            )
             self.scroll_mode = True  # Enter manual scroll mode
-            logging.debug(f"Page up: scroll_offset={self.scroll_offset}, max={self.max_scroll_offset}")
+            logging.debug(
+                f"Page up: scroll_offset={self.scroll_offset}, max={self.max_scroll_offset}"
+            )
         else:
             logging.debug("Page up requested but not in full-screen mode")
 
@@ -679,11 +708,15 @@ class BuildTUI:
         """Handle page down for log scrolling."""
         if self.full_screen_mode and self.full_screen_host:
             # Calculate page size (terminal height minus header/footer)
-            page_size = self.term.height - 8  # Leave room for header/footer (same as renderer)
+            page_size = (
+                self.term.height - 8
+            )  # Leave room for header/footer (same as renderer)
             self.scroll_offset = max(self.scroll_offset - page_size, 0)
             if self.scroll_offset == 0:
                 self.scroll_mode = False  # Back to auto-scroll mode
-            logging.debug(f"Page down: scroll_offset={self.scroll_offset}, scroll_mode={self.scroll_mode}")
+            logging.debug(
+                f"Page down: scroll_offset={self.scroll_offset}, scroll_mode={self.scroll_mode}"
+            )
         else:
             logging.debug("Page down requested but not in full-screen mode")
 
@@ -693,7 +726,9 @@ class BuildTUI:
             # Scroll up by one line
             self.scroll_offset = min(self.scroll_offset + 1, self.max_scroll_offset)
             self.scroll_mode = True  # Enter manual scroll mode
-            logging.debug(f"Line up: scroll_offset={self.scroll_offset}, max={self.max_scroll_offset}")
+            logging.debug(
+                f"Line up: scroll_offset={self.scroll_offset}, max={self.max_scroll_offset}"
+            )
         else:
             logging.debug("Line up requested but not in full-screen mode")
 
@@ -704,7 +739,9 @@ class BuildTUI:
             self.scroll_offset = max(self.scroll_offset - 1, 0)
             if self.scroll_offset == 0:
                 self.scroll_mode = False  # Back to auto-scroll mode
-            logging.debug(f"Line down: scroll_offset={self.scroll_offset}, scroll_mode={self.scroll_mode}")
+            logging.debug(
+                f"Line down: scroll_offset={self.scroll_offset}, scroll_mode={self.scroll_mode}"
+            )
         else:
             logging.debug("Line down requested but not in full-screen mode")
 
@@ -713,7 +750,9 @@ class BuildTUI:
         if self.full_screen_mode and self.full_screen_host:
             self.scroll_offset = self.max_scroll_offset  # Jump to beginning of log
             self.scroll_mode = True  # Enter manual scroll mode
-            logging.debug(f"Home: scroll_offset={self.scroll_offset} (beginning of log)")
+            logging.debug(
+                f"Home: scroll_offset={self.scroll_offset} (beginning of log)"
+            )
         else:
             logging.debug("Home key pressed but not in full-screen mode")
 
@@ -734,7 +773,9 @@ class BuildTUI:
             self.max_scroll_offset = max(0, len(log_lines) - available_height)
             # Ensure current scroll offset is within bounds
             self.scroll_offset = min(self.scroll_offset, self.max_scroll_offset)
-            logging.debug(f"Updated scroll limits: log_lines={len(log_lines)}, term_height={self.term.height}, available_height={available_height}, max_offset={self.max_scroll_offset}, current={self.scroll_offset}")
+            logging.debug(
+                f"Updated scroll limits: log_lines={len(log_lines)}, term_height={self.term.height}, available_height={available_height}, max_offset={self.max_scroll_offset}, current={self.scroll_offset}"
+            )
         else:
             self.max_scroll_offset = 0
             self.scroll_offset = 0
@@ -746,33 +787,37 @@ class BuildTUI:
         self.menu_mode = False
         self.menu_selection = 0
         self.input_handler.set_navigation_mode(NavigationMode.HOST_NAVIGATION)
-        
+
         try:
             # Calculate help box dimensions
             help_width = 70
             help_height = 20
-            
+
             # Ensure we don't go off-screen
             if help_width > self.term.width:
                 help_width = self.term.width - 4
             if help_height > self.term.height:
                 help_height = self.term.height - 4
-            
+
             # Center the help box
             start_x = max(2, (self.term.width - help_width) // 2)
             start_y = max(2, (self.term.height - help_height) // 2)
-            
-            logging.debug(f"Drawing help overlay at ({start_x}, {start_y}) with size {help_width}x{help_height}")
-            
+
+            logging.debug(
+                f"Drawing help overlay at ({start_x}, {start_y}) with size {help_width}x{help_height}"
+            )
+
             # Clear the area first, then draw help overlay
             self._clear_help_area(start_x, start_y, help_width, help_height)
-            self._draw_positioned_help_overlay(start_x, start_y, help_width, help_height)
-            
+            self._draw_positioned_help_overlay(
+                start_x, start_y, help_width, help_height
+            )
+
             # Wait for key press
             with self.term.cbreak():
                 key = self.term.inkey()
                 logging.debug(f"Help screen closed with key: {key}")
-                
+
         except (EOFError, KeyboardInterrupt):
             logging.debug("Help screen interrupted")
         except Exception as e:
@@ -792,8 +837,10 @@ class BuildTUI:
         finally:
             # Restore screen by triggering a render
             logging.debug("Help screen closed, restoring display")
-    
-    def _draw_positioned_help_overlay(self, start_x: int, start_y: int, width: int, height: int) -> None:
+
+    def _draw_positioned_help_overlay(
+        self, start_x: int, start_y: int, width: int, height: int
+    ) -> None:
         """Draw a help overlay using blessed positioning without causing scrolling."""
         try:
             # Help content lines
@@ -814,25 +861,37 @@ class BuildTUI:
                 "  h          - Show this help",
                 "  q          - Quit application",
                 "",
-                "Press any key to continue..."
+                "Press any key to continue...",
             ]
-            
+
             # Draw top border
             with self.term.location(start_x, start_y):
-                print(self.term.bright_blue + "┌" + "─" * (width - 2) + "┐" + self.term.normal)
-            
+                print(
+                    self.term.bright_blue
+                    + "┌"
+                    + "─" * (width - 2)
+                    + "┐"
+                    + self.term.normal
+                )
+
             # Draw title line
             title = " Build Redland TUI - Help "
             title_padding = max(0, (width - len(title)) // 2)
-            title_line = "│" + " " * title_padding + title + " " * max(0, width - len(title) - title_padding - 2) + "│"
+            title_line = (
+                "│"
+                + " " * title_padding
+                + title
+                + " " * max(0, width - len(title) - title_padding - 2)
+                + "│"
+            )
             with self.term.location(start_x, start_y + 1):
                 print(self.term.bright_blue + title_line + self.term.normal)
-            
+
             # Draw separator line
             separator = "├" + "─" * (width - 2) + "┤"
             with self.term.location(start_x, start_y + 2):
                 print(self.term.bright_blue + separator + self.term.normal)
-            
+
             # Draw help content
             for i, line in enumerate(help_lines):
                 if i + 3 < height - 1:  # Leave room for bottom border
@@ -841,12 +900,12 @@ class BuildTUI:
                     content_line = "│ " + padded_line + " │"
                     with self.term.location(start_x, start_y + 3 + i):
                         print(self.term.bright_blue + content_line + self.term.normal)
-            
+
             # Draw bottom border
             bottom_border = "└" + "─" * (width - 2) + "┘"
             with self.term.location(start_x, start_y + height - 1):
                 print(self.term.bright_blue + bottom_border + self.term.normal)
-                
+
         except Exception as e:
             logging.error(f"Error drawing positioned help overlay: {e}")
             # Fallback to simple help if overlay fails
@@ -857,28 +916,37 @@ class BuildTUI:
             print("Help: h, Quit: q")
             print("Press any key to continue...")
             print("=" * 60)
-    
-    def _draw_simple_help_overlay(self, left_padding: int, top_padding: int, width: int, height: int) -> None:
+
+    def _draw_simple_help_overlay(
+        self, left_padding: int, top_padding: int, width: int, height: int
+    ) -> None:
         """Draw a simple help overlay using print statements with padding."""
         try:
             # Top padding
             for _ in range(top_padding):
                 print()
-            
+
             # Top border
             top_border = " " * left_padding + "┌" + "─" * (width - 2) + "┐"
             print(self.term.bright_blue + top_border + self.term.normal)
-            
+
             # Title line
             title = " Build Redland TUI - Help "
             title_padding = max(0, (width - len(title)) // 2)
-            title_line = " " * left_padding + "│" + " " * title_padding + title + " " * max(0, width - len(title) - title_padding - 2) + "│"
+            title_line = (
+                " " * left_padding
+                + "│"
+                + " " * title_padding
+                + title
+                + " " * max(0, width - len(title) - title_padding - 2)
+                + "│"
+            )
             print(self.term.bright_blue + title_line + self.term.normal)
-            
+
             # Separator line
             separator = " " * left_padding + "├" + "─" * (width - 2) + "┤"
             print(self.term.bright_blue + separator + self.term.normal)
-            
+
             # Help content lines
             help_lines = [
                 "Navigation:",
@@ -897,9 +965,9 @@ class BuildTUI:
                 "  h          - Show this help",
                 "  q          - Quit application",
                 "",
-                "Press any key to continue..."
+                "Press any key to continue...",
             ]
-            
+
             # Draw help content
             for i, line in enumerate(help_lines):
                 if i + 3 < height - 1:  # Leave room for bottom border
@@ -907,15 +975,15 @@ class BuildTUI:
                     padded_line = line.ljust(width - 2)
                     content_line = " " * left_padding + "│ " + padded_line + " │"
                     print(self.term.bright_blue + content_line + self.term.normal)
-            
+
             # Bottom border
             bottom_border = " " * left_padding + "└" + "─" * (width - 2) + "┘"
             print(self.term.bright_blue + bottom_border + self.term.normal)
-            
+
             # Bottom padding
             for _ in range(top_padding):
                 print()
-                
+
         except Exception as e:
             logging.error(f"Error drawing simple help overlay: {e}")
             # Fallback to simple help if overlay fails
@@ -926,8 +994,10 @@ class BuildTUI:
             print("Help: h, Quit: q")
             print("Press any key to continue...")
             print("=" * 60)
-    
-    def _clear_help_area(self, start_x: int, start_y: int, width: int, height: int) -> None:
+
+    def _clear_help_area(
+        self, start_x: int, start_y: int, width: int, height: int
+    ) -> None:
         """Clear the area where the help overlay will be drawn."""
         try:
             for y in range(start_y, start_y + height):
@@ -936,34 +1006,47 @@ class BuildTUI:
                     print(" " * width)
         except Exception as e:
             logging.error(f"Error clearing help area: {e}")
-    
-    def _draw_help_overlay(self, start_x: int, start_y: int, width: int, height: int) -> None:
+
+    def _draw_help_overlay(
+        self, start_x: int, start_y: int, width: int, height: int
+    ) -> None:
         """Draw a bordered help overlay box."""
         try:
             # Ensure we're within terminal bounds
-            if (start_x < 0 or start_y < 0 or 
-                start_x + width > self.term.width or 
-                start_y + height > self.term.height):
-                logging.warning(f"Help overlay would be off-screen: ({start_x}, {start_y}) {width}x{height}")
+            if (
+                start_x < 0
+                or start_y < 0
+                or start_x + width > self.term.width
+                or start_y + height > self.term.height
+            ):
+                logging.warning(
+                    f"Help overlay would be off-screen: ({start_x}, {start_y}) {width}x{height}"
+                )
                 return
-            
+
             # Draw top border
             top_border = "┌" + "─" * (width - 2) + "┐"
             with self.term.location(start_x, start_y):
                 print(self.term.bright_blue + top_border + self.term.normal)
-            
+
             # Draw title line
             title = " Build Redland TUI - Help "
             title_padding = max(0, (width - len(title)) // 2)
-            title_line = "│" + " " * title_padding + title + " " * max(0, width - len(title) - title_padding - 2) + "│"
+            title_line = (
+                "│"
+                + " " * title_padding
+                + title
+                + " " * max(0, width - len(title) - title_padding - 2)
+                + "│"
+            )
             with self.term.location(start_x, start_y + 1):
                 print(self.term.bright_blue + title_line + self.term.normal)
-            
+
             # Draw separator line
             separator = "├" + "─" * (width - 2) + "┤"
             with self.term.location(start_x, start_y + 2):
                 print(self.term.bright_blue + separator + self.term.normal)
-            
+
             # Help content lines
             help_lines = [
                 "Navigation:",
@@ -982,9 +1065,9 @@ class BuildTUI:
                 "  h          - Show this help",
                 "  q          - Quit application",
                 "",
-                "Press any key to continue..."
+                "Press any key to continue...",
             ]
-            
+
             # Draw help content
             for i, line in enumerate(help_lines):
                 if i + 3 < height - 1:  # Leave room for bottom border
@@ -993,12 +1076,12 @@ class BuildTUI:
                     content_line = "│ " + padded_line + " │"
                     with self.term.location(start_x, start_y + 3 + i):
                         print(self.term.bright_blue + content_line + self.term.normal)
-            
+
             # Draw bottom border
             bottom_border = "└" + "─" * (width - 2) + "┘"
             with self.term.location(start_x, start_y + height - 1):
                 print(self.term.bright_blue + bottom_border + self.term.normal)
-                
+
         except Exception as e:
             logging.error(f"Error drawing help overlay: {e}")
             # Fallback to simple help if overlay fails
@@ -1013,47 +1096,44 @@ class BuildTUI:
     def _build_menu_options(self) -> None:
         """Build the list of menu options based on current state."""
         self.menu_options = []
-        
+
         # Add host-related options
         for i, host in enumerate(self.hosts):
             status = "IDLE"
             if host in self.ssh_manager.results:
                 status = self.ssh_manager.results[host]["status"]
-            
+
             # Add host selection option
-            self.menu_options.append({
-                "type": "host",
-                "host": host,
-                "index": i,
-                "text": f"Host: {host} ({status})",
-                "action": "select_host"
-            })
-        
+            self.menu_options.append(
+                {
+                    "type": "host",
+                    "host": host,
+                    "index": i,
+                    "text": f"Host: {host} ({status})",
+                    "action": "select_host",
+                }
+            )
+
         # Add separator
-        self.menu_options.append({
-            "type": "separator",
-            "text": "─" * 40
-        })
-        
+        self.menu_options.append({"type": "separator", "text": "─" * 40})
+
         # Add action options
-        self.menu_options.append({
-            "type": "action",
-            "text": "Show Help",
-            "action": "show_help"
-        })
-        
-        self.menu_options.append({
-            "type": "action",
-            "text": "Quit Application",
-            "action": "quit"
-        })
-        
+        self.menu_options.append(
+            {"type": "action", "text": "Show Help", "action": "show_help"}
+        )
+
+        self.menu_options.append(
+            {"type": "action", "text": "Quit Application", "action": "quit"}
+        )
+
         logging.debug(f"Built menu with {len(self.menu_options)} options")
 
     def _handle_input_key(self, key) -> None:
         """Handle a single key press using the InputHandler."""
-        logging.debug(f"Handling key: {key} (menu_mode={self.menu_mode}, full_screen_mode={self.full_screen_mode})")
-        
+        logging.debug(
+            f"Handling key: {key} (menu_mode={self.menu_mode}, full_screen_mode={self.full_screen_mode})"
+        )
+
         # Choose the appropriate navigation callbacks based on current mode
         if self.menu_mode:
             # In menu mode, use menu navigation callbacks

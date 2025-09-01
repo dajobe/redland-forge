@@ -84,8 +84,14 @@ Hosts file format:
     parser.add_argument(
         "--cache-retention",
         type=int,
-        default=1,
-        help="Cache retention period in days (default: 1)",
+        default=30,
+        help="Cache retention period in days (default: 30)",
+    )
+    parser.add_argument(
+        "--cache-keep-builds",
+        type=int,
+        default=5,
+        help="Number of recent builds to keep in cache (default: 5)",
     )
     parser.add_argument(
         "--no-cache",
@@ -208,6 +214,7 @@ def main() -> int:
         # Prepare timing cache options
         cache_file = args.cache_file
         cache_retention = args.cache_retention
+        cache_keep_builds = args.cache_keep_builds
         cache_enabled = not args.no_cache
         progress_enabled = not args.no_progress
 
@@ -219,6 +226,7 @@ def main() -> int:
             auto_exit_enabled=auto_exit_enabled,
             cache_file=cache_file,
             cache_retention=cache_retention,
+            cache_keep_builds=cache_keep_builds,
             cache_enabled=cache_enabled,
             progress_enabled=progress_enabled,
         )
