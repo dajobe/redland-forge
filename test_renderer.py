@@ -163,7 +163,9 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "BUILDING"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
+        visible_count = self.renderer.render_host_sections(
+            host_sections, ssh_results, None
+        )
 
         self.assertEqual(visible_count, 1)
         mock_section.render.assert_called_once_with(self.mock_terminal, False)
@@ -178,7 +180,9 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "SUCCESS"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
+        visible_count = self.renderer.render_host_sections(
+            host_sections, ssh_results, None
+        )
 
         self.assertEqual(visible_count, 1)
         mock_section.render.assert_called_once_with(self.mock_terminal, False)
@@ -193,7 +197,9 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "SUCCESS"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
+        visible_count = self.renderer.render_host_sections(
+            host_sections, ssh_results, None
+        )
 
         self.assertEqual(visible_count, 0)
         mock_section.render.assert_not_called()
@@ -208,7 +214,9 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "FAILED"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
+        visible_count = self.renderer.render_host_sections(
+            host_sections, ssh_results, None
+        )
 
         self.assertEqual(visible_count, 1)
         mock_section.render.assert_called_once_with(self.mock_terminal, False)
@@ -223,7 +231,9 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {"host1": {"status": "FAILED"}}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
+        visible_count = self.renderer.render_host_sections(
+            host_sections, ssh_results, None
+        )
 
         self.assertEqual(visible_count, 0)
         mock_section.render.assert_not_called()
@@ -234,7 +244,9 @@ class TestRendererHostSectionRendering(unittest.TestCase):
         host_sections = {"host1": mock_section}
         ssh_results = {}
 
-        visible_count = self.renderer.render_host_sections(host_sections, ssh_results, None)
+        visible_count = self.renderer.render_host_sections(
+            host_sections, ssh_results, None
+        )
 
         self.assertEqual(visible_count, 0)
         mock_section.render.assert_not_called()

@@ -134,7 +134,7 @@ class ParallelSSHManager:
                         )
                     logging.error(f"SSH connection failed for {hostname}")
                     return
-                    
+
             except Exception as e:
                 with self.lock:
                     self.results[hostname]["status"] = "FAILED"

@@ -190,21 +190,21 @@ class TextFormatter:
 def format_duration(seconds: float) -> str:
     """
     Format duration in seconds to human-readable string in consistent format.
-    
+
     Uses whole seconds and shows:
-    - Under 1 minute: "Ns" 
+    - Under 1 minute: "Ns"
     - 1+ minutes: "NmNs" or "Nm" if no remaining seconds
     - 1+ hours: "NhNm" or "Nh" if no remaining minutes
-    
+
     Args:
         seconds: Duration in seconds
-        
+
     Returns:
         Formatted duration string (e.g., "45s", "2m30s", "1h15m")
     """
     # Round to nearest second first
     total_seconds = int(round(seconds))
-    
+
     if total_seconds < 60:
         return f"{total_seconds}s"
     elif total_seconds < 3600:

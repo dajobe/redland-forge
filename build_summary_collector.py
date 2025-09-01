@@ -171,7 +171,7 @@ class BuildSummaryCollector:
         """
         if seconds is None:
             return "unknown"
-        
+
         return format_duration(seconds)
 
     def generate_summary(self) -> str:

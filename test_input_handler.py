@@ -74,11 +74,15 @@ class TestInputHandlerStateManagement(unittest.TestCase):
     def test_navigation_mode_management(self):
         """Test navigation mode getter and setter."""
         # Initial state should be HOST_NAVIGATION
-        self.assertEqual(self.handler.get_navigation_mode(), NavigationMode.HOST_NAVIGATION)
+        self.assertEqual(
+            self.handler.get_navigation_mode(), NavigationMode.HOST_NAVIGATION
+        )
 
         # Test setting different modes
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        self.assertEqual(self.handler.get_navigation_mode(), NavigationMode.LOG_SCROLLING)
+        self.assertEqual(
+            self.handler.get_navigation_mode(), NavigationMode.LOG_SCROLLING
+        )
 
         self.handler.set_navigation_mode(NavigationMode.FULL_SCREEN)
         self.assertEqual(self.handler.get_navigation_mode(), NavigationMode.FULL_SCREEN)
@@ -139,7 +143,7 @@ class TestInputHandlerNavigationModes(unittest.TestCase):
     def test_host_navigation_mode_up_down(self):
         """Test UP/DOWN keys in host navigation mode."""
         self.handler.set_navigation_mode(NavigationMode.HOST_NAVIGATION)
-        
+
         # Test UP key
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_UP
@@ -173,7 +177,7 @@ class TestInputHandlerNavigationModes(unittest.TestCase):
     def test_host_navigation_mode_left_right(self):
         """Test LEFT/RIGHT keys in host navigation mode."""
         self.handler.set_navigation_mode(NavigationMode.HOST_NAVIGATION)
-        
+
         # Test LEFT key
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_LEFT
@@ -207,7 +211,7 @@ class TestInputHandlerNavigationModes(unittest.TestCase):
     def test_log_scrolling_mode_page_up_down(self):
         """Test PAGE_UP/PAGE_DOWN keys in log scrolling mode."""
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        
+
         # Test PAGE_UP key
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_PGUP
@@ -241,7 +245,7 @@ class TestInputHandlerNavigationModes(unittest.TestCase):
     def test_log_scrolling_mode_home_end(self):
         """Test HOME/END keys in log scrolling mode."""
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        
+
         # Test HOME key
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_HOME
@@ -275,7 +279,7 @@ class TestInputHandlerNavigationModes(unittest.TestCase):
     def test_menu_mode_navigation(self):
         """Test navigation in menu mode."""
         self.handler.set_navigation_mode(NavigationMode.MENU)
-        
+
         # Test UP key in menu mode
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_UP
@@ -311,7 +315,7 @@ class TestInputHandlerNavigationModes(unittest.TestCase):
         for mode in NavigationMode:
             with self.subTest(mode=mode):
                 self.handler.set_navigation_mode(mode)
-                
+
                 # Test 'q' key
                 mock_key = Mock()
                 mock_key.__eq__ = Mock(side_effect=lambda x: x == "q")
@@ -660,7 +664,7 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
         """Test input handling for escape key."""
         # Set to LOG_SCROLLING mode where escape works
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        
+
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_ESCAPE
         mock_inkey = Mock(return_value=mock_key)
@@ -728,7 +732,7 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
         """Test input handling for page up key."""
         # Set to LOG_SCROLLING mode where page up works
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        
+
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_PGUP
         mock_inkey = Mock(return_value=mock_key)
@@ -763,7 +767,7 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
         """Test input handling for page down key."""
         # Set to LOG_SCROLLING mode where page down works
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        
+
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_PGDN
         mock_inkey = Mock(return_value=mock_key)
@@ -798,7 +802,7 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
         """Test input handling for home key."""
         # Set to LOG_SCROLLING mode where home works
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        
+
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_HOME
         mock_inkey = Mock(return_value=mock_key)
@@ -833,7 +837,7 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
         """Test input handling for end key."""
         # Set to LOG_SCROLLING mode where end works
         self.handler.set_navigation_mode(NavigationMode.LOG_SCROLLING)
-        
+
         mock_key = Mock()
         mock_key.code = self.mock_terminal.KEY_END
         mock_inkey = Mock(return_value=mock_key)

@@ -23,18 +23,22 @@ class BorderRenderer:
 
     @staticmethod
     def draw_top_border(
-        term: Terminal, y: int, width: int, border_color: str = None, is_focused: bool = False
+        term: Terminal,
+        y: int,
+        width: int,
+        border_color: str = None,
+        is_focused: bool = False,
     ) -> None:
         """Draw a top border line."""
         if border_color is None:
             border_color = ColorManager.get_ansi_color(
                 ColorManager.DEFAULT_BORDER_COLOR
             )
-        
+
         # Use bright color for focused host
         if is_focused:
             border_color = ColorManager.get_ansi_color("BRIGHT_YELLOW")
-        
+
         border = (
             border_color
             + "┌"
@@ -47,18 +51,22 @@ class BorderRenderer:
 
     @staticmethod
     def draw_bottom_border(
-        term: Terminal, y: int, width: int, border_color: str = None, is_focused: bool = False
+        term: Terminal,
+        y: int,
+        width: int,
+        border_color: str = None,
+        is_focused: bool = False,
     ) -> None:
         """Draw a bottom border line."""
         if border_color is None:
             border_color = ColorManager.get_ansi_color(
                 ColorManager.DEFAULT_BORDER_COLOR
             )
-        
+
         # Use bright color for focused host
         if is_focused:
             border_color = ColorManager.get_ansi_color("BRIGHT_YELLOW")
-        
+
         border = (
             border_color
             + "└"
@@ -71,18 +79,22 @@ class BorderRenderer:
 
     @staticmethod
     def draw_middle_border(
-        term: Terminal, y: int, width: int, border_color: str = None, is_focused: bool = False
+        term: Terminal,
+        y: int,
+        width: int,
+        border_color: str = None,
+        is_focused: bool = False,
     ) -> None:
         """Draw a middle border line."""
         if border_color is None:
             border_color = ColorManager.get_ansi_color(
                 ColorManager.DEFAULT_BORDER_COLOR
             )
-        
+
         # Use bright color for focused host
         if is_focused:
             border_color = ColorManager.get_ansi_color("BRIGHT_YELLOW")
-        
+
         border = (
             border_color
             + "├"
@@ -388,7 +400,9 @@ class HostSection:
             return False
         return True
 
-    def _draw_borders(self, term: Terminal, box_width: int, is_focused: bool = False) -> None:
+    def _draw_borders(
+        self, term: Terminal, box_width: int, is_focused: bool = False
+    ) -> None:
         """
         Draw the border lines for this section.
 
@@ -398,17 +412,23 @@ class HostSection:
             is_focused: Whether this host is currently focused
         """
         # Top border
-        BorderRenderer.draw_top_border(term, self.start_y, box_width, is_focused=is_focused)
+        BorderRenderer.draw_top_border(
+            term, self.start_y, box_width, is_focused=is_focused
+        )
 
         # Middle border
-        BorderRenderer.draw_middle_border(term, self.start_y + 2, box_width, is_focused=is_focused)
+        BorderRenderer.draw_middle_border(
+            term, self.start_y + 2, box_width, is_focused=is_focused
+        )
 
         # Bottom border
         BorderRenderer.draw_bottom_border(
             term, self.start_y + self.height - 1, box_width, is_focused=is_focused
         )
 
-    def _render_header(self, term: Terminal, box_width: int, is_focused: bool = False) -> None:
+    def _render_header(
+        self, term: Terminal, box_width: int, is_focused: bool = False
+    ) -> None:
         """
         Render the header line with status information.
 
@@ -424,7 +444,7 @@ class HostSection:
         display_hostname = (
             self.hostname.split("@")[-1] if "@" in self.hostname else self.hostname
         )
-        
+
         # Add focus indicator
         focus_indicator = "▶ " if is_focused else "  "
         header = f"{focus_indicator}{symbol} {display_hostname} [{self.status}]"
@@ -595,7 +615,6 @@ class HostSection:
             ):  # Leave room for bottom border
                 break
             BorderRenderer.draw_empty_line(term, output_start + i, box_width)
-
 
     def get_display_hostname(self) -> str:
         """

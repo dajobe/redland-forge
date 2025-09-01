@@ -182,7 +182,7 @@ class TestHostSectionStepDetection(unittest.TestCase):
     def test_detect_step_from_output_debug_logging(self, mock_logging, mock_detect):
         """Test debug logging for step detection."""
         mock_detect.return_value = "configure"
-        
+
         # Mock a step change callback to avoid "No step change callback available" message
         self.section.step_change_callback = Mock()
 
@@ -373,8 +373,6 @@ class TestHostSectionRendering(unittest.TestCase):
 
         # Should call draw_empty_line for remaining lines
         self.assertEqual(mock_border_renderer.draw_empty_line.call_count, 3)
-
-
 
 
 class TestHostSectionUtilityMethods(unittest.TestCase):

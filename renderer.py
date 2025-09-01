@@ -369,7 +369,10 @@ class Renderer:
             print(bottom_border)
 
     def render_host_sections(
-        self, host_sections: Dict[str, Any], ssh_results: Dict[str, Dict[str, Any]], focused_host: Optional[str] = None
+        self,
+        host_sections: Dict[str, Any],
+        ssh_results: Dict[str, Dict[str, Any]],
+        focused_host: Optional[str] = None,
     ) -> int:
         """
         Render all host sections.
@@ -544,15 +547,27 @@ class Renderer:
             elif full_screen_mode and full_screen_host:
                 # Full-screen mode: show only the focused host
                 import logging
-                logging.debug(f"Renderer: Entering full-screen mode for host {full_screen_host}")
-                self.render_full_screen_host(full_screen_host, host_sections, ssh_results, scroll_offset, scroll_mode, max_scroll_offset)
+
+                logging.debug(
+                    f"Renderer: Entering full-screen mode for host {full_screen_host}"
+                )
+                self.render_full_screen_host(
+                    full_screen_host,
+                    host_sections,
+                    ssh_results,
+                    scroll_offset,
+                    scroll_mode,
+                    max_scroll_offset,
+                )
             else:
                 # Normal mode: show all hosts
                 # Render header
                 self.render_header(tarball, host_sections, ssh_results)
 
                 # Render host sections
-                visible_hosts = self.render_host_sections(host_sections, ssh_results, focused_host)
+                visible_hosts = self.render_host_sections(
+                    host_sections, ssh_results, focused_host
+                )
 
                 # Render completion message if no hosts visible
                 self.render_completion_message(
@@ -623,8 +638,11 @@ class Renderer:
             ssh_results: Dictionary of SSH results
         """
         import logging
-        logging.debug(f"render_full_screen_host called: host={host_name}, scroll_offset={scroll_offset}, scroll_mode={scroll_mode}")
-        
+
+        logging.debug(
+            f"render_full_screen_host called: host={host_name}, scroll_offset={scroll_offset}, scroll_mode={scroll_mode}"
+        )
+
         if host_name not in host_sections:
             logging.debug(f"Host {host_name} not found in host_sections")
             return
@@ -641,7 +659,7 @@ class Renderer:
             header += f" | Status: {result['status']}"
         if section.current_step:
             header += f" | Step: {section.current_step}"
-        
+
         print(self.term.bold(header))
         print("=" * self.term.width)
         print()
@@ -659,19 +677,24 @@ class Renderer:
         if result and "output" in result:
             output_lines = result["output"]
             total_lines = len(output_lines)
-            
+
             # Debug logging for scroll calculations
             import logging
-            logging.debug(f"Full-screen render: host={host_name}, total_lines={total_lines}, scroll_offset={scroll_offset}, scroll_mode={scroll_mode}")
-            
+
+            logging.debug(
+                f"Full-screen render: host={host_name}, total_lines={total_lines}, scroll_offset={scroll_offset}, scroll_mode={scroll_mode}"
+            )
+
             if total_lines > 0:
                 # Calculate visible lines based on scroll offset
-                available_height = self.term.height - 8  # Account for header, info, footer
-                
+                available_height = (
+                    self.term.height - 8
+                )  # Account for header, info, footer
+
                 # Ensure scroll_offset doesn't exceed maximum possible
                 max_scroll = max(0, total_lines - available_height)
                 actual_scroll_offset = min(scroll_offset, max_scroll)
-                
+
                 # Calculate start and end lines for display
                 if total_lines <= available_height:
                     # All lines fit, no scrolling needed
@@ -679,24 +702,32 @@ class Renderer:
                     end_line = total_lines
                 else:
                     # Calculate visible range based on scroll offset
-                    start_line = max(0, total_lines - available_height - actual_scroll_offset)
+                    start_line = max(
+                        0, total_lines - available_height - actual_scroll_offset
+                    )
                     end_line = total_lines - actual_scroll_offset
-                
+
                 # Show scroll indicator
                 if scroll_mode:
-                    print(f"--- SCROLL MODE: Showing lines {start_line + 1}-{end_line} of {total_lines} ---")
+                    print(
+                        f"--- SCROLL MODE: Showing lines {start_line + 1}-{end_line} of {total_lines} ---"
+                    )
                 elif total_lines > available_height:
-                    print(f"--- Showing last {available_height} of {total_lines} lines ---")
-                
+                    print(
+                        f"--- Showing last {available_height} of {total_lines} lines ---"
+                    )
+
                 # Display visible lines
                 visible_lines = output_lines[start_line:end_line]
                 for line in visible_lines:
                     print(line.rstrip())
-                
+
                 # Show scroll position indicator
                 if total_lines > available_height:
                     if actual_scroll_offset > 0:
-                        print(f"--- Scroll: {actual_scroll_offset} lines up from bottom ---")
+                        print(
+                            f"--- Scroll: {actual_scroll_offset} lines up from bottom ---"
+                        )
                     else:
                         print("--- At latest output ---")
             else:
