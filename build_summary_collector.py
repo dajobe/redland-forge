@@ -182,44 +182,102 @@ class BuildSummaryCollector:
             Formatted summary string
         """
         total_time = self.get_total_build_time()
+        all_results = list(self.host_results.values())
+
+        if not all_results:
+            summary = []
+            summary.append("=" * 60)
+            summary.append("BUILD SUMMARY")
+            summary.append("=" * 60)
+            summary.append(f"Total time: {self._format_duration(total_time)}")
+            summary.append("\nNo builds completed.\n")
+            summary.append("=" * 60)
+            return "\n".join(summary)
+
+        # Determine column widths
+        host_col_width = max([len(r.host_name) for r in all_results] + [len("Host")])
+        status_col_width = max([len("SUCCESS"), len("FAILED")])
+        time_col_width = max(
+            [len(self._format_duration(r.total_time)) for r in all_results]
+            + [len("Time Taken")]
+        )
+
+        # Add padding
+        host_col_width += 2
+        status_col_width += 2
+        time_col_width += 2
+
+        total_width = host_col_width + status_col_width + time_col_width + 3
 
         summary = []
-        summary.append("=" * 60)
-        summary.append("BUILD SUMMARY")
-        summary.append("=" * 60)
-        summary.append(f"Total time: {self._format_duration(total_time)}")
+
+        # Header
+        summary.append("=" * total_width)
+        summary.append("BUILD SUMMARY".center(total_width))
+        summary.append("=" * total_width)
+        summary.append(
+            f"Total time: {self._format_duration(total_time)}".center(total_width)
+        )
         summary.append("")
 
-        # Group by status
-        successful = self.get_successful_builds()
-        failed = self.get_failed_builds()
+        # Table Header
+        header = (
+            f"│{'Host'.center(host_col_width)}│"
+            f"{'Status'.center(status_col_width)}│"
+            f"{'Time Taken'.center(time_col_width)}│"
+        )
+        summary.append(
+            "┌"
+            + "─" * host_col_width
+            + "┬"
+            + "─" * status_col_width
+            + "┬"
+            + "─" * time_col_width
+            + "┐"
+        )
+        summary.append(header)
+        summary.append(
+            "├"
+            + "─" * host_col_width
+            + "┼"
+            + "─" * status_col_width
+            + "┼"
+            + "─" * time_col_width
+            + "┤"
+        )
 
-        if successful:
-            summary.append("SUCCESSFUL BUILDS:")
-            for result in successful:
-                time_str = self._format_duration(result.total_time or 0)
-                summary.append(f"  ✓ {result.host_name} ({time_str})")
-            summary.append("")
+        # Table Rows
+        for result in sorted(all_results, key=lambda r: r.host_name):
+            status = "SUCCESS" if result.success else "FAILED"
+            time_str = self._format_duration(result.total_time)
 
-        if failed:
-            summary.append("FAILED BUILDS:")
-            for result in failed:
-                time_str = self._format_duration(result.total_time or 0)
-                summary.append(f"  ✗ {result.host_name} ({time_str})")
-                if result.error_message:
-                    summary.append(f"    Error: {result.error_message}")
-            summary.append("")
-
-        total_builds = len(self.host_results)
-        if total_builds > 0:
-            success_rate = len(successful) / total_builds * 100
-            summary.append(
-                f"Overall: {len(successful)}/{total_builds} builds successful ({success_rate:.1f}%)"
+            row = (
+                f"│ {result.host_name.ljust(host_col_width - 1)}│"
+                f" {status.ljust(status_col_width - 1)}│"
+                f" {time_str.rjust(time_col_width - 1)}│"
             )
-        else:
-            summary.append("No builds completed")
+            summary.append(row)
 
-        summary.append("=" * 60)
+        # Footer
+        summary.append(
+            "└"
+            + "─" * host_col_width
+            + "┴"
+            + "─" * status_col_width
+            + "┴"
+            + "─" * time_col_width
+            + "┘"
+        )
+        summary.append("")
+
+        # Overall stats
+        successful = self.get_successful_builds()
+        total_builds = len(all_results)
+        success_rate = len(successful) / total_builds * 100 if total_builds > 0 else 0
+        summary.append(
+            f"Overall: {len(successful)}/{total_builds} builds successful ({success_rate:.1f}%)"
+        )
+        summary.append("=" * total_width)
 
         return "\n".join(summary)
 

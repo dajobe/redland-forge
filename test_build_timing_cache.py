@@ -190,7 +190,7 @@ class TestBuildTimingCache(unittest.TestCase):
         # Last build should be the 8th one (index 7)
         last_build = host_data["recent_builds"][-1]
         self.assertEqual(last_build["configure_time"], 7.0)
-        
+
         # First build in the list should be the 4th one (index 3) since we keep last 5
         first_build = host_data["recent_builds"][0]
         self.assertEqual(first_build["configure_time"], 3.0)

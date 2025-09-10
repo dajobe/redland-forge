@@ -318,7 +318,7 @@ class BuildTimingCache:
 
         host_data["recent_builds"].append(asdict(recent_build))
         if len(host_data["recent_builds"]) > self.keep_builds:
-            host_data["recent_builds"] = host_data["recent_builds"][-self.keep_builds:]
+            host_data["recent_builds"] = host_data["recent_builds"][-self.keep_builds :]
 
         logging.debug(
             f"Recorded timing for {host_name}: configure={configure_time:.1f}s, "

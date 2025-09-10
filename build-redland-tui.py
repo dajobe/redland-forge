@@ -8,6 +8,7 @@ Thin wrapper script for the parallel build monitoring TUI.
 import argparse
 import logging
 import sys
+from typing import List
 
 from app import BuildTUI, set_color_mode, read_hosts_from_file
 from config import Config
@@ -129,6 +130,54 @@ Hosts file format:
     return args
 
 
+def format_host_table(hosts: List[str]) -> str:
+    """Formats the host list into a text table with a border."""
+    if not hosts:
+        return "No hosts."
+
+    max_to_show = 5
+    num_hosts = len(hosts)
+
+    hosts_to_show = hosts[:max_to_show]
+
+    title = f" Starting TUI with {num_hosts} hosts "
+
+    # Determine the width of the table
+    max_len = max(len(h) for h in hosts_to_show) if hosts_to_show else 0
+    width = max(max_len, len(title)) + 4
+
+    # Top border
+    table = ["┌" + "─" * (width - 2) + "┐"]
+
+    # Title
+    title_padding = (width - 2 - len(title)) // 2
+    table.append(
+        "│"
+        + " " * title_padding
+        + title
+        + " " * (width - 2 - len(title) - title_padding)
+        + "│"
+    )
+
+    # Separator
+    table.append("├" + "─" * (width - 2) + "┤")
+
+    # Host list
+    for host in hosts_to_show:
+        padded_host = f"  {host}".ljust(width - 2)
+        table.append("│" + padded_host + "│")
+
+    if num_hosts > max_to_show:
+        more_text = f"  ... and {num_hosts - max_to_show} more."
+        padded_more = more_text.ljust(width - 2)
+        table.append("│" + padded_more + "│")
+
+    # Bottom border
+    table.append("└" + "─" * (width - 2) + "┘")
+
+    return "\n".join(table)
+
+
 def main() -> int:
     """Main function."""
     try:
@@ -202,9 +251,7 @@ def main() -> int:
 
     # Create and run TUI
     try:
-        print(
-            f"Starting TUI with {len(userhosts)} hosts: {userhosts[:3]}{'...' if len(userhosts) > 3 else ''}"
-        )
+        print(format_host_table(userhosts))
         logging.debug("About to create BuildTUI instance")
 
         # Prepare auto-exit options
