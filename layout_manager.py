@@ -182,13 +182,13 @@ class LayoutManager:
         if len(self.host_sections) < len(self.hosts):
             hidden_hosts = len(self.hosts) - len(self.host_sections)
             logging.warning(
-                f"Terminal too small: {hidden_hosts} hosts will not be displayed or built"
+                f"Terminal too small: {hidden_hosts} hosts will not be displayed initially"
             )
             print(
                 f"\n{ColorManager.get_ansi_color('BRIGHT_YELLOW')}Warning: Terminal too small to display all {len(self.hosts)} hosts."
             )
             print(
-                f"Only {len(self.host_sections)} hosts will be built and displayed.{ColorManager.get_ansi_color('RESET')}\n"
+                f"Only {len(self.host_sections)} hosts will be displayed at one time.{ColorManager.get_ansi_color('RESET')}\n"
             )
 
     def get_max_visible_hosts(self) -> int:
