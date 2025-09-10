@@ -115,6 +115,11 @@ Hosts file format:
         action="store_true",
         help="Remove specific testing hosts from timing cache and exit",
     )
+    parser.add_argument(
+        "--bindings-languages",
+        type=str,
+        help="Comma-separated list of language bindings to build.",
+    )
 
     args = parser.parse_args()
 
@@ -265,6 +270,10 @@ def main() -> int:
         cache_enabled = not args.no_cache
         progress_enabled = not args.no_progress
 
+        bindings_languages = (
+            args.bindings_languages.split(",") if args.bindings_languages else None
+        )
+
         tui = BuildTUI(
             userhosts,
             args.tarball,
@@ -276,6 +285,7 @@ def main() -> int:
             cache_keep_builds=cache_keep_builds,
             cache_enabled=cache_enabled,
             progress_enabled=progress_enabled,
+            bindings_languages=bindings_languages,
         )
         logging.debug("BuildTUI instance created successfully, about to call run()")
         tui.run()

@@ -89,7 +89,10 @@ class BuildTUI:
             logging.debug(f"Terminal type: {self.term.type}")
             logging.debug(f"Terminal kind: {self.term.kind}")
 
-            self.ssh_manager = ParallelSSHManager(max_concurrent or min(4, len(hosts)))
+            self.ssh_manager = ParallelSSHManager(
+                max_concurrent or min(4, len(hosts)),
+                bindings_languages=bindings_languages,
+            )
 
             # Set build script path
             script_path = os.path.abspath(
@@ -101,7 +104,7 @@ class BuildTUI:
             if not os.path.isfile(script_path):
                 raise FileNotFoundError(
                     f"Build script not found: {script_path}\n"
-                    f"Expected 'build-redland.py' to exist in the 'build-tui' directory."
+                    f"Expected 'build-agent.py' to exist in the 'build-tui' directory."
                 )
 
             self.ssh_manager.set_build_script_path(script_path)

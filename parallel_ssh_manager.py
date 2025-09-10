@@ -32,12 +32,15 @@ from ssh_connection import (
 class ParallelSSHManager:
     """Manages parallel SSH connections and builds using paramiko."""
 
-    def __init__(self, max_concurrent: int = 4):
+    def __init__(
+        self, max_concurrent: int = 4, bindings_languages: Optional[List[str]] = None
+    ):
         """
         Initialize the parallel SSH manager.
 
         Args:
             max_concurrent: Maximum number of concurrent builds
+            bindings_languages: Optional list of language bindings to build.
         """
         self.max_concurrent = max_concurrent
         self.active_connections = {}
@@ -46,6 +49,7 @@ class ParallelSSHManager:
         self.lock = threading.Lock()
         self.build_script_path = None
         self.build_start_callback = None
+        self.bindings_languages = bindings_languages
 
     def add_host(self, hostname: str, tarball: str) -> None:
         """
@@ -230,6 +234,10 @@ class ParallelSSHManager:
 
             # Change to home directory and start build so working area is $HOME/build
             build_cmd = f"cd '{remote_home_dir}' && python3 {Config.BUILD_SCRIPT_NAME} {tarball_name} --no-print-hostname"
+            if self.bindings_languages:
+                build_cmd += (
+                    f" --bindings-languages {','.join(self.bindings_languages)}"
+                )
 
             # Execute build command with real-time output monitoring
             stdin, stdout, stderr = ssh.client.exec_command(build_cmd)
@@ -329,7 +337,7 @@ class ParallelSSHManager:
                     for line in remaining_stderr.splitlines():
                         if line.strip():
                             with self.lock:
-                                stderr_line = f"{ColorManager.get_ansi_color('BRIGHT_YELLOW')}[STDERR]{ColorManager.get_ansi_color('RESET')} {line.strip()}"
+                                stderr_line = f"{ColorManager.get_ansi_color('BRIGHT_YELLOW')}[STDERR]{ColorManger.get_ansi_color('RESET')} {line.strip()}"
                                 logging.debug(
                                     f"Adding remaining stderr line: {stderr_line}"
                                 )

@@ -192,11 +192,11 @@ def extract_package_info(tarball_path: str) -> Tuple[str, str, str]:
     dirname = re.sub(r"\.tar\.(gz|bz2|xz)$", "", tarball_name)
 
     # Extract package name (everything before the last dash-number)
-    package_match = re.match(r"^(.+?)-[\d.]+$", dirname)
+    package_match = re.match(r"^(.+?)-[\d.]*$", dirname)
     package = package_match.group(1) if package_match else dirname
 
     # Extract version (everything after the last dash)
-    version_match = re.search(r"-([\d.]+)$", dirname)
+    version_match = re.search(r"-([\d.]*)$", dirname)
     version = version_match.group(1) if version_match else "unknown"
 
     return package, version, dirname
@@ -368,10 +368,12 @@ def run_make_step(
 
 
 def build_language_bindings(
-    build_dir: str, logs_dir: str, make_cmd: str
+    build_dir: str,
+    logs_dir: str,
+    make_cmd: str,
+    languages: List[str],
 ) -> Tuple[List[str], List[str]]:
     """Build language bindings and return lists of successful and failed languages."""
-    languages = ["perl", "python", "ruby", "php", "lua"]
     successful = []
     failed = []
 
@@ -425,14 +427,37 @@ def build_language_bindings(
 
 def main() -> int:
     """Main build function."""
-    if len(sys.argv) < 2:
-        logging.error("USAGE: build-redland.py PACKAGE-TARBALL [--no-print-hostname]")
-        return 1
-
     # Parse arguments
     args = sys.argv[1:]
-    tarball_path = args[0]
-    no_print_hostname = "--no-print-hostname" in args
+    tarball_path = None
+    no_print_hostname = False
+    bindings_languages = None
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--no-print-hostname":
+            no_print_hostname = True
+            i += 1
+        elif arg == "--bindings-languages":
+            if i + 1 < len(args):
+                bindings_languages = args[i + 1].split(",")
+                i += 2
+            else:
+                logging.error("--bindings-languages requires an argument")
+                return 1
+        elif tarball_path is None:
+            tarball_path = arg
+            i += 1
+        else:
+            logging.error(f"Unknown argument: {arg}")
+            return 1
+
+    if tarball_path is None:
+        logging.error(
+            "USAGE: build-redland.py PACKAGE-TARBALL [--no-print-hostname] [--bindings-languages LUA,PERL,...]"
+        )
+        return 1
 
     # Set up logging based on hostname preference
     setup_logging(no_print_hostname)
@@ -548,10 +573,12 @@ def main() -> int:
     if "MAKEFLAGS" in os.environ:
         del os.environ["MAKEFLAGS"]
 
-    # Build language bindings
-    successful_langs, failed_langs = build_language_bindings(
-        str(build), str(logs), make_cmd
-    )
+    successful_langs, failed_langs = [], []
+    if bindings_languages:
+        # Build language bindings
+        successful_langs, failed_langs = build_language_bindings(
+            str(build), str(logs), make_cmd, bindings_languages
+        )
 
     # Print summary
     end_time = datetime.now()
