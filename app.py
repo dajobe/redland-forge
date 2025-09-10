@@ -91,9 +91,9 @@ class BuildTUI:
 
             self.ssh_manager = ParallelSSHManager(max_concurrent or min(4, len(hosts)))
 
-            # Set build script path (script lives one level up from build-tui)
+            # Set build script path
             script_path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "build-redland.py")
+                os.path.join(os.path.dirname(__file__), "build-redland.py")
             )
             logging.debug(f"Resolved build script path: {script_path}")
 
@@ -101,7 +101,7 @@ class BuildTUI:
             if not os.path.isfile(script_path):
                 raise FileNotFoundError(
                     f"Build script not found: {script_path}\n"
-                    f"Expected 'build-redland.py' to exist next to the admin directory."
+                    f"Expected 'build-redland.py' to exist in the 'build-tui' directory."
                 )
 
             self.ssh_manager.set_build_script_path(script_path)
