@@ -43,6 +43,7 @@ class BuildTUI:
         cache_keep_builds: Optional[int] = None,
         cache_enabled: Optional[bool] = None,
         progress_enabled: Optional[bool] = None,
+        bindings_languages: Optional[List[str]] = None,
     ):
         try:
             logging.debug("Initializing BuildTUI")
@@ -96,7 +97,7 @@ class BuildTUI:
 
             # Set build script path
             script_path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "build-redland.py")
+                os.path.join(os.path.dirname(__file__), "build-agent.py")
             )
             logging.debug(f"Resolved build script path: {script_path}")
 
@@ -106,7 +107,6 @@ class BuildTUI:
                     f"Build script not found: {script_path}\n"
                     f"Expected 'build-agent.py' to exist in the 'build-tui' directory."
                 )
-
             self.ssh_manager.set_build_script_path(script_path)
 
             # Initialize managers
