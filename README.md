@@ -6,6 +6,11 @@ A sophisticated text-based user interface for monitoring parallel Redland builds
 
 Build TUI provides real-time monitoring of parallel build processes with a clean, organized terminal interface. It displays build progress, status updates, and output from multiple hosts simultaneously.
 
+** Documentation**
+
+- **[Architecture Guide](architecture.md)**: Detailed system architecture and design
+- **[Testing Guide](testing.md)**: Testing strategies and infrastructure
+
 ## Features
 
 - **Real-time Monitoring**: Live updates of build progress across multiple hosts
@@ -63,6 +68,7 @@ The application automatically exits after a configurable delay once all builds c
 ## Command Line Options
 
 ### Build and Host Configuration
+
 ```bash
 tarball                      # The Redland package tarball (e.g., redland-1.1.0.tar.gz)
 hosts                        # One or more username@hostname pairs (can be comma-separated)
@@ -71,12 +77,14 @@ hosts                        # One or more username@hostname pairs (can be comma
 ```
 
 ### Auto-Exit Configuration
+
 ```bash
 --auto-exit-delay SECONDS    # Auto-exit delay in seconds (default: 300 = 5 minutes)
 --no-auto-exit               # Disable auto-exit functionality
 ```
 
 ### Build Timing Cache Configuration
+
 ```bash
 --cache-file PATH            # Custom cache file location (default: ~/.config/build-tui/timing-cache.json)
 --cache-retention DAYS       # Cache retention period in days (default: 30)
@@ -86,12 +94,14 @@ hosts                        # One or more username@hostname pairs (can be comma
 ```
 
 ### Output and Debug Options
+
 ```bash
 --color MODE                 # Control color output: auto (default), always, or never
 --debug                      # Enable debug logging to debug.log file
 ```
 
 ### Cache Management
+
 ```bash
 --cleanup-demo-hosts         # Clean up demo/test host data from timing cache and exit
 --remove-testing-hosts       # Remove specific testing hosts from timing cache and exit
@@ -178,42 +188,35 @@ Overall: 2/3 builds successful (66.7%)
 
 ## Architecture
 
-The application uses a modular architecture with clear separation of concerns:
+Build TUI uses a modular architecture with clear separation of concerns, designed for monitoring parallel build processes across multiple remote hosts. The application provides real-time monitoring, progress tracking, and comprehensive build management capabilities.
 
-- **BuildTUI** (`build-redland-tui.py`): Main orchestrator and UI controller
-- **LayoutManager** (`layout_manager.py`): Terminal layout and host section positioning
-- **StatisticsManager** (`statistics_manager.py`): Build progress and statistics calculation
-- **HostSection** (`host_section.py`): Individual host display and state management
-- **SSHConnection** (`ssh_connection.py`): Remote connection and command execution
-- **OutputBuffer** (`output_buffer.py`): Output buffering and line management
-- **TextFormatter** (`text_formatter.py`): Text formatting and display utilities
-- **Config** (`config.py`): Centralized configuration management
-- **BuildStepDetector** (`build_step_detector.py`): Build phase detection
-- **AutoExitManager** (`auto_exit_manager.py`): Auto-exit timing and countdown management
-- **BuildSummaryCollector** (`build_summary_collector.py`): Build result collection and summary generation
+For detailed architectural information, design patterns, and technical implementation details, see the **[Architecture Guide](architecture.md)**.
 
 ## Configuration
 
-All settings are centralized in `config.py` and include:
-
-- Build timeouts and retries
-- Terminal layout parameters
-- SSH connection settings
-- Output buffering limits
-- Color and formatting options
-- Auto-exit timing and behavior
-- Build summary configuration
+All settings are centralized in `config.py`. For detailed configuration options including build timeouts, SSH settings, UI preferences, and advanced features, see the **[Architecture Guide](architecture.md)**.
 
 ## Testing
 
-Run the comprehensive test suite:
+Build TUI includes a comprehensive test suite with 408+ unit tests covering all major components and functionality.
+
+### Running Tests
 
 ```bash
 cd build-tui
 python3 -m pytest test_*.py -v
 ```
 
-All 366 tests should pass, covering unit tests, integration tests, edge cases, and configuration flexibility.
+All tests should pass, covering unit tests, integration tests, edge cases, and configuration flexibility.
+
+### Test Categories
+
+- **Unit Tests**: Individual module functionality with mocked dependencies
+- **Integration Tests**: Component interaction and data flow validation
+- **UI Tests**: Rendering and display functionality
+- **Error Handling Tests**: Exception scenarios and recovery mechanisms
+
+For detailed information about the testing architecture, strategies, and infrastructure, see the **[Testing Guide](testing.md)**.
 
 ## Dependencies
 
@@ -289,21 +292,96 @@ cd build-tui
 
 ```
 build-tui/
-├── build-redland-tui.py          # Main application
-├── config.py                     # Centralized configuration
-├── layout_manager.py             # Terminal layout management
-├── host_section.py               # Individual host display logic
-├── statistics_manager.py         # Build statistics and progress tracking
-├── ssh_connection.py             # SSH connection and file transfer
-├── build_step_detector.py        # Build phase detection
-├── output_buffer.py              # Output buffering and management
-├── text_formatter.py             # Text formatting and display utilities
-├── auto_exit_manager.py          # Auto-exit timing and countdown
-├── build_summary_collector.py    # Build result collection and summaries
-├── test_*.py                     # Comprehensive test suite
-└── requirements.txt              # Python dependencies
+├── 📄 Documentation
+│   ├── README.md                 # Quick start and usage guide
+│   ├── architecture.md           # System architecture and design
+│   ├── testing.md                # Testing strategies and infrastructure
+│   └── TODO.md                   # Future enhancements roadmap
+│
+├── 🚀 Core Application
+│   ├── build-redland-tui.py      # Main application entry point
+│   └── app.py                    # Main BuildTUI class and orchestration
+│
+├── 🔧 Core Components
+│   ├── layout_manager.py         # Terminal layout and positioning
+│   ├── host_section.py           # Individual host display logic
+│   ├── statistics_manager.py     # Build statistics and progress tracking
+│   ├── renderer.py               # UI rendering and display management
+│   ├── input_handler.py          # Keyboard input processing and navigation
+│   └── config.py                 # Centralized configuration management
+│
+├── 🌐 SSH and Networking
+│   ├── parallel_ssh_manager.py   # Parallel SSH connection management
+│   └── ssh_connection.py         # SSH connection and file transfer
+│
+├── 📊 Data Processing
+│   ├── build_step_detector.py    # Build phase detection
+│   ├── output_buffer.py          # Output buffering and management
+│   ├── text_formatter.py         # Text formatting utilities
+│   ├── build_timing_cache.py     # Build timing data persistence
+│   ├── auto_exit_manager.py      # Auto-exit timing and countdown
+│   └── build_summary_collector.py # Build result collection
+│
+├── 🧪 Testing Infrastructure
+│   ├── test_*.py                 # Comprehensive test suite (19+ files)
+│   └── test.tar.gz               # Test data archive
+│
+├── ⚙️ Utilities and Configuration
+│   ├── color_manager.py          # ANSI color scheme management
+│   ├── exception_handler.py      # Centralized exception handling
+│   ├── host_visibility_manager.py # Host display visibility management
+│   ├── progress_display_manager.py # Progress display utilities
+│   └── requirements.txt          # Python dependencies
+│
+└── 🔨 Build Scripts
+    └── build-agent.py            # Remote build execution script
 ```
+
+## Documentation
+
+Build TUI provides comprehensive documentation to help users and developers understand and work with the project:
+
+### 📖 Documentation Files
+
+| Document | Description |
+|----------|-------------|
+| **[Architecture Guide](architecture.md)** | Detailed system architecture, design patterns, and component interactions |
+| **[Testing Guide](testing.md)** | Testing strategies, infrastructure, and development practices |
+| **[README.md](README.md)** | This file - quick start, features, and usage examples |
+| **[TODO.md](TODO.md)** | Future enhancements and development roadmap |
+
+### Key Topics Covered
+
+#### Architecture Guide (`architecture.md`)
+
+- Core system components and their responsibilities
+- Data flow and component interaction patterns
+- Design patterns and architectural decisions
+- Performance considerations and error handling
+- Future extensibility and plugin architecture
+
+#### Testing Guide (`testing.md`)
+
+- Testing strategy and approach
+- Test infrastructure and utilities
+- Test categories and coverage
+- Development testing workflow
+- Mocking strategies and best practices
+
+#### This README
+
+- Quick start guide and basic usage
+- Feature overview and command-line options
+- Configuration examples and use cases
+- Installation and dependency information
 
 ## Contributing
 
 The codebase follows clean architecture principles with comprehensive test coverage, clear separation of concerns, well-documented APIs, and consistent coding standards. Each module contains its own documentation in docstrings.
+
+### Getting Started for Contributors
+
+1. Review the **[Architecture Guide](architecture.md)** to understand the system design
+2. Familiarize yourself with the **[Testing Guide](testing.md)** for testing practices
+3. Run the test suite: `python3 -m pytest test_*.py -v`
+4. Check **[TODO.md](TODO.md)** for current development priorities

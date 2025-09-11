@@ -1,785 +1,107 @@
-# Build TUI Enhancement Roadmap
-
-## Application Name Suggestions
-
-Here are some suggestions for a new name for the application, to make it more generic and suitable for a standalone project.
-
-### Generic Names
-
-If the goal is to make the tool a general-purpose build tool for autoconf packages, a generic name is better.
-
-* **Parabuild**: Short for "Parallel Build". It's short, memorable, and descriptive of the parallel nature of the tool.
-* **BuildGrid**: Evokes the image of a grid of build servers working in parallel.
-* **Dispatch**: An action-oriented name that suggests sending out build jobs to remote hosts.
-* **TermiBuild**: A good choice if the TUI aspect is the most important feature to highlight.
-* **AutoBuild-TUI**: A bit longer, but very descriptive of what it does (builds autoconf projects with a TUI).
-
-### Redland-Focused Names
-
-If the tool is intended to remain primarily for Redland, a name that reflects this is appropriate.
-
-* **Raptor-Build**: A cooler, more memorable name that is still clearly associated with Redland (since Raptor is a Redland library).
+# Build TUI Future Enhancements
 
 ## Overview
 
-This document outlines the design for significant enhancements to the Build TUI application, focusing on improved navigation, user experience, and build monitoring capabilities.
+This document outlines proposed future enhancements for the Build TUI
+application.
 
-## **🎯 Overall Progress: 7/7 Phases COMPLETED**
+## Future Enhancement Opportunities
 
-### **✅ Completed Phases:**
-
-1. **Phase 1**: Extended Key Support ✅
-2. **Phase 2**: Navigation Modes ✅  
-3. **Phase 3**: Full-Screen Toggle ✅
-4. **Phase 4**: Menu Activation System ✅
-5. **Phase 5**: Enhanced Help System ✅
-6. **Phase 6**: Visual Focus Indicators ✅
-7. **Phase 7**: Log Scrolling Implementation ✅
-
-### **📊 Completion Status: 100% Complete**
-
-## Current State Analysis
-
-### Existing Features
-
-* **✅ Enhanced Navigation System**: Full UP/DOWN/LEFT/RIGHT navigation between all hosts
-* **✅ Help System**: Comprehensive help screen with 'h' key and menu integration
-* **✅ Quit Functionality**: 'q' key - **✅ FULLY WORKING**
-* **✅ Menu System**: TAB key opens host selection menu with navigation
-* **✅ Full-Screen Mode**: ENTER key toggles full-screen for focused hosts
-* **✅ Log Scrolling System**: PAGE_UP/DOWN, HOME/END for full log navigation
-* **✅ Visual Focus Indicators**: Yellow borders and "▶" arrow show focused host
-* **✅ Automatic Host Management**: Completed hosts auto-hide after timeout
-* **✅ Auto-Exit Functionality**: After build completion
-* **✅ Build Summary Output**: On exit
-* **✅ Build Timing Cache**: System for progress estimates
-* **✅ Enhanced Input Handler**: Complete navigation modes system (Phases 1-7 COMPLETED)
-
-### **Input Handler Technical Debt - COMPLETED PHASES**
-
-#### **Phase 1: Extended Key Support ✅ COMPLETED**
-
-* **✅ LEFT/RIGHT keys**: Navigate between ALL hosts (including completed ones)
-* **✅ ENTER key**: Full-screen toggle for current host
-* **✅ TAB key**: Menu toggle
-* **✅ ESC key**: Escape functionality
-* **✅ PAGE_UP/DOWN keys**: Log scrolling support
-* **✅ HOME/END keys**: Log navigation support
-
-#### **Phase 2: Navigation Modes ✅ COMPLETED**
-
-* **✅ NavigationMode enum**: HOST_NAVIGATION, LOG_SCROLLING, FULL_SCREEN, MENU
-* **✅ Mode-specific key handling**: Keys behave differently based on current mode
-* **✅ Global key support**: q (quit) and h (help) work in all modes
-* **✅ Comprehensive testing**: 33 input handler tests passing
-
-#### **Current Status: Input System 100% Functional**
-
-* **✅ All keys detected correctly** (confirmed via debug logs)
-* **✅ All callbacks working properly** (navigation, help, menu, full-screen)
-* **✅ No input lag or missed keystrokes**
-* **✅ Terminal mode conflicts resolved**
-
-### **Phase 3: Full-Screen Toggle Implementation ✅ COMPLETED**
-
-* **Status**: ✅ COMPLETED
-* **Priority**: HIGH (immediate user value)
-* **Dependencies**: Input system foundation complete
-
-#### **What Was Implemented:**
-
-* **✅ Full-screen state management**: `full_screen_mode` and `full_screen_host` in app
-* **✅ Full-screen toggle**: ENTER key toggles full-screen mode for focused host
-* **✅ Escape functionality**: ESC key exits full-screen mode
-* **✅ Navigation mode switching**: Input handler switches between HOST_NAVIGATION and FULL_SCREEN modes
-* **✅ Full-screen rendering**: Renderer shows single host with enhanced output display
-* **✅ Enhanced output display**: Shows last 30 lines with scroll indicators
-
-#### **How It Works:**
-
-1. **Enter full-screen**: Press ENTER on any host to enter full-screen mode
-2. **Full-screen display**: Shows focused host with enhanced output (last 30 lines)
-3. **Exit full-screen**: Press ESC or ENTER again to return to normal view
-4. **Mode switching**: Input handler automatically switches navigation modes
-
-### **Phase 4: Menu Activation System ✅ COMPLETED**
-
-* **Status**: ✅ COMPLETED
-* **Priority**: MEDIUM (enhances navigation)
-* **Dependencies**: Full-screen functionality complete
-
-#### **What Was Implemented:**
-
-* **✅ Menu state management**: `menu_mode`, `menu_selection`, and `menu_options` in app
-* **✅ Menu toggle**: TAB key opens/closes host selection menu
-* **✅ Menu navigation**: UP/DOWN keys navigate menu options
-* **✅ Menu selection**: ENTER key selects menu option (no more blank screen!)
-* **✅ Menu options**: Host selection, help, and quit options
-* **✅ Escape functionality**: ESC key exits menu mode
-* **✅ Navigation mode switching**: Input handler switches between HOST_NAVIGATION and MENU modes
-
-#### **How It Works:**
-
-1. **Open menu**: Press TAB to open host selection menu
-2. **Navigate menu**: Use UP/DOWN arrow keys to move selection
-3. **Select option**: Press ENTER to select highlighted option
-4. **Exit menu**: Press ESC or TAB again to close menu
-5. **Menu actions**: Select hosts, show help, or quit application
-
-#### **Menu Options Available:**
-
-* **Host Selection**: Choose any host to focus on
-* **Show Help**: Display comprehensive help screen
-* **Quit Application**: Exit the application
-
-### **Phase 5: Enhanced Help System ✅ COMPLETED**
-
-* **Status**: ✅ COMPLETED
-* **Priority**: LOW (user experience improvement)
-* **Dependencies**: Menu system complete
-
-#### **What Was Implemented:**
-
-* **✅ Enhanced help overlay**: Beautiful bordered overlay box instead of basic text
-* **✅ Help integration**: 'h' key and menu option both work
-* **✅ Comprehensive instructions**: Shows all available keyboard shortcuts
-* **✅ Professional interface**: Clean borders, centered positioning, blue color scheme
-* **✅ Proper state management**: Help screen properly exits menu mode
-* **✅ Non-disruptive**: Overlay doesn't overwrite main display
-
-#### **Help Screen Features:**
-
-* **Professional overlay**: Centered bordered box with blue color scheme
-* **Navigation instructions**: UP/DOWN, LEFT/RIGHT, TAB, ENTER, ESC
-* **Menu options**: Host selection, help, quit
-* **Key bindings**: All available shortcuts clearly listed
-* **Interactive**: Press any key to return to normal mode
-* **Clean design**: 70x20 character box with proper borders and spacing
-
-### **Next Phase: Phase 6 - Visual Focus Indicators ✅ COMPLETED**
-
-* **Status**: ✅ COMPLETED
-* **Priority**: MEDIUM (user experience improvement)
-* **Dependencies**: Menu system and navigation complete
-
-#### **What Was Implemented:**
-
-* **✅ Visual focus indicators**: Yellow borders around focused host
-* **✅ Focus arrow**: "▶" indicator in header for focused host
-* **✅ Consistent highlighting**: All border elements (top, middle, bottom) use focus color
-* **✅ Focus state management**: App properly tracks and displays focused host
-* **✅ Navigation feedback**: Clear visual feedback when using arrow keys
-
-#### **How It Works:**
-
-1. **Focus highlighting**: Currently focused host has bright yellow borders
-2. **Header indicator**: "▶" arrow shows which host is selected
-3. **Navigation feedback**: UP/DOWN keys move focus with visual updates
-4. **State persistence**: Focus state maintained across renders
-
-### **Phase 7: Log Scrolling Implementation ✅ COMPLETED**
-
-* **Status**: ✅ COMPLETED
-* **Priority**: MEDIUM (enhances build monitoring)
-* **Dependencies**: Focus indicators and navigation complete
-
-#### **What Was Implemented:**
-
-* **✅ Log scrolling**: PAGE_UP/DOWN, HOME/END in full-screen mode
-* **✅ Scroll indicators**: Show current position in log with line numbers
-* **✅ Auto-scroll toggle**: Switch between auto-scroll and manual scroll modes
-* **✅ Scroll state persistence**: Maintain scroll position when switching modes
-* **✅ Scroll limits**: Automatic calculation of maximum scroll offset
-* **✅ Visual feedback**: Clear indicators for scroll mode and position
-* **✅ Integration**: Full integration with existing full-screen and navigation systems
-
-#### **How Log Scrolling Works:**
-
-1. **Enter Full-Screen**: Press ENTER on any host to enter full-screen mode
-2. **Auto-Scroll Mode**: Initially shows latest output (scroll_offset = 0)
-3. **Manual Scrolling**:
-   * **PAGE_UP**: Scroll up by one page (enters scroll mode)
-   * **PAGE_DOWN**: Scroll down by one page (exits scroll mode when at bottom)
-   * **HOME**: Jump to beginning of log (enters scroll mode)
-   * **END**: Jump to latest output (exits scroll mode)
-4. **Scroll Indicators**: Shows current line range and scroll position
-5. **Mode Switching**: Automatically switches between auto-scroll and manual scroll
-6. **State Persistence**: Scroll position maintained when switching between hosts
-
-### Current Limitations
-
-* **✅ Log scrolling**: FULLY IMPLEMENTED with PAGE_UP/DOWN, HOME/END support
-* **Completed builds**: Limited persistent access to completed builds
-* **Advanced filtering**: No host filtering by status or search
-* **Build actions**: No pause/resume/restart functionality for individual hosts
-
-## Proposed Enhancements
-
-### 1. Enhanced Navigation System
+### 1. Enhanced Navigation Features
 
 #### New Keyboard Shortcuts
 
-```
-Navigation:
-  UP/DOWN     - Navigate between visible hosts
-  LEFT/RIGHT  - Navigate between all hosts (including completed)
-  ENTER       - Toggle full-screen mode for focused host
-  ESC         - Exit full-screen mode / Cancel current action
-  
-Log Scrolling (when host is focused):
-  PAGE_UP     - Scroll log up by one page
-  PAGE_DOWN   - Scroll log down by one page
-  HOME        - Jump to beginning of log
-  END         - Jump to end of log (latest output)
-  UP/DOWN     - Scroll log line by line (when in scroll mode)
-  
-Host Management:
-  TAB         - Open host selection menu
-  SPACE       - Toggle pause/resume for focused host
-  'c'         - Clear log for focused host
-  'r'         - Restart build for focused host (if failed)
-  
-General:
-  'h'         - Show/hide help screen
-  'q'         - Quit application
-  '?'         - Quick help overlay
-  'm'         - Toggle minimized view for completed hosts
-```
+* **SPACE**: Toggle pause/resume for focused host
+* **'c'**: Clear log for focused host
+* **'r'**: Restart build for focused host (if failed)
 
-#### Focus Management
+#### Advanced Host Management
 
-* **Normal Focus**: Host section highlighted with border color change
-* **Full-Screen Focus**: Host takes entire terminal, other hosts hidden
-* **Scroll Mode**: Within full-screen mode, user can scroll through log history
-* **Visual Indicators**: Border color changes, status line updates, cursor positioning
+* **Numbered selection**: Quick access with number keys (1-9) in menu
+* **Host filtering**: Filter by status (all, active, completed, failed)
+* **Search functionality**: Type to filter hosts by name
 
-#### Log Scrolling System
-
-```python
-class ScrollState:
-    def __init__(self):
-        self.scroll_offset = 0          # Lines scrolled up from bottom
-        self.max_scroll_offset = 0      # Maximum possible scroll offset
-        self.scroll_mode = False        # Whether currently in scroll mode
-        self.scroll_speed = 1           # Lines per scroll action
-```
-
-* **Auto-scroll**: When not in scroll mode, always show latest output
-* **Manual scroll**: When in scroll mode, maintain scroll position
-* **Scroll limits**: Prevent scrolling beyond available log content
-* **Scroll indicators**: Show scroll position (e.g., "Line 45 of 200")
-
-### 2. Full-Screen Mode
-
-#### Implementation
-
-* **Enter**: Switch focused host to full-screen
-* **Exit**: ESC key or ENTER again to return to normal view
-* **Layout**: Full-screen host uses entire terminal minus minimal header/footer
-* **Other hosts**: Continue running in background, not visible
-
-#### Features
-
-* **Enhanced log display**: More lines visible, better formatting
-* **Scroll controls**: Full scrolling capabilities
-* **Status overlay**: Minimal status info in corner
-* **Quick exit**: ESC key always exits full-screen
-
-### 3. Host Selection Menu
-
-#### Menu Design
-
-```terminal
-┌─ Host Selection ──────────────────────────────────────┐
-│ [1] dajobe@berlin     [SUCCESS] Completed 2m ago      │
-│ [2] dajobe@fedora     [BUILDING] Configure step       │
-│ [3] dajobe@gentoo     [FAILED] Build error            │
-│ [4] dajobe@sid        [QUEUED] Waiting to start       │
-│ [5] dajobe@stable     [SUCCESS] Completed 5m ago      │
-│                                                       │
-│ Navigation: UP/DOWN, ENTER to select, ESC to cancel   │
-└───────────────────────────────────────────────────────┘
-```
-
-#### Features
-
-* **Numbered selection**: Quick access with number keys (1-9)
-* **Status indicators**: Show current status for each host
-* **Completion times**: Show when completed builds finished
-* **Filtering**: Option to filter by status (all, active, completed, failed)
-* **Search**: Type to filter hosts by name
-
-### 4. Completed Build Management
-
-#### Minimized State
-
-* **Auto-minimize**: Completed builds automatically minimize after timeout
-* **Minimized indicator**: Show small status bar instead of full section
-* **Access methods**:
-  * Host selection menu
-  * LEFT/RIGHT navigation
-  * 'm' key to toggle minimized view
-
-#### Minimized Display
-
-```terminal
-┌─ Completed Builds ────────────────────────────────────┐
-│ dajobe@berlin [SUCCESS] ✓ dajobe@fedora [BUILDING] 🔨 │
-│ dajobe@gentoo [FAILED]  ✗ dajobe@stable [SUCCESS] ✓   │
-└───────────────────────────────────────────────────────┘
-```
-
-### 5. Enhanced Layout Management
-
-#### Dynamic Layout Adjustments
-
-* **Normal mode**: Multiple hosts visible, adaptive sizing
-* **Full-screen mode**: Single host uses all available space
-* **Menu mode**: Overlay menu with semi-transparent background
-* **Minimized mode**: Compact status bars for completed builds
-
-#### Layout Transitions
-
-* **Smooth transitions**: Animate layout changes when possible
-* **State preservation**: Remember scroll positions and focus states
-* **Responsive design**: Adapt to terminal size changes
-
-### 6. Batch Mode for CI/CD
+### 2. Batch Mode for CI/CD
 
 #### Overview
 
-A non-interactive batch mode for running builds in parallel on multiple hosts, suitable for CI/CD environments. This mode would replace the functionality of the old `build-redland-on.py` script.
+A non-interactive batch mode for running builds in parallel on multiple hosts, suitable for CI/CD environments.
 
 #### Features
 
-* **Non-interactive output**: The application will run without the TUI, printing log-style output to the console.
-* **Scrolling output**: The output will scroll up the screen as major tasks are completed, providing a real-time log of the build process.
-* **Parallel execution**: Builds will run in parallel on multiple hosts, with the same concurrency management as the TUI mode.
-* **Summary report**: A summary report will be printed at the end of the build process, similar to the one in the TUI mode.
+* **Non-interactive output**: Console log-style output without TUI
+* **Parallel execution**: Same concurrency management as TUI mode
+* **Summary report**: Comprehensive build summary at completion
+* **Command-line activation**: `--batch` or `--no-tui` flag
 
-#### Command-line activation
+### 3. Build Script Integration Enhancements
 
-A new command-line flag, such as `--batch` or `--no-tui`, would be added to activate this mode.
+#### Interface Improvements
 
-## Implementation Architecture
+* **Structured output format**: Standardize build script output for better parsing
+* **Optional TUI mode**: `--tui-mode` flag for enhanced progress reporting
+* **Configuration sharing**: Build script reads TUI preferences when available
 
-### New Classes
+#### Enhanced Coordination
 
-```python
-class NavigationManager:
-    """Manages focus, scrolling, and navigation state"""
-    
-class ScrollManager:
-    """Handles log scrolling for individual hosts"""
-    
-class MenuManager:
-    """Manages host selection and other menus"""
-    
-class FocusManager:
-    """Manages host focus and full-screen states"""
-```
+* **Better step detection**: More robust parsing of build phases
+* **Improved error categorization**: Enhanced error reporting and handling
+* **Timing data integration**: More accurate progress estimation
 
-### Enhanced Existing Classes
+### 4. Matrix Build Functionality
 
-```python
-class InputHandler:
-    """Enhanced with new keyboard shortcuts and menu handling"""
-    
-class HostSection:
-    """Enhanced with scroll state and focus indicators"""
-    
-class LayoutManager:
-    """Enhanced with full-screen and minimized layouts"""
-```
+#### Overview
 
-## Configuration Options
+A matrix-build system that automatically discovers host capabilities and runs builds across different dimensions of compilers, operating systems, and architectures.
 
-### User Preferences
+#### Discovery Phase
 
-```python
-# Navigation settings
-NAVIGATION_SCROLL_SPEED = 1
-NAVIGATION_AUTO_MINIMIZE_TIMEOUT = 30
-NAVIGATION_FULL_SCREEN_HEADER_HEIGHT = 2
-NAVIGATION_MENU_OVERLAY_OPACITY = 0.8
+* **Host capability detection**: Automatically detect available compilers (gcc, clang, cc, g++)
+* **OS identification**: Detect operating system and version (Debian, Ubuntu, etc.)
+* **Architecture detection**: Identify CPU architecture (x86-64, ARM, etc.)
+* **Compiler flags support**: Test for specific compiler flags and features
+* **Dependency checking**: Verify required libraries and tools are available
 
-# Visual settings
-NAVIGATION_FOCUS_BORDER_COLOR = "BRIGHT_CYAN"
-NAVIGATION_SCROLL_INDICATOR_COLOR = "YELLOW"
-NAVIGATION_MENU_BORDER_COLOR = "WHITE"
-```
+#### Matrix Configuration
 
-## User Experience Considerations
-
-### Visual Feedback
-
-* **Focus indicators**: Clear visual indication of focused host
-* **Scroll indicators**: Show scroll position and available content
-* **Status overlays**: Minimal status info in full-screen mode
-* **Transition animations**: Smooth visual transitions
-
-### Accessibility
-
-* **Keyboard navigation**: All features accessible via keyboard
-* **Clear indicators**: Visual and textual status information
-* **Consistent shortcuts**: Logical and memorable key mappings
-* **Help system**: Comprehensive help with examples
-
-### Performance
-
-* **Efficient rendering**: Only redraw changed sections
-* **Scroll optimization**: Virtual scrolling for large logs
-* **Memory management**: Limit log buffer sizes
-* **Background processing**: Non-blocking UI updates
-
-## Testing Strategy
-
-### Unit Tests
-
-* Navigation state management
-* Scroll position calculations
-* Menu selection logic
-* Focus state transitions
-
-### Integration Tests
-
-* Full navigation workflow
-* Layout transitions
-* Input handling scenarios
-* Performance under load
-
-### User Acceptance Tests
-
-* Real-world usage scenarios
-* Keyboard shortcut memorability
-* Visual clarity and feedback
-* Performance with large logs
-
-## Success Metrics
-
-### Usability
-
-* Time to navigate between hosts
-* Ease of log exploration
-* User satisfaction with interface
-
-### Performance
-
-* Responsiveness of navigation
-* Memory usage with large logs
-* CPU usage during scrolling
-
-### Reliability
-
-* No navigation state corruption
-* Proper cleanup of resources
-* Graceful handling of edge cases
-
-## Code-Focused Analysis and Implementation Priority
-
-### Current Codebase Assessment
-
-Based on my analysis of the existing code and the proposed navigation features, here's my assessment of the current state and recommendations for implementation priority:
-
-#### **HIGH PRIORITY - Foundation Work (Addresses Technical Debt)**
-
-1. **Enhanced Input Handler** ⭐⭐⭐⭐⭐
-   * **Why**: The current `InputHandler` is only 100 lines and handles basic navigation. This is the foundation for all other features.
-   * **Risk**: Low
-   * **Impact**: High - enables all other navigation features
-   * **Current State**: `input_handler.py` is clean and focused, easy to extend
-   * **Navigation Connections**:
-     * Currently only handles UP/DOWN navigation between visible hosts
-     * Needs LEFT/RIGHT navigation between all hosts (including completed)
-     * Must add ENTER/ESC for full-screen toggle
-     * Requires TAB for menu activation
-     * Needs PAGE_UP/PAGE_DOWN, HOME/END for log scrolling
-
-2. **Focus Management System** ⭐⭐⭐⭐⭐
-   * **Why**: Required for all navigation features. The current focus system is basic.
-   * **Risk**: Low
-   * **Impact**: High - core navigation functionality
-   * **Current State**: Focus logic is scattered across multiple classes, needs centralization
-   * **Navigation Connections**:
-     * `HostSection` currently has no focus state management
-     * `LayoutManager` handles positioning but not focus
-     * `app.py` has basic focus tracking but no visual indicators
-     * Need centralized focus state for normal, full-screen, and scroll modes
-
-3. **Scroll State Management** ⭐⭐⭐⭐⭐
-   * **Why**: Foundation for log exploration. The current `OutputBuffer` is simple and ready for enhancement.
-   * **Risk**: Low
-   * **Impact**: High - major UX improvement
-   * **Current State**: `output_buffer.py` is only 97 lines, clean architecture ready for extension
-   * **Navigation Connections**:
-     * `OutputBuffer` in `HostSection` needs scroll offset tracking
-     * Must integrate with focus management for scroll mode
-     * Requires scroll indicators and position display
-     * Needs to preserve scroll state during layout transitions
-
-#### **MEDIUM PRIORITY - Core Features (Major UX Improvements)**
-
-4. **Enhanced HostSection with Scroll Support** ⭐⭐⭐⭐
-   * **Why**: Enables log exploration within existing UI. Current `HostSection` is 672 lines and could benefit from refactoring.
-   * **Risk**: Medium
-   * **Impact**: High - log scrolling is a major feature
-   * **Current State**: `HostSection` is large but well-structured, needs scroll integration
-   * **Navigation Connections**:
-     * `BorderRenderer` class needs focus-aware border coloring
-     * `OutputBuffer` integration with scroll state
-     * Focus indicators and visual feedback
-     * Scroll-aware rendering methods
-
-5. **Layout Manager Enhancements** ⭐⭐⭐⭐
-   * **Why**: Required for full-screen and minimized modes. Current `LayoutManager` is 441 lines and handles basic layouts well.
-   * **Risk**: Medium
-   * **Impact**: High - enables full-screen mode
-   * **Current State**: Good foundation, needs full-screen and minimized layout support
-   * **Navigation Connections**:
-     * Currently only handles normal multi-host layout
-     * Must add full-screen layout calculation
-     * Needs minimized layout for completed builds
-     * Layout transitions and state preservation
-     * Responsive design for different terminal sizes
-
-6. **Basic Full-Screen Mode** ⭐⭐⭐⭐
-   * **Why**: Major UX improvement that builds on layout enhancements.
-   * **Risk**: Medium
-   * **Impact**: High - full-screen viewing is highly requested
-   * **Current State**: Requires layout manager enhancements first
-   * **Navigation Connections**:
-     * ENTER key integration with focus management
-     * ESC key handling for exit
-     * Full-screen rendering in `Renderer` class
-     * Background host management during full-screen
-
-#### **LOWER PRIORITY - Advanced Features (Polish and Optimization)**
-
-7. **Host Selection Menu** ⭐⭐⭐
-   * **Why**: Provides access to all hosts including completed ones. Nice-to-have feature.
-   * **Risk**: Low
-   * **Impact**: Medium - improves host access
-   * **Current State**: New functionality, no existing code to modify
-   * **Navigation Connections**:
-     * TAB key integration with `InputHandler`
-     * Menu overlay rendering in `Renderer`
-     * Host status integration with existing status tracking
-     * Numbered selection (1-9 keys) implementation
-
-8. **Completed Build Management** ⭐⭐⭐
-   * **Why**: Solves the "lost completed builds" problem. Good UX improvement.
-   * **Risk**: Low
-   * **Impact**: Medium - better build history access
-   * **Current State**: Builds on existing visibility management
-   * **Navigation Connections**:
-     * LEFT/RIGHT navigation between all hosts
-     * Minimized display mode in `LayoutManager`
-     * 'm' key toggle integration
-     * Persistent access to completed builds
-
-9. **Enhanced Navigation (LEFT/RIGHT between all hosts)** ⭐⭐⭐
-   * **Why**: Polishes the navigation experience. Nice-to-have feature.
-   * **Risk**: Low
-   * **Impact**: Medium - smoother navigation
-   * **Current State**: Requires focus management system first
-   * **Navigation Connections**:
-     * Extends current UP/DOWN navigation logic
-     * Integrates with host visibility management
-     * Smooth focus transitions
-     * Visual feedback improvements
-
-#### **OPTIMIZATION PRIORITY - Performance and Polish**
-
-10. **Performance Optimization** ⭐⭐
-    * **Why**: Ensures good performance with large builds. Important for production use.
-    * **Risk**: Low
-    * **Impact**: Medium - performance improvements
-    * **Current State**: Current performance is adequate, optimization can wait
-    * **Navigation Connections**:
-      * Virtual scrolling for large logs
-      * Efficient rendering for frequent updates
-      * Memory management for log buffers
-      * Background processing optimization
-
-11. **User Experience Refinements** ⭐⭐
-    * **Why**: Improves overall user experience. Polish features.
-    * **Risk**: Low
-    * **Impact**: Low - cosmetic improvements
-    * **Current State**: Current UX is functional, refinements are nice-to-have
-    * **Navigation Connections**:
-      * Smooth transitions and animations
-      * Comprehensive help system
-      * Visual indicators and feedback
-      * Keyboard shortcut consistency
-
-### Key Code Integration Points
-
-#### **Input Handler Integration**
-
-* **Current**: Basic UP/DOWN navigation in `app.py` main loop
-* **Needed**: Extended keyboard handling for all new shortcuts
-* **Impact**: Low risk, high value - enables all navigation features
-
-#### **Focus System Integration**
-
-* **Current**: Basic focus tracking in `app.py` with `focused_host` index
-* **Needed**: Centralized focus state management across all components
-* **Impact**: Medium risk, high value - required for all navigation features
-
-#### **Layout System Integration**
-
-* **Current**: `LayoutManager` handles basic multi-host layouts
-* **Needed**: Full-screen, minimized, and menu layout modes
-* **Impact**: Medium risk, high value - enables major UX improvements
-
-#### **Rendering System Integration**
-
-* **Current**: `Renderer` class handles basic UI rendering
-* **Needed**: Focus indicators, scroll indicators, menu overlays
-* **Impact**: Low risk, medium value - visual polish and feedback
-
-### Implementation Strategy Recommendations
-
-#### **Phase 1: Foundation**
-
-* Enhanced Input Handler
-* Focus Management System
-* Scroll State Management
-
-#### **Phase 2: Core Features**
-
-* Enhanced HostSection with Scroll Support
-* Layout Manager Enhancements
-* Basic Full-Screen Mode
-
-#### **Phase 3: Advanced Features**
-
-* Host Selection Menu
-* Completed Build Management
-* Enhanced Navigation
-
-#### **Phase 4: Optimization**
-
-* Performance Optimization
-* User Experience Refinements
-* Testing & Documentation
-
-### Risk Assessment
-
-* **Low Risk**: Input handler, focus management, scroll state
-* **Medium Risk**: Layout enhancements, full-screen mode, host section modifications
-* **High Risk**: None identified - all features build incrementally
-
-### Success Criteria
-
-* **Phase 1**: All new keyboard shortcuts work, focus system functional
-* **Phase 2**: Full-screen mode works, log scrolling functional
-* **Phase 3**: Menu system works, completed builds accessible
-* **Phase 4**: Performance optimized, user experience polished
-
-### Code Refactoring Requirements
-
-#### **File Size Reduction**
-
-* **`app.py` (753 lines)**: Extract navigation logic, focus management, and input handling
-* **`host_section.py` (672 lines)**: Separate scroll logic, focus indicators, and rendering
-* **`renderer.py` (583 lines)**: Split into focused rendering components
-* **`layout_manager.py` (441 lines)**: Add new layout modes without increasing size
-
-#### **Architecture Improvements**
-
-* **Centralized Focus Management**: New `FocusManager` class to coordinate focus across components
-* **Enhanced Input Handling**: Extend `InputHandler` with all new keyboard shortcuts
-* **Scroll State Integration**: Integrate scroll state with existing `OutputBuffer` and `HostSection`
-* **Layout Mode Support**: Add full-screen and minimized layouts to `LayoutManager`
-
-#### **Integration Points**
-
-* **Focus System**: Must integrate with `app.py`, `HostSection`, `LayoutManager`, and `Renderer`
-* **Input Handling**: Must integrate with main app loop and all navigation features
-* **Layout Management**: Must preserve existing functionality while adding new modes
-* **Rendering**: Must maintain performance while adding visual feedback and indicators
-
-## Conclusion
-
-This enhanced navigation system will transform the Build TUI from a passive monitoring tool into an interactive build exploration platform. The design prioritizes usability, performance, and maintainability while building upon the existing solid architecture.
-
-The implementation will be incremental, allowing for testing and refinement at each stage while maintaining backward compatibility with existing functionality.
-
-Based on my code analysis, the foundation work (Phases 1-2) should be prioritized as it addresses technical debt and provides the most immediate user value with the lowest risk. The advanced features can be implemented incrementally once the foundation is solid.
-
-The proposed navigation features have significant implications for the current codebase architecture. The existing code is well-structured but will require careful refactoring to integrate the new navigation capabilities while maintaining the current functionality and addressing the file size concerns identified in the initial assessment.
-
-## Future Enhancement: Build Script Integration
-
-### Current Architecture Decision
-
-After careful analysis, the decision has been made to **maintain separation** between `build-tui` and `../build-redland.py` rather than integrating them into a single ownership model.
-
-#### **Why Keep Separation**
-
-1. **Architectural Purity**: Maintains clear separation of concerns between build tool and monitoring tool
-2. **Reusability**: `build-redland.py` remains independent and usable outside of TUI context
-3. **Maintainability**: Each component can evolve independently without affecting the other
-4. **Testing**: Components can be tested in isolation
-5. **Risk Management**: Changes to one component don't cascade to the other
-
-#### **Current Integration Point**
-
-```python
-# From app.py - current well-architected integration
-script_path = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "build-redland.py")
-)
-```
-
-The build script is **used** by build-tui (scp-ed to remote hosts) but not **owned** by it, maintaining proper separation.
-
-### Future Enhancement Opportunities
-
-#### **Interface Contract Improvements**
-
-Instead of full integration, focus on enhancing the interface between components:
-
-1. **Structured Output Format**
-   * Define clear output format standards for build script
-   * Add optional TUI-friendly output modes
-   * Create parsing utilities in the TUI
-
-2. **Optional TUI Mode**
-   * Build script could support `--tui-mode` flag
-   * Enable structured progress reporting
-   * Add clear step boundary markers
-   * Provide detailed timing data
-
-3. **Configuration-Driven Cooperation**
-   * Build script reads TUI configuration if present
-   * Falls back to normal behavior if not
-   * No hard coupling required
-
-#### **TUI Enhancement Areas**
-
-1. **Improved Parsing**
-   * Better step detection from existing output
-   * More robust error parsing and categorization
-   * Enhanced timing extraction and analysis
-
-2. **Configuration Integration**
-   * TUI could configure build script behavior
-   * Build script could read TUI preferences
-   * Maintain independence while improving coordination
-
-### Implementation Priority
-
-This enhancement is **low priority** and should be considered only after:
-
-* Core navigation features are implemented
-* Current code refactoring is complete
-* User feedback indicates interface improvements are needed
-
-### Success Criteria
-
-* **Maintain Independence**: Both components remain independently usable
-* **Improved Coordination**: Better data flow between build script and TUI
-* **Enhanced User Experience**: More reliable progress tracking and error reporting
-* **No Performance Impact**: Integration doesn't slow down either component
+* **Compiler dimensions**: gcc/cc, clang/llvm, cc with specific flags, C++/g++
+* **OS dimensions**: Debian, Ubuntu, CentOS, Alpine, etc.
+* **Architecture dimensions**: x86-64, ARM64, ARM32, etc.
+* **Custom dimensions**: User-defined build variants
+* **Exclusion rules**: Skip incompatible combinations
+
+#### Build Execution
+
+* **Multi-build per host**: Run multiple matrix combinations on capable hosts
+* **Resource optimization**: Distribute builds based on host capabilities
+* **Dependency management**: Ensure proper toolchain setup for each combination
+* **Result aggregation**: Collect and compare results across matrix dimensions
+
+### 5. Performance and Scalability
+
+#### Memory Optimization
+
+* **Virtual scrolling**: Handle very large logs efficiently
+* **Log buffer limits**: Configurable memory usage constraints
+* **Background processing**: Non-blocking UI updates for better responsiveness
+
+#### Advanced Features
+
+* **Host grouping**: Organize hosts by categories or environments
+* **Build templates**: Pre-configured build scenarios
+* **Export functionality**: Save build results and configurations
+
+## Implementation Priority
+
+1. **High Priority**: Batch mode for CI/CD integration
+2. **Medium Priority**: Enhanced navigation shortcuts and filtering
+3. **Medium Priority**: Matrix build functionality (discovery and execution)
+4. **Low Priority**: Build script integration improvements
+5. **Future**: Advanced performance optimizations and templates
+
+## Success Criteria
+
+* **Maintain current functionality**: All existing features continue to work
+* **Incremental implementation**: New features don't disrupt existing workflows
+* **User feedback driven**: Features implemented based on user needs
+* **Performance maintained**: Enhancements don't impact current performance
