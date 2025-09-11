@@ -110,8 +110,7 @@ class TestLayoutManagerSmallTerminalLayout(unittest.TestCase):
 
     def test_setup_layout_small_terminal(self):
         """Test complete layout setup for small terminal."""
-        with patch.object(self.manager, "_warn_about_hidden_hosts"):
-            host_sections = self.manager.setup_layout()
+        host_sections = self.manager.setup_layout()
 
         # Should only have one host section for small terminals
         self.assertEqual(len(host_sections), 1)
@@ -177,8 +176,7 @@ class TestLayoutManagerNormalTerminalLayout(unittest.TestCase):
 
     def test_setup_layout_normal_terminal(self):
         """Test complete layout setup for normal terminal."""
-        with patch.object(self.manager, "_warn_about_hidden_hosts"):
-            host_sections = self.manager.setup_layout()
+        host_sections = self.manager.setup_layout()
 
         # Should have multiple host sections for normal terminals
         self.assertGreater(len(host_sections), 1)
@@ -479,8 +477,7 @@ class TestLayoutManagerResize(unittest.TestCase):
         self.manager.add_host_section("host2", 13, 10)
 
         # Resize layout
-        with patch.object(self.manager, "_warn_about_hidden_hosts"):
-            new_sections = self.manager.resize_layout()
+        new_sections = self.manager.resize_layout()
 
         # Should have recalculated sections (may be same number but different positions/sizes)
         self.assertIsInstance(new_sections, dict)
@@ -513,8 +510,7 @@ class TestLayoutManagerIntegration(unittest.TestCase):
     def test_full_layout_cycle(self):
         """Test complete layout cycle."""
         # Setup layout
-        with patch.object(self.manager, "_warn_about_hidden_hosts"):
-            host_sections = self.manager.setup_layout()
+        host_sections = self.manager.setup_layout()
 
         # Verify layout is valid
         self.assertTrue(self.manager.validate_layout())
@@ -534,8 +530,7 @@ class TestLayoutManagerIntegration(unittest.TestCase):
 
     def test_layout_consistency(self):
         """Test that layout information is consistent."""
-        with patch.object(self.manager, "_warn_about_hidden_hosts"):
-            host_sections = self.manager.setup_layout()
+        host_sections = self.manager.setup_layout()
 
         info = self.manager.get_layout_info()
 
@@ -552,8 +547,7 @@ class TestLayoutManagerIntegration(unittest.TestCase):
         """Test integration with small terminal."""
         self.mock_terminal.height = TestConfig.MIN_TERMINAL_HEIGHT - 1  # Small terminal
 
-        with patch.object(self.manager, "_warn_about_hidden_hosts"):
-            host_sections = self.manager.setup_layout()
+        host_sections = self.manager.setup_layout()
 
         # Should only show one host in small terminal
         self.assertEqual(len(host_sections), 1)

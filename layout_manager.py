@@ -52,9 +52,6 @@ class LayoutManager:
             # Create host sections
             self._create_host_sections(layout_info)
 
-            # Warn if not all hosts can be displayed
-            self._warn_about_hidden_hosts()
-
             return self.host_sections
 
         except Exception as e:
@@ -177,19 +174,6 @@ class LayoutManager:
                 f"Created host section for {host}: start_y={start_y}, height={section_height}, end_y={start_y + section_height}"
             )
 
-    def _warn_about_hidden_hosts(self) -> None:
-        """Warn if not all hosts can be displayed."""
-        if len(self.host_sections) < len(self.hosts):
-            hidden_hosts = len(self.hosts) - len(self.host_sections)
-            logging.warning(
-                f"Terminal too small: {hidden_hosts} hosts will not be displayed initially"
-            )
-            print(
-                f"\n{ColorManager.get_ansi_color('BRIGHT_YELLOW')}Warning: Terminal too small to display all {len(self.hosts)} hosts."
-            )
-            print(
-                f"Only {len(self.host_sections)} hosts will be displayed at one time.{ColorManager.get_ansi_color('RESET')}\n"
-            )
 
     def get_max_visible_hosts(self) -> int:
         """
