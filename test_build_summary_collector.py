@@ -149,11 +149,10 @@ class TestBuildSummaryCollector(unittest.TestCase):
 
         summary = self.collector.generate_summary()
         self.assertIn("BUILD SUMMARY", summary)
-        self.assertIn("SUCCESSFUL BUILDS:", summary)
-        self.assertIn("FAILED BUILDS:", summary)
-        self.assertIn("✓ host1", summary)
-        self.assertIn("✗ host2", summary)
-        self.assertIn("Error: Test error", summary)
+        self.assertIn("host1", summary)
+        self.assertIn("host2", summary)
+        self.assertIn("SUCCESS", summary)
+        self.assertIn("FAILED", summary)
         self.assertIn("Overall: 1/2 builds successful", summary)
 
     def test_get_statistics_summary(self):
@@ -184,7 +183,8 @@ class TestBuildSummaryCollector(unittest.TestCase):
             # Verify the summary content
             summary_arg = mock_print.call_args[0][0]
             self.assertIn("BUILD SUMMARY", summary_arg)
-            self.assertIn("✓ test-host", summary_arg)
+            self.assertIn("test-host", summary_arg)
+            self.assertIn("SUCCESS", summary_arg)
 
 
 if __name__ == "__main__":

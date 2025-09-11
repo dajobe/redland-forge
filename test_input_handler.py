@@ -453,6 +453,30 @@ class TestInputHandlerInputProcessing(unittest.TestCase):
             # Verify help callback was called
             self.mock_on_show_help.assert_called_once()
 
+    def test_handle_input_question_mark_help_key(self):
+        """Test input handling for question mark help key."""
+        mock_key = Mock()
+        # Make the key behave like a string when compared
+        mock_key.__eq__ = Mock(side_effect=lambda x: x == "?")
+        mock_inkey = Mock(return_value=mock_key)
+        mock_cbreak = Mock()
+        mock_cbreak.__enter__ = Mock(return_value=None)
+        mock_cbreak.__exit__ = Mock(return_value=None)
+
+        self.mock_terminal.cbreak.return_value = mock_cbreak
+        self.mock_terminal.inkey = mock_inkey
+
+        with patch("input_handler.logging") as mock_logging:
+            self.handler.handle_input(
+                self.mock_on_quit,
+                self.mock_on_navigate_up,
+                self.mock_on_navigate_down,
+                self.mock_on_show_help,
+            )
+
+            # Verify help callback was called
+            self.mock_on_show_help.assert_called_once()
+
     def test_handle_input_up_key(self):
         """Test input handling for up arrow key."""
         mock_key = Mock()

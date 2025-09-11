@@ -388,6 +388,18 @@ class TestHostSectionUtilityMethods(unittest.TestCase):
         result = self.section.get_display_hostname()
         self.assertEqual(result, "testhost")
 
+    def test_get_display_hostname_with_at_and_domain(self):
+        """Test get_display_hostname with @ symbol and domain."""
+        self.section.hostname = "user@testhost.example.com"
+        result = self.section.get_display_hostname()
+        self.assertEqual(result, "testhost")
+
+    def test_get_display_hostname_without_at_with_domain(self):
+        """Test get_display_hostname without @ symbol but with domain."""
+        self.section.hostname = "testhost.example.com"
+        result = self.section.get_display_hostname()
+        self.assertEqual(result, "testhost")
+
     def test_get_display_hostname_without_at(self):
         """Test get_display_hostname without @ symbol."""
         self.section.hostname = "testhost"
