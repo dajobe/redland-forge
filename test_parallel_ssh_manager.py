@@ -61,7 +61,7 @@ class TestParallelSSHManagerHostManagement(unittest.TestCase):
 
     def test_set_build_script_path(self):
         """Test setting build script path."""
-        script_path = "/path/to/build-redland.py"
+        script_path = "/path/to/build-agent.py"
         self.manager.set_build_script_path(script_path)
         self.assertEqual(self.manager.build_script_path, script_path)
 

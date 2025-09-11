@@ -23,7 +23,7 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(settings["BUILD_TIMEOUT_SECONDS"], 7200)
         self.assertEqual(settings["BUILD_DIRECTORY"], "$HOME/build")
-        self.assertEqual(settings["BUILD_SCRIPT_NAME"], "build-redland.py")
+        self.assertEqual(settings["BUILD_SCRIPT_NAME"], "build-agent.py")
 
     def test_ui_settings(self):
         """Test UI rendering settings."""

@@ -64,10 +64,10 @@ class ParallelSSHManager:
 
     def set_build_script_path(self, script_path: str) -> None:
         """
-        Set the path to the build-redland.py script.
+        Set the path to the build script.
 
         Args:
-            script_path: Path to the build script
+            script_path: Path to the build script (build-agent.py)
         """
         self.build_script_path = script_path
 

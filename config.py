@@ -18,7 +18,7 @@ class Config:
     # Remote build directory (relative to remote user's home)
     # Use $HOME so shell commands expand it; code resolves an absolute path for SFTP
     BUILD_DIRECTORY = "$HOME/build"
-    BUILD_SCRIPT_NAME = "build-redland.py"
+    BUILD_SCRIPT_NAME = "build-agent.py"
 
     # UI rendering settings
     MIN_RENDER_INTERVAL_SECONDS = 0.2

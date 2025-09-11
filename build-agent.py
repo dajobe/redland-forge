@@ -455,7 +455,7 @@ def main() -> int:
 
     if tarball_path is None:
         logging.error(
-            "USAGE: build-redland.py PACKAGE-TARBALL [--no-print-hostname] [--bindings-languages LUA,PERL,...]"
+            "USAGE: build-agent.py PACKAGE-TARBALL [--no-print-hostname] [--bindings-languages LUA,PERL,...]"
         )
         return 1
 

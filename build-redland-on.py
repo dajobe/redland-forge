@@ -308,6 +308,47 @@ def read_hosts_from_file(filename: str) -> List[str]:
     return hosts
 
 
+def detect_bindings_languages(tarball: str) -> str:
+    """
+    Detect which language binding directories exist in the tarball.
+
+    Args:
+        tarball: Path to the tarball file.
+
+    Returns:
+        Comma-separated string of detected language bindings.
+    """
+    import tempfile
+    import tarfile
+
+    detected_languages = []
+
+    try:
+        # Create a temporary directory to extract just the directory structure
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with tarfile.open(tarball, "r:*") as tar:
+                # Extract only the top-level directories to check for language bindings
+                for member in tar.getmembers():
+                    if member.isdir() and "/" not in member.name.rstrip("/"):
+                        # Top-level directory, check if it's a language binding
+                        lang = member.name.rstrip("/")
+                        if lang in ["perl", "python", "ruby", "php", "lua"]:
+                            detected_languages.append(lang)
+
+    except Exception as e:
+        logging.warning(f"Failed to detect language bindings from tarball: {e}")
+        # Fall back to all languages if detection fails
+        return "perl,python,ruby,php,lua"
+
+    if not detected_languages:
+        logging.debug("No language bindings detected in tarball")
+        return ""
+
+    languages_str = ",".join(detected_languages)
+    logging.debug(f"Detected language bindings: {languages_str}")
+    return languages_str
+
+
 def build_on_host(tarball: str, userhost: str) -> int:
     """
     Build the Redland package on a remote host.
@@ -332,28 +373,34 @@ def build_on_host(tarball: str, userhost: str) -> int:
     # Local paths (assuming the program and build-redland script are in the
     # same directory)
     program_dir = Path(__file__).parent
-    bins_dir = Path.home() / "dev/redland/admin"
+    bins_dir = Path.home() / "dev/redland/build-tui-extracted"
 
     # Check if tarball file exists
     if not Path(tarball).exists():
         logging.info(f"Package tarball not found: {tarball}")
         return 1
 
+    # Detect which language bindings are available in the tarball
+    bindings_languages = detect_bindings_languages(tarball)
+    bindings_arg = f" --bindings-languages {bindings_languages}" if bindings_languages else ""
+
     logging.info(f"Building on {colorize(host_label, Colors.BRIGHT_CYAN)}...")
+    if bindings_languages:
+        logging.debug(f"Language bindings to build: {bindings_languages}")
 
     # Clear remote build directory
-    run_command(f"rm -f ./build-redland.py {tarball}", userhost)
+    run_command(f"rm -f ./build-agent.py {tarball}", userhost)
 
-    # Transfer build-redland.py script and tarball
-    transfer_file(str(bins_dir / "build-redland.py"), ".", userhost)
+    # Transfer build-agent.py script and tarball
+    transfer_file(str(bins_dir / "build-agent.py"), ".", userhost)
     transfer_file(tarball, ".", userhost)
 
     logging.info(colorize("Starting remote build...", Colors.BRIGHT_BLUE))
     start_time = datetime.now()
 
-    # Execute build script remotely
+    # Execute build script remotely with detected language bindings
     rc = run_command(
-        f"python3 ./build-redland.py {tarball_file} --no-print-hostname", userhost
+        f"python3 ./build-agent.py {tarball_file} --no-print-hostname{bindings_arg}", userhost
     )
 
     end_time = datetime.now()
