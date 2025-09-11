@@ -12,6 +12,7 @@ from typing import List
 
 from app import BuildTUI, set_color_mode, read_hosts_from_file
 from config import Config
+from exception_handler import ExceptionHandler
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -298,10 +299,10 @@ def main() -> int:
     except Exception as e:
         import traceback
 
-        logging.error(f"Error in main function: {e}")
-        logging.error("Full traceback:")
-        logging.error(traceback.format_exc())
-        print(f"Error in main function: {e}")
+        exception_results = ExceptionHandler.handle_exception(
+            e, "Main application error", show_user=True
+        )
+        print(f"\n{ExceptionHandler.format_exception_summary(exception_results)}")
         print("Full traceback:")
         traceback.print_exc()
         return 1

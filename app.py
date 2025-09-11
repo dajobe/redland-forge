@@ -23,6 +23,7 @@ from input_handler import InputHandler, NavigationMode
 from host_visibility_manager import HostVisibilityManager
 from parallel_ssh_manager import ParallelSSHManager
 from color_manager import ColorManager, set_color_mode, supports_color, colorize
+from exception_handler import ExceptionHandler, ExceptionSeverity
 from auto_exit_manager import AutoExitManager
 from build_summary_collector import BuildSummaryCollector
 from progress_display_manager import ProgressDisplayManager
@@ -1214,23 +1215,24 @@ class BuildTUI:
                         except Exception as e:
                             import traceback
 
-                            logging.error(f"Error in main loop: {e}")
-                            logging.error("Full traceback:")
-                            logging.error(traceback.format_exc())
-                            print(f"Error in main loop: {e}")
-                            print("Full traceback:")
-                            print(traceback.format_exc())
-                            break
+                            exception_results = ExceptionHandler.handle_exception(
+                                e, "Main application loop error", show_user=True
+                            )
+                            print(f"\n{ExceptionHandler.format_exception_summary(exception_results)}")
+                            if exception_results['severity'] == ExceptionSeverity.CRITICAL:
+                                print("Full traceback:")
+                                traceback.print_exc()
+                                break
 
         except KeyboardInterrupt:
             print("\nBuild interrupted by user")
         except Exception as e:
             import traceback
 
-            logging.error(f"Error in run method: {e}")
-            logging.error("Full traceback:")
-            logging.error(traceback.format_exc())
-            print(f"Error in run method: {e}")
+            exception_results = ExceptionHandler.handle_exception(
+                e, "Application run method error", show_user=True
+            )
+            print(f"\n{ExceptionHandler.format_exception_summary(exception_results)}")
             print("Full traceback:")
             traceback.print_exc()
         finally:

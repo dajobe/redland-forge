@@ -16,6 +16,7 @@ import paramiko
 from config import Config
 from color_manager import ColorManager
 from host_section import Colors
+from exception_handler import ExceptionHandler, ExceptionSeverity
 from ssh_connection import (
     SSHConnection,
     parse_hostname,
@@ -140,12 +141,14 @@ class ParallelSSHManager:
                     return
 
             except Exception as e:
+                exception_results = ExceptionHandler.handle_exception(
+                    e, "SSH connection failed", hostname, show_user=True
+                )
                 with self.lock:
                     self.results[hostname]["status"] = "FAILED"
                     self.results[hostname]["output"].append(
-                        f"✗ SSH connection error: {str(e)}"
+                        ExceptionHandler.format_exception_summary(exception_results)
                     )
-                logging.error(f"SSH connection error for {hostname}: {str(e)}")
                 return
 
             with self.lock:
@@ -171,8 +174,15 @@ class ParallelSSHManager:
                 if not ssh.sftp:
                     ssh.sftp = ssh.client.open_sftp()
                 remote_home_dir = ssh.sftp.normalize(".")
-            except Exception:
+            except Exception as e:
                 # Fallback: try shell to get HOME
+                exception_results = ExceptionHandler.handle_exception(
+                    e, "SFTP directory resolution failed, using fallback", hostname, show_user=False
+                )
+                with self.lock:
+                    self.results[hostname]["output"].append(
+                        f"⚠️  Using fallback directory resolution due to SFTP issue"
+                    )
                 exit_code, stdout, _ = ssh.execute_command("pwd")
                 remote_home_dir = stdout.strip() if exit_code == 0 else ""
 
@@ -337,7 +347,7 @@ class ParallelSSHManager:
                     for line in remaining_stderr.splitlines():
                         if line.strip():
                             with self.lock:
-                                stderr_line = f"{ColorManager.get_ansi_color('BRIGHT_YELLOW')}[STDERR]{ColorManger.get_ansi_color('RESET')} {line.strip()}"
+                                stderr_line = f"{ColorManager.get_ansi_color('BRIGHT_YELLOW')}[STDERR]{ColorManager.get_ansi_color('RESET')} {line.strip()}"
                                 logging.debug(
                                     f"Adding remaining stderr line: {stderr_line}"
                                 )
@@ -379,17 +389,23 @@ class ParallelSSHManager:
 
             except Exception as e:
                 # Handle exceptions during output monitoring
+                exception_results = ExceptionHandler.handle_exception(
+                    e, "Build monitoring failed", hostname, show_user=True
+                )
                 with self.lock:
                     self.results[hostname]["status"] = "FAILED"
-                    error_msg = f"✗ Error during build monitoring: {str(e)}"
-                    self.results[hostname]["output"].append(error_msg)
-                    logging.error(f"Build monitoring error for {hostname}: {error_msg}")
+                    self.results[hostname]["output"].append(
+                        ExceptionHandler.format_exception_summary(exception_results)
+                    )
 
         except Exception as e:
+            exception_results = ExceptionHandler.handle_exception(
+                e, "Build process failed", hostname, show_user=True
+            )
             with self.lock:
                 self.results[hostname]["status"] = "FAILED"
                 self.results[hostname]["output"].append(
-                    f"Exception during build: {str(e)}"
+                    ExceptionHandler.format_exception_summary(exception_results)
                 )
 
         finally:
