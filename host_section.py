@@ -440,10 +440,8 @@ class HostSection:
         status_color = self.get_status_color()
         symbol = self.get_status_symbol()
 
-        # Extract just the hostname part if it contains @
-        display_hostname = (
-            self.hostname.split("@")[-1] if "@" in self.hostname else self.hostname
-        )
+        # Extract just the base hostname (without username or domain)
+        display_hostname = self.get_display_hostname()
 
         # Add focus indicator
         focus_indicator = "▶ " if is_focused else "  "
@@ -618,12 +616,15 @@ class HostSection:
 
     def get_display_hostname(self) -> str:
         """
-        Get the display hostname (without username if present).
+        Get the display hostname (just the base hostname without username or domain).
 
         Returns:
-            Display hostname
+            Display hostname (e.g., 'host' from 'user@host.example.com')
         """
-        return self.hostname.split("@")[-1] if "@" in self.hostname else self.hostname
+        # First remove username if present
+        hostname_part = self.hostname.split("@")[-1] if "@" in self.hostname else self.hostname
+        # Then remove domain if present
+        return hostname_part.split(".")[0]
 
     def is_completed(self) -> bool:
         """

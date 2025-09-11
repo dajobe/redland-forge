@@ -122,7 +122,7 @@ class InputHandler:
         if key == "q":
             logging.debug("Quit requested via keyboard input")
             on_quit()
-        elif key == "h":
+        elif key in ("h", "?"):
             logging.debug("Help requested via keyboard input")
             on_show_help()
 
@@ -193,7 +193,7 @@ class InputHandler:
             "",
             "Basic Navigation:",
             "  q - Quit",
-            "  h - Show/hide this help",
+            "  h, ? - Show/hide this help",
             "  UP/DOWN - Navigate between visible hosts",
             "  LEFT/RIGHT - Navigate between all hosts (including completed)",
             "",
