@@ -1,8 +1,8 @@
-# Build TUI Future Enhancements
+# Redland Forge Future Enhancements
 
 ## Overview
 
-This document outlines proposed future enhancements for the Build TUI
+This document outlines proposed future enhancements for the Redland Forge
 application.
 
 ## Future Enhancement Opportunities

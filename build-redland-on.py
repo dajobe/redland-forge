@@ -370,10 +370,10 @@ def build_on_host(tarball: str, userhost: str) -> int:
         logging.info(f"Invalid package tarball format: {tarball_file}")
         return 1
 
-    # Local paths (assuming the program and build-redland script are in the
+    # Local paths (assuming the program and build-agent script are in the
     # same directory)
     program_dir = Path(__file__).parent
-    bins_dir = Path.home() / "dev/redland/build-tui-extracted"
+    bins_dir = program_dir
 
     # Check if tarball file exists
     if not Path(tarball).exists():

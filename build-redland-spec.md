@@ -1,8 +1,8 @@
-# Build Redland TUI - Remaining Work
+# Redland Forge - Remaining Work
 
 ## Overview
 
-This document outlines the remaining work for the build-tui system. The major refactoring has been completed with significant improvements in modularity, testability, and maintainability.
+This document outlines the remaining work for the redland-forge system. The major refactoring has been completed with significant improvements in modularity, testability, and maintainability.
 
 ## Current Status
 

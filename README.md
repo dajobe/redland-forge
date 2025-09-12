@@ -1,69 +1,67 @@
-# Build TUI - Parallel Build Monitor
+# Redland Forge - Distributed Build Orchestrator
 
-A sophisticated text-based user interface for monitoring parallel Redland builds across multiple remote hosts.
+A distributed build orchestrator for monitoring and managing parallel
+builds across multiple remote hosts.
+
+This was created as part of the [Redland Project](https://librdf.org/)
+for internal build testing.
 
 ## Overview
 
-Build TUI provides real-time monitoring of parallel build processes with a clean, organized terminal interface. It displays build progress, status updates, and output from multiple hosts simultaneously.
-
-** Documentation**
-
-- **[Architecture Guide](architecture.md)**: Detailed system architecture and design
-- **[Testing Guide](testing.md)**: Testing strategies and infrastructure
+Redland Forge is a distributed build orchestrator that provides
+comprehensive build management across multiple remote hosts. It
+offers real-time monitoring through a clean terminal interface, and
+intelligent build coordination with timing analytics and progress
+estimation.
 
 ## Features
 
-- **Real-time Monitoring**: Live updates of build progress across multiple hosts
-- **Parallel Execution**: Concurrent builds with configurable limits
-- **Status Tracking**: Visual indicators for different build stages (connecting, preparing, building, success/failure)
-- **Output Buffering**: Intelligent output management with configurable limits
-- **Terminal UI**: Responsive interface that adapts to terminal size
-- **SSH Integration**: Secure remote execution with comprehensive error handling
-- **Build Step Detection**: Automatic detection of build phases (configure, make, install, etc.)
-- **Build Timing Cache**: Persistent storage of build timing data for progress estimates
-- **Auto-Exit**: Automatically exits after builds complete with configurable delay
-- **Build Summary**: Comprehensive build result summaries with success/failure reporting
+- **Distributed Orchestration**: Coordinate builds across multiple
+  remote hosts with intelligent resource management.
+- **Real-time Monitoring**: Live terminal interface with build
+  progress tracking and status visualization.
+- **Parallel Execution**: Concurrent builds with configurable
+  concurrency limits.
+- **Build Intelligence**: Automatic step detection, timing analytics,
+  and progress estimation.
+- **SSH Integration**: Secure remote execution with connection
+  pooling and error recovery.
+- **Output Management**: Intelligent buffering and display of build
+  logs across hosts.
+- **Auto-Exit & Summaries**: Automatic completion handling with
+  comprehensive result reporting.
+- **Timing Cache**: Persistent build performance data for accurate
+  progress predictions.
 
 ## Quick Start
 
 ```bash
 # Basic usage
-cd build-tui
-./build-redland-tui.py redland-1.1.0.tar.gz user@host1 user@host2
+cd redland-forge
+./redland-forge redland-1.1.0.tar.gz user@host1 user@host2
+
+# Or using Python directly
+./redland-forge.py redland-1.1.0.tar.gz user@host1 user@host2
 
 # With host file
-./build-redland-tui.py redland-1.1.0.tar.gz -f hosts.txt
+./redland-forge redland-1.1.0.tar.gz -f hosts.txt
 
 # Limit concurrent builds
-./build-redland-tui.py redland-1.1.0.tar.gz --max-concurrent 4 user@host1 user@host2
+./redland-forge redland-1.1.0.tar.gz --max-concurrent 4 user@host1 user@host2
 
 # Auto-exit after 10 minutes (default: 5 minutes)
-./build-redland-tui.py redland-1.1.0.tar.gz --auto-exit-delay 600 user@host1 user@host2
+./redland-forge redland-1.1.0.tar.gz --auto-exit-delay 600 user@host1 user@host2
 
 # Disable auto-exit
-./build-redland-tui.py redland-1.1.0.tar.gz --no-auto-exit user@host1 user@host2
+./redland-forge redland-1.1.0.tar.gz --no-auto-exit user@host1 user@host2
 ```
 
-## Auto-Exit and Build Summary Features
+## Documentation
 
-### Auto-Exit Functionality
-
-The application automatically exits after a configurable delay once all builds complete, providing hands-free operation for automated build monitoring.
-
-**Key Benefits:**
-
-- **Hands-free operation**: Perfect for CI/CD pipelines and scheduled builds
-- **Configurable timing**: Adjustable delay from 1 second to any duration
-- **Smart timer management**: Timer resets on each new build completion
-- **Visual countdown**: Real-time countdown display in the UI header
-- **Override capability**: Users can still manually exit before auto-exit triggers
-
-**Configuration Options:**
-
-```bash
---auto-exit-delay SECONDS    # Custom delay (default: 300 = 5 minutes)
---no-auto-exit               # Disable auto-exit entirely
-```
+- **[Architecture Guide](architecture.md)**: Detailed system
+  architecture and design.
+- **[Testing Guide](testing.md)**: Testing strategies and infrastructure.
+- **[TODO.md](TODO.md)** for current development priorities.
 
 ## Command Line Options
 
@@ -86,7 +84,7 @@ hosts                        # One or more username@hostname pairs (can be comma
 ### Build Timing Cache Configuration
 
 ```bash
---cache-file PATH            # Custom cache file location (default: ~/.config/build-tui/timing-cache.json)
+--cache-file PATH            # Custom cache file location (default: ~/.config/redland-forge/timing-cache.json)
 --cache-retention DAYS       # Cache retention period in days (default: 30)
 --cache-keep-builds N        # Number of recent builds to keep in cache (default: 5)
 --no-cache                   # Disable timing cache functionality
@@ -109,15 +107,23 @@ hosts                        # One or more username@hostname pairs (can be comma
 
 ## Build Timing Cache
 
-The Build Timing Cache system provides intelligent progress estimation by storing historical build timing data. This enables accurate progress estimates for ongoing builds based on previous performance data from the same hosts.
+This system provides intelligent progress estimation by storing
+historical build timing data. This enables accurate progress
+estimates for ongoing builds based on previous performance data from
+the same hosts.
 
 ### Key Features
 
-- **Progress Estimation**: Real-time progress estimates based on historical data
-- **Host-Specific Data**: Separate timing statistics for each remote host
-- **Global Build Retention**: Configurable limit on the number of recent builds to keep
-- **Time-Based Cleanup**: Automatic removal of data older than the retention period
-- **Demo Host Management**: Special handling for temporary/testing hosts with shorter retention
+- **Progress Estimation**: Real-time progress estimates based on
+  historical data.
+- **Host-Specific Data**: Separate timing statistics for each remote
+  host.
+- **Global Build Retention**: Configurable limit on the number of
+  recent builds to keep.
+- **Time-Based Cleanup**: Automatic removal of data older than the
+  retention period.
+- **Demo Host Management**: Special handling for temporary/testing
+  hosts with shorter retention.
 
 ### Cache Configuration
 
@@ -131,26 +137,26 @@ The cache system supports both count-based and time-based retention:
 
 ```bash
 # Default cache settings (5 builds, 30 days retention)
-./build-redland-tui.py redland-1.1.0.tar.gz user@host1
+./redland-forge.py redland-1.1.0.tar.gz user@host1
 
 # Keep more build history
-./build-redland-tui.py redland-1.1.0.tar.gz --cache-keep-builds 10 user@host1
+./redland-forge.py redland-1.1.0.tar.gz --cache-keep-builds 10 user@host1
 
 # Longer retention period
-./build-redland-tui.py redland-1.1.0.tar.gz --cache-retention 90 user@host1
+./redland-forge.py redland-1.1.0.tar.gz --cache-retention 90 user@host1
 
 # Custom cache location
-./build-redland-tui.py redland-1.1.0.tar.gz --cache-file ~/.my-build-cache.json user@host1
+./redland-forge.py redland-1.1.0.tar.gz --cache-file ~/.my-build-cache.json user@host1
 
 # Disable caching entirely
-./build-redland-tui.py redland-1.1.0.tar.gz --no-cache user@host1
+./redland-forge.py redland-1.1.0.tar.gz --no-cache user@host1
 ```
 
 ### Build Summary Output
 
 When the application exits (either manually or via auto-exit), it prints a comprehensive summary of all build results to stdout.
 
-**Summary Includes:**
+Summary Includes:
 
 - **Total build time**: Overall duration from start to completion
 - **Success/failure counts**: Clear breakdown of build outcomes
@@ -158,65 +164,37 @@ When the application exits (either manually or via auto-exit), it prints a compr
 - **Error details**: Specific error messages for failed builds
 - **Success rates**: Percentage and ratio of successful builds
 
-**Example Output:**
+Example Output:
 
-```
+```diagram
 ============================================================
 BUILD SUMMARY
 ============================================================
 Total time: 12m 34s
 
 SUCCESSFUL BUILDS:
-  ✓ dajobe@berlin (3m 12s)
-  ✓ dajobe@fedora (4m 45s)
+  ✓ dajobe@foo (3m 12s)
+  ✓ dajobe@bar (4m 45s)
 
 FAILED BUILDS:
-  ✗ dajobe@gentoo (1m 23s)
+  ✗ dajobe@baz (1m 23s)
     Error: Build failed during make step
 
 Overall: 2/3 builds successful (66.7%)
 ============================================================
 ```
 
-### Use Cases
-
-- **Automated builds**: Set up unattended build monitoring
-- **CI/CD integration**: Perfect for continuous integration workflows
-- **Batch processing**: Handle large-scale multi-host builds
-- **Scheduled builds**: Run builds during off-hours with automatic cleanup
-- **Reporting**: Generate build summaries for documentation and analysis
-
-## Architecture
-
-Build TUI uses a modular architecture with clear separation of concerns, designed for monitoring parallel build processes across multiple remote hosts. The application provides real-time monitoring, progress tracking, and comprehensive build management capabilities.
-
-For detailed architectural information, design patterns, and technical implementation details, see the **[Architecture Guide](architecture.md)**.
-
 ## Configuration
 
-All settings are centralized in `config.py`. For detailed configuration options including build timeouts, SSH settings, UI preferences, and advanced features, see the **[Architecture Guide](architecture.md)**.
+All settings are centralized in `config.py`. For detailed
+configuration options including build timeouts, SSH settings, UI
+preferences, and advanced features, see the
+**[Architecture Guide](architecture.md)**.
 
 ## Testing
 
-Build TUI includes a comprehensive test suite with 408+ unit tests covering all major components and functionality.
-
-### Running Tests
-
-```bash
-cd build-tui
-python3 -m pytest test_*.py -v
-```
-
-All tests should pass, covering unit tests, integration tests, edge cases, and configuration flexibility.
-
-### Test Categories
-
-- **Unit Tests**: Individual module functionality with mocked dependencies
-- **Integration Tests**: Component interaction and data flow validation
-- **UI Tests**: Rendering and display functionality
-- **Error Handling Tests**: Exception scenarios and recovery mechanisms
-
-For detailed information about the testing architecture, strategies, and infrastructure, see the **[Testing Guide](testing.md)**.
+For detailed information about the testing architecture, strategies,
+and infrastructure, see the **[Testing Guide](testing.md)**.
 
 ## Dependencies
 
@@ -224,11 +202,61 @@ For detailed information about the testing architecture, strategies, and infrast
 - blessed (terminal UI)
 - paramiko (SSH connections)
 
+## Try It Now (No Installation Required)
+
+For the quickest way to try Redland Forge without installation, use
+`uvx` (requires [uv](https://github.com/astral-sh/uv)):
+
+```bash
+# Install uv first (one-time setup)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Run Redland Forge directly from GitHub
+uvx git+https://github.com/dajobe/redland-forge.git --help
+
+# Or run with your own local copy
+uvx --from . redland-forge --help
+```
+
+For development with uv:
+
+```bash
+# Create a virtual environment and install dependencies
+uv venv
+uv pip install -e .
+
+# Run the application
+uv run redland-forge --help
+
+# Or run with development dependencies
+uv pip install -e ".[dev]"
+uv run redland-forge --help
+```
+
+## Traditional Installation
+
 Install with:
 
 ```bash
-cd build-tui
-pip install -r requirements.txt
+cd redland-forge
+
+# Install the package
+pip install .
+
+# Or for development (recommended)
+pip install -e .
+```
+
+For development dependencies:
+
+```bash
+cd redland-forge
+
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Or install development tools separately
+pip install -e . pytest black mypy flake8
 ```
 
 ## Usage Examples
@@ -236,48 +264,37 @@ pip install -r requirements.txt
 ### Basic Build
 
 ```bash
-cd build-tui
-./build-redland-tui.py redland-1.1.0.tar.gz user@build-server1 user@build-server2
+cd redland-forge
+./redland-forge.py redland-1.1.0.tar.gz user@build-server1 user@build-server2
 ```
 
 ### Large Scale Build
 
 ```bash
-cd build-tui
-./build-redland-tui.py redland-1.1.0.tar.gz -f production-hosts.txt --max-concurrent 8
+cd redland-forge
+./redland-forge.py redland-1.1.0.tar.gz -f production-hosts.txt --max-concurrent 8
 ```
 
 ### Debug Mode
 
 ```bash
-cd build-tui
-./build-redland-tui.py redland-1.1.0.tar.gz --debug user@host1 user@host2
+cd redland-forge
+./redland-forge.py redland-1.1.0.tar.gz --debug user@host1 user@host2
 ```
 
 ### Automated Build Monitoring
 
 ```bash
-cd build-tui
+cd redland-forge
 # Auto-exit after 10 minutes with comprehensive logging
-./build-redland-tui.py redland-1.1.0.tar.gz \
+./redland-forge.py redland-1.1.0.tar.gz \
   --auto-exit-delay 600 \
   --debug \
   -f production-hosts.txt \
   --max-concurrent 6
 ```
 
-### CI/CD Integration
-
-```bash
-cd build-tui
-# Perfect for automated pipelines - exits automatically
-./build-redland-tui.py redland-1.1.0.tar.gz \
-  --auto-exit-delay 300 \
-  -f ci-hosts.txt \
-  --max-concurrent 4
-```
-
-## Key Features
+Key Features:
 
 - **Adaptive Layout**: Automatically adjusts to terminal size
 - **Real-time Updates**: Live status and progress monitoring
@@ -286,102 +303,10 @@ cd build-tui
 - **Extensibility**: Modular design for easy feature additions
 - **Auto-Exit**: Hands-free operation with configurable timing
 - **Build Summaries**: Comprehensive result reporting and analysis
-- **CI/CD Ready**: Perfect for automated build pipelines
 
-## Project Structure
+## History
 
-```
-build-tui/
-├── 📄 Documentation
-│   ├── README.md                 # Quick start and usage guide
-│   ├── architecture.md           # System architecture and design
-│   ├── testing.md                # Testing strategies and infrastructure
-│   └── TODO.md                   # Future enhancements roadmap
-│
-├── 🚀 Core Application
-│   ├── build-redland-tui.py      # Main application entry point
-│   └── app.py                    # Main BuildTUI class and orchestration
-│
-├── 🔧 Core Components
-│   ├── layout_manager.py         # Terminal layout and positioning
-│   ├── host_section.py           # Individual host display logic
-│   ├── statistics_manager.py     # Build statistics and progress tracking
-│   ├── renderer.py               # UI rendering and display management
-│   ├── input_handler.py          # Keyboard input processing and navigation
-│   └── config.py                 # Centralized configuration management
-│
-├── 🌐 SSH and Networking
-│   ├── parallel_ssh_manager.py   # Parallel SSH connection management
-│   └── ssh_connection.py         # SSH connection and file transfer
-│
-├── 📊 Data Processing
-│   ├── build_step_detector.py    # Build phase detection
-│   ├── output_buffer.py          # Output buffering and management
-│   ├── text_formatter.py         # Text formatting utilities
-│   ├── build_timing_cache.py     # Build timing data persistence
-│   ├── auto_exit_manager.py      # Auto-exit timing and countdown
-│   └── build_summary_collector.py # Build result collection
-│
-├── 🧪 Testing Infrastructure
-│   ├── test_*.py                 # Comprehensive test suite (19+ files)
-│   └── test.tar.gz               # Test data archive
-│
-├── ⚙️ Utilities and Configuration
-│   ├── color_manager.py          # ANSI color scheme management
-│   ├── exception_handler.py      # Centralized exception handling
-│   ├── host_visibility_manager.py # Host display visibility management
-│   ├── progress_display_manager.py # Progress display utilities
-│   └── requirements.txt          # Python dependencies
-│
-└── 🔨 Build Scripts
-    └── build-agent.py            # Remote build execution script
-```
+Where this all came from, thanks for the 20 years of service:
 
-## Documentation
-
-Build TUI provides comprehensive documentation to help users and developers understand and work with the project:
-
-### 📖 Documentation Files
-
-| Document | Description |
-|----------|-------------|
-| **[Architecture Guide](architecture.md)** | Detailed system architecture, design patterns, and component interactions |
-| **[Testing Guide](testing.md)** | Testing strategies, infrastructure, and development practices |
-| **[README.md](README.md)** | This file - quick start, features, and usage examples |
-| **[TODO.md](TODO.md)** | Future enhancements and development roadmap |
-
-### Key Topics Covered
-
-#### Architecture Guide (`architecture.md`)
-
-- Core system components and their responsibilities
-- Data flow and component interaction patterns
-- Design patterns and architectural decisions
-- Performance considerations and error handling
-- Future extensibility and plugin architecture
-
-#### Testing Guide (`testing.md`)
-
-- Testing strategy and approach
-- Test infrastructure and utilities
-- Test categories and coverage
-- Development testing workflow
-- Mocking strategies and best practices
-
-#### This README
-
-- Quick start guide and basic usage
-- Feature overview and command-line options
-- Configuration examples and use cases
-- Installation and dependency information
-
-## Contributing
-
-The codebase follows clean architecture principles with comprehensive test coverage, clear separation of concerns, well-documented APIs, and consistent coding standards. Each module contains its own documentation in docstrings.
-
-### Getting Started for Contributors
-
-1. Review the **[Architecture Guide](architecture.md)** to understand the system design
-2. Familiarize yourself with the **[Testing Guide](testing.md)** for testing practices
-3. Run the test suite: `python3 -m pytest test_*.py -v`
-4. Check **[TODO.md](TODO.md)** for current development priorities
+- `build-redland`: the shell script
+- `build-redland-on`: the Perl script that called the shell script. Note the RCS / CVS Id in the source.  If you know what these are, I salute you.

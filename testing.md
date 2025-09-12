@@ -1,8 +1,8 @@
-# Build TUI Testing Architecture
+# Redland Forge Testing Architecture
 
 ## Overview
 
-This document describes the testing strategy, infrastructure, and practices used in the Build TUI project.
+This document describes the testing strategy, infrastructure, and practices used in the Redland Forge project.
 
 ## Unit Test Coverage
 
@@ -68,7 +68,7 @@ This document describes the testing strategy, infrastructure, and practices used
 
 ### Key Python Modules and Dependencies
 
-#### **Core Dependencies** (`requirements.txt`)
+#### **Core Dependencies** (`pyproject.toml`)
 
 ```python
 # Terminal UI and Input Handling
@@ -93,7 +93,7 @@ dataclasses              # Data structure definitions
 
 | Module | Purpose | Key Dependencies |
 |--------|---------|------------------|
-| `build-redland-tui.py` | Entry point | `argparse`, `logging`, `sys` |
+| `redland-forge.py` | Entry point | `argparse`, `logging`, `sys` |
 | `app.py` | Main application | `blessed`, `threading`, `time` |
 | `parallel_ssh_manager.py` | SSH coordination | `paramiko`, `threading` |
 | `ssh_connection.py` | SSH operations | `paramiko` |
@@ -139,7 +139,7 @@ dataclasses              # Data structure definitions
 ## Test File Organization
 
 ```
-build-tui/
+redland-forge/
 ├── test_*.py                    # Unit tests for each module
 ├── test_*.py (continued)
 │

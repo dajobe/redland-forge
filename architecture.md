@@ -1,27 +1,95 @@
-# Build TUI Architecture
+# Redland Forge Architecture
 
 ## Overview
 
-Build TUI is a terminal-based user interface for monitoring build
+Redland Forge is a distributed build orchestrator for managing build
 processes over tarballs constructed with autoconf suite (configure,
-make, make check, make install steps).  It works across multiple
-remote hosts in parallel. The application provides real-time
-monitoring, progress tracking, and comprehensive build management
-capabilities.
+make, make check, make install steps). It coordinates builds across
+multiple remote hosts in parallel, providing real-time monitoring,
+progress tracking, and comprehensive build management capabilities.
 
-**Note**: Testing architecture and practices are documented separately in `testing.md`.
+**Note**: Testing architecture and practices are documented
+separately in `testing.md`.
+
+## Project Structure
+
+```diagram
+redland-forge/
+├── 📄 Documentation
+│   ├── README.md                 # Quick start and usage guide
+│   ├── architecture.md           # System architecture and design
+│   ├── testing.md                # Testing strategies and infrastructure
+│   └── TODO.md                   # Future enhancements roadmap
+│
+├── 🚀 Application Entry
+│   ├── redland-forge.py          # Main application entry point
+│   └── build-agent.py            # Remote build execution script
+│
+├── 📦 Source Code (src/)
+│   ├── app.py                    # Main BuildTUI class and orchestration
+│   ├── config.py                 # Centralized configuration management
+│   ├── layout_manager.py         # Terminal layout and positioning
+│   ├── host_section.py           # Individual host display logic
+│   ├── statistics_manager.py     # Build statistics and progress tracking
+│   ├── renderer.py               # UI rendering and display management
+│   ├── input_handler.py          # Keyboard input processing and navigation
+│   ├── parallel_ssh_manager.py   # Parallel SSH connection management
+│   ├── ssh_connection.py         # SSH connection and file transfer
+│   ├── build_step_detector.py    # Build phase detection
+│   ├── output_buffer.py          # Output buffering and management
+│   ├── text_formatter.py         # Text formatting utilities
+│   ├── build_timing_cache.py     # Build timing data persistence
+│   ├── auto_exit_manager.py      # Auto-exit timing and countdown
+│   ├── build_summary_collector.py # Build result collection
+│   ├── color_manager.py          # ANSI color scheme management
+│   ├── exception_handler.py      # Centralized exception handling
+│   ├── host_visibility_manager.py # Host display visibility management
+│   └── progress_display_manager.py # Progress display utilities
+│
+├── 🧪 Tests (tests/)
+│   ├── test_app.py               # Main application tests
+│   ├── test_auto_exit_manager.py # Auto-exit functionality tests
+│   ├── test_build_step_detector.py # Build step detection tests
+│   ├── test_build_summary_collector.py # Build summary tests
+│   ├── test_build_timing_cache.py # Cache functionality tests
+│   ├── test_color_system.py      # Color management tests
+│   ├── test_config.py            # Configuration tests
+│   ├── test_host_section.py      # Host section tests
+│   ├── test_host_visibility_manager.py # Host visibility tests
+│   ├── test_input_handler.py     # Input handling tests
+│   ├── test_layout_manager.py    # Layout management tests
+│   ├── test_output_buffer.py     # Output buffer tests
+│   ├── test_parallel_ssh_manager.py # SSH manager tests
+│   ├── test_progress_display_manager.py # Progress display tests
+│   ├── test_renderer.py          # Renderer tests
+│   ├── test_ssh_connection.py    # SSH connection tests
+│   ├── test_statistics_manager.py # Statistics tests
+│   ├── test_text_formatter.py    # Text formatting tests
+│   └── test.tar.gz               # Test data archive
+│
+├── ⚙️ Configuration
+│   ├── pyproject.toml            # Modern Python packaging and dependencies
+│   └── build-redland-on.py       # Build script
+│
+└── 📋 Project Files
+    ├── architecture.md           # Architecture documentation
+    ├── testing.md                # Testing documentation
+    ├── TODO.md                   # Future enhancements
+    └── build-redland-spec.md     # Build specifications
+```
 
 ## Core Architecture
 
 ### Application Entry Point
 
-- **`build-redland-tui.py`** - Main entry point with argument parsing
+- **`redland-forge.py`** - Main entry point with argument parsing
   and application orchestration.
 - Thin wrapper that creates and runs the `BuildTUI` instance
+- **`build-agent.py`** - Remote build execution script for target hosts
 
 ### Main Application Controller
 
-- **`app.py`** - `BuildTUI` class that orchestrates the entire application
+- **`src/app.py`** - `BuildTUI` class that orchestrates the entire application
   - Manages the main event loop and application state
   - Coordinates all subsystems (SSH, layout, rendering, input)
   - Handles application lifecycle (startup, shutdown, cleanup)
@@ -30,14 +98,14 @@ capabilities.
 
 ### 1. SSH and Build Management
 
-- **`parallel_ssh_manager.py`** - Manages parallel SSH connections
+- **`src/parallel_ssh_manager.py`** - Manages parallel SSH connections
   and build execution.
   - Handles concurrent build processes across multiple hosts
   - Manages connection queue and active connections
   - Transfers build scripts and tarballs to remote hosts
   - Monitors build output in real-time
 
-- **`ssh_connection.py`** - Low-level SSH connection management.
+- **`src/ssh_connection.py`** - Low-level SSH connection management.
   - Establishes and maintains SSH connections
   - Handles file transfers (SCP/SFTP)
   - Executes remote commands with output capture
@@ -47,7 +115,7 @@ capabilities.
 
 #### Layout Management
 
-- **`layout_manager.py`** - Terminal layout calculation and host positioning
+- **`src/layout_manager.py`** - Terminal layout calculation and host positioning
   - Calculates optimal host section sizes based on terminal dimensions
   - Handles different layout modes (normal, small terminal, full-screen)
   - Manages host visibility and positioning
@@ -55,7 +123,7 @@ capabilities.
 
 #### Rendering System
 
-- **`renderer.py`** - UI rendering and display management
+- **`src/renderer.py`** - UI rendering and display management
   - Renders the complete terminal interface
   - Handles header, footer, and host sections
   - Manages color schemes and visual indicators
@@ -63,7 +131,7 @@ capabilities.
 
 #### Host Display
 
-- **`host_section.py`** - Individual host display and state management
+- **`src/host_section.py`** - Individual host display and state management
   - Renders individual host status and output
   - Manages host-specific data (status, timing, output buffer)
   - Handles focus indicators and visual feedback
@@ -71,7 +139,7 @@ capabilities.
 
 ### 3. Input and Navigation
 
-- **`input_handler.py`** - Keyboard input processing and navigation
+- **`src/input_handler.py`** - Keyboard input processing and navigation
   - Handles all keyboard shortcuts and navigation
   - Supports multiple navigation modes (host, full-screen, menu, scrolling)
   - Processes special keys (arrows, function keys, etc.)
@@ -81,7 +149,7 @@ capabilities.
 
 #### Build Progress Tracking
 
-- **`statistics_manager.py`** - Build statistics calculation and tracking
+- **`src/statistics_manager.py`** - Build statistics calculation and tracking
   - Calculates completion percentages and success rates
   - Tracks build timing and performance metrics
   - Manages host status aggregation
@@ -89,7 +157,7 @@ capabilities.
 
 #### Build Timing Cache
 
-- **`build_timing_cache.py`** - Persistent storage of build timing data
+- **`src/build_timing_cache.py`** - Persistent storage of build timing data
   - Stores historical build performance data
   - Enables progress estimation for ongoing builds
   - Manages cache retention and cleanup
@@ -99,7 +167,7 @@ capabilities.
 
 #### Step Detection
 
-- **`build_step_detector.py`** - Automatic build phase detection
+- **`src/build_step_detector.py`** - Automatic build phase detection
   - Identifies build phases from output patterns
   - Supports configurable step definitions
   - Handles step priority and matching logic
@@ -107,7 +175,7 @@ capabilities.
 
 #### Output Management
 
-- **`output_buffer.py`** - Log output buffering and management
+- **`src/output_buffer.py`** - Log output buffering and management
   - Manages output line storage with size limits
   - Provides scrolling and line access methods
   - Handles output formatting and display
@@ -117,14 +185,14 @@ capabilities.
 
 #### Text Processing
 
-- **`text_formatter.py`** - Text formatting and display utilities
+- **`src/text_formatter.py`** - Text formatting and display utilities
   - Handles duration formatting and time display
   - Manages visual length calculations
   - Provides text alignment and formatting functions
 
 #### Color Management
 
-- **`color_manager.py`** - ANSI color scheme management
+- **`src/color_manager.py`** - ANSI color scheme management
   - Provides consistent color definitions
   - Handles color mode detection and switching
   - Manages status color mapping
@@ -132,7 +200,7 @@ capabilities.
 
 #### Configuration
 
-- **`config.py`** - Centralized application configuration
+- **`src/config.py`** - Centralized application configuration
   - Defines all application settings and constants
   - Manages timeouts, limits, and default values
   - Provides configuration access methods
@@ -141,7 +209,7 @@ capabilities.
 
 #### Auto-Exit Management
 
-- **`auto_exit_manager.py`** - Automatic application exit handling
+- **`src/auto_exit_manager.py`** - Automatic application exit handling
   - Manages countdown timers for build completion
   - Provides visual countdown display
   - Handles exit callbacks and cleanup
@@ -149,7 +217,7 @@ capabilities.
 
 #### Build Summary
 
-- **`build_summary_collector.py`** - Build result collection and reporting
+- **`src/build_summary_collector.py`** - Build result collection and reporting
   - Collects comprehensive build results
   - Generates formatted summary reports
   - Tracks timing and success/failure statistics
@@ -157,7 +225,7 @@ capabilities.
 
 #### Exception Handling
 
-- **`exception_handler.py`** - Centralized exception management
+- **`src/exception_handler.py`** - Centralized exception management
   - Categorizes exceptions by severity
   - Provides user-friendly error messages
   - Handles logging and error reporting
@@ -165,7 +233,7 @@ capabilities.
 
 #### Host Visibility
 
-- **`host_visibility_manager.py`** - Host display visibility management
+- **`src/host_visibility_manager.py`** - Host display visibility management
   - Controls which hosts are currently visible
   - Manages host hiding/showing based on state
   - Handles completed build visibility
@@ -176,30 +244,35 @@ capabilities.
 The application uses a modular architecture with clear separation of concerns. The following core components work together to provide comprehensive build monitoring:
 
 #### Core Orchestration
-- **BuildTUI** (`build-redland-tui.py`): Main orchestrator and UI controller
-- **LayoutManager** (`layout_manager.py`): Terminal layout and host section positioning
-- **StatisticsManager** (`statistics_manager.py`): Build progress and statistics calculation
+
+- **BuildTUI** (`src/app.py`): Main orchestrator and UI controller
+- **LayoutManager** (`src/layout_manager.py`): Terminal layout and host section positioning
+- **StatisticsManager** (`src/statistics_manager.py`): Build progress and statistics calculation
 
 #### Host Management
-- **HostSection** (`host_section.py`): Individual host display and state management
-- **SSHConnection** (`ssh_connection.py`): Remote connection and command execution
-- **OutputBuffer** (`output_buffer.py`): Output buffering and line management
+
+- **HostSection** (`src/host_section.py`): Individual host display and state management
+- **SSHConnection** (`src/ssh_connection.py`): Remote connection and command execution
+- **OutputBuffer** (`src/output_buffer.py`): Output buffering and line management
 
 #### Data Processing
-- **TextFormatter** (`text_formatter.py`): Text formatting and display utilities
-- **Config** (`config.py`): Centralized configuration management
-- **BuildStepDetector** (`build_step_detector.py`): Build phase detection
+
+- **TextFormatter** (`src/text_formatter.py`): Text formatting and display utilities
+- **Config** (`src/config.py`): Centralized configuration management
+- **BuildStepDetector** (`src/build_step_detector.py`): Build phase detection
 
 #### Advanced Features
-- **AutoExitManager** (`auto_exit_manager.py`): Auto-exit timing and countdown management
-- **BuildSummaryCollector** (`build_summary_collector.py`): Build result collection and summary generation
+
+- **AutoExitManager** (`src/auto_exit_manager.py`): Auto-exit timing and countdown management
+- **BuildSummaryCollector** (`src/build_summary_collector.py`): Build result collection and summary generation
+- **ProgressDisplayManager** (`src/progress_display_manager.py`): Progress display utilities
 
 ## Data Flow Architecture
 
 ### 1. Initialization Phase
 
-```
-Command Line Args → build-redland-tui.py → BuildTUI.__init__()
+```diagram
+Command Line Args → redland-forge.py → src/app.py::BuildTUI.__init__()
                                              ↓
 Host List Validation → SSH Manager Setup → Layout Calculation
                                              ↓
@@ -208,7 +281,7 @@ Terminal Setup → Component Initialization → Event Loop Start
 
 ### 2. Build Execution Phase
 
-```
+```diagram
 BuildTUI.run() → SSH Manager → Parallel Build Workers
                     ↓                    ↓
 Input Processing ← Renderer ← Layout Manager
@@ -218,7 +291,7 @@ Host Updates ← Statistics ← Output Processing
 
 ### 3. Rendering Pipeline
 
-```
+```diagram
 Terminal State → Renderer.render_full_ui() → Layout Manager
                         ↓                           ↓
 Statistics Calculation ← Host Section Rendering ← Position Calculation
@@ -228,9 +301,9 @@ Header/Footer Render ← Color Management ← Text Formatting
 
 ## Component Interaction Diagram
 
-```
+```diagram
 ┌─────────────────────────────────────────────────────────────┐
-│                    Build TUI Application                    │
+│                    Redland Forge Application                    │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
 │  │  BuildTUI   │────│ InputHandler│────│  Renderer   │      │
