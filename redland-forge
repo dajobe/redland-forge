@@ -1,0 +1,12 @@
+#!/bin/bash
+# Redland Forge - Parallel Build Monitor
+# Top-level wrapper script for the Python application
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Set Python path to include the src directory
+export PYTHONPATH="$SCRIPT_DIR/src:$PYTHONPATH"
+
+# Execute the Python application with all arguments passed through
+exec python3 "$SCRIPT_DIR/redland-forge.py" "$@"
