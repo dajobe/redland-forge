@@ -1,18 +1,23 @@
 # Redland Forge - Distributed Build Orchestrator
 
-A distributed build orchestrator for monitoring and managing parallel
-builds across multiple remote hosts.
+Redland Forge is a terminal based distributed build orchestrator that
+enables parallel building across multiple remote hosts with real-time
+monitoring through a terminal interface along with build
+coordination, timing analytics and progress estimation.
 
 This was created as part of the [Redland Project](https://librdf.org/)
 for internal build testing.
 
-## Overview
+TL;DR:
 
-Redland Forge is a distributed build orchestrator that provides
-comprehensive build management across multiple remote hosts. It
-offers real-time monitoring through a clean terminal interface, and
-intelligent build coordination with timing analytics and progress
-estimation.
+```shell
+uvx git+https://github.com/dajobe/redland-forge.git redland-1.1.0.tar.gz host
+```
+
+## Screenshot
+
+![Redland Forge Terminal Interface](images/redland-forge-overview.png)
+*Redland Forge displaying real-time build progress across multiple remote hosts*
 
 ## Features
 

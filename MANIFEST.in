@@ -1,0 +1,17 @@
+# Include image files in source distribution
+include images/*.png
+
+# Include README and documentation
+include README.md
+include CHANGELOG.md
+include TODO.md
+include architecture.md
+include testing.md
+
+# Include build scripts
+include build-agent.py
+include redland-forge.py
+
+# Include configuration files
+include setup.cfg
+include pyproject.toml
