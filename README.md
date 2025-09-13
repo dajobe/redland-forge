@@ -68,7 +68,7 @@ cd redland-forge
 ### Build and Host Configuration
 
 ```bash
-tarball                      # The Redland package tarball (e.g., redland-1.1.0.tar.gz)
+tarball                      # The package tarball (e.g. redland-1.0.0.tar.gz)
 hosts                        # One or more username@hostname pairs (can be comma-separated)
 -f, --hosts-file FILE        # Read hosts from file, one per line
 --max-concurrent N           # Maximum concurrent builds (default: auto-detect based on screen size)
