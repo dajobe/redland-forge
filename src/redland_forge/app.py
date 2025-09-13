@@ -30,6 +30,29 @@ from .build_summary_collector import BuildSummaryCollector
 from .progress_display_manager import ProgressDisplayManager
 
 
+def get_build_agent_script_path() -> Optional[str]:
+    """Get the path to the build-agent.py script.
+
+    Returns the path to build-agent.py whether in development or installed package.
+    """
+    import os
+
+    # Try to find build-agent.py in the same directory as this module
+    package_dir = os.path.dirname(os.path.abspath(__file__))
+    agent_path = os.path.join(package_dir, 'build-agent.py')
+
+    if os.path.exists(agent_path):
+        return agent_path
+
+    # Fallback: development environment (source tree)
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    dev_path = os.path.join(script_dir, 'build-agent.py')
+    if os.path.exists(dev_path):
+        return dev_path
+
+    return None
+
+
 class BuildTUI:
     """Main TUI application for parallel build monitoring."""
 
@@ -97,17 +120,19 @@ class BuildTUI:
                 bindings_languages=bindings_languages,
             )
 
-            # Set build script path
-            script_path = os.path.abspath(
-                os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "build-agent.py")
-            )
+            # Set build script path using the helper function
+            script_path = get_build_agent_script_path()
+            if script_path is None:
+                raise FileNotFoundError(
+                    f"Build script not found. Could not locate build-agent.py in package."
+                )
             logging.debug(f"Resolved build script path: {script_path}")
 
             # Validate build script exists early; it's required for operation
             if not os.path.isfile(script_path):
                 raise FileNotFoundError(
                     f"Build script not found: {script_path}\n"
-                    f"Expected 'build-agent.py' to exist in the 'redland-forge' directory."
+                    f"Expected 'build-agent.py' to exist in the package."
                 )
             self.ssh_manager.set_build_script_path(script_path)
 
@@ -1401,61 +1426,6 @@ class BuildTUI:
                         )
 
 
-def get_build_agent_script_path() -> Optional[str]:
-    """Get the path to the build-agent.py script.
-
-    Returns the path to build-agent.py whether in development or installed package.
-    """
-    import os
-    from pathlib import Path
-
-    # First try: development environment (source tree)
-    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    dev_path = os.path.join(script_dir, 'build-agent.py')
-    if os.path.exists(dev_path):
-        return dev_path
-
-    # Second try: installed package (look for it in package data)
-    try:
-        import importlib.resources
-        # Python 3.9+ has importlib.resources.files
-        try:
-            files = importlib.resources.files('redland_forge')
-            if hasattr(files, 'joinpath'):
-                # Python 3.9+ with importlib.resources
-                agent_path = files.joinpath('../build-agent.py')
-                if agent_path.exists():
-                    return str(agent_path)
-        except AttributeError:
-            # Fallback for older Python versions
-            pass
-
-        # Fallback: try to find it relative to the package
-        package_dir = os.path.dirname(os.path.abspath(__file__))
-        installed_path = os.path.join(package_dir, '..', '..', 'build-agent.py')
-        if os.path.exists(installed_path):
-            return installed_path
-
-    except (ImportError, AttributeError):
-        pass
-
-    return None
-
-
-def get_build_agent_script_content() -> Optional[str]:
-    """Get the content of the build-agent.py script.
-
-    Returns the full content of build-agent.py as a string.
-    """
-    script_path = get_build_agent_script_path()
-    if script_path and os.path.exists(script_path):
-        try:
-            with open(script_path, 'r', encoding='utf-8') as f:
-                return f.read()
-        except (IOError, OSError):
-            pass
-
-    return None
 
 
 def read_hosts_from_file(filename: str) -> List[str]:

@@ -5,10 +5,16 @@ All notable changes to Redland Forge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.1] - 2025-09-13
+## [1.0.2] - 2025-09-13
 
+- Fixed hardcoded build-agent path resolution in BuildTUI initialization.
+- Moved build-agent.py into package structure for proper distribution.
+- Improved uvx installation compatibility and script location handling.
+
+## [1.0.1] - 2025-09-13
 - Added entry points for `uvx` support and package installation
-- Updated build-agent packaging to be included as package data rather than executable
+- Updated build-agent packaging to be included as package data rather
+  than executable.
 
 ## [1.0.0] - 2025-09-12
 

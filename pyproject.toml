@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "redland-forge"
-version = "1.0.1"
+version = "1.0.2"
 description = "A distributed build orchestrator for monitoring and managing parallel builds across multiple remote hosts."
 readme = "README.md"
 license = "MIT"
@@ -67,7 +67,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
 redland_forge = ["*.py", "*.md", "*.txt"]
-"*" = ["build-agent.py"]
 
 [tool.black]
 line-length = 88
