@@ -7,15 +7,20 @@ Manages progress display for ongoing builds using historical timing data.
 
 import logging
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Any, Callable
 
 from .text_formatter import format_duration
+from .build_timing_cache import BuildTimingCache
 
 
 class ProgressDisplayManager:
     """Manages progress display for ongoing builds"""
 
-    def __init__(self, timing_cache, cache_key_func=None):
+    def __init__(
+        self,
+        timing_cache: BuildTimingCache,
+        cache_key_func: Optional[Callable[[str], str]] = None,
+    ) -> None:
         """
         Initialize the progress display manager.
 
@@ -25,8 +30,8 @@ class ProgressDisplayManager:
         """
         self.timing_cache = timing_cache
         self.cache_key_func = cache_key_func or (lambda host: host)
-        self.build_start_times = {}  # host_name -> start_time
-        self.build_steps = {}  # host_name -> current_step
+        self.build_start_times: Dict[str, float] = {}  # host_name -> start_time
+        self.build_steps: Dict[str, str] = {}  # host_name -> current_step
         logging.debug("ProgressDisplayManager initialized")
 
     def start_build_tracking(self, host_name: str) -> None:
@@ -199,7 +204,7 @@ class ProgressDisplayManager:
         if host_name in self.build_steps:
             del self.build_steps[host_name]
 
-    def get_active_builds(self) -> Dict[str, Dict[str, any]]:
+    def get_active_builds(self) -> Dict[str, Dict[str, Any]]:
         """
         Get information about all actively tracked builds.
 
@@ -223,7 +228,7 @@ class ProgressDisplayManager:
 
         return active_builds
 
-    def get_host_progress_info(self, host_name: str) -> Dict[str, any]:
+    def get_host_progress_info(self, host_name: str) -> Dict[str, Any]:
         """
         Get progress information for a specific host.
 

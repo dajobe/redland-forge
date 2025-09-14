@@ -24,7 +24,7 @@ class NavigationMode(Enum):
 class InputHandler:
     """Handles keyboard input and help display for the TUI."""
 
-    def __init__(self, terminal: Terminal):
+    def __init__(self, terminal: Terminal) -> None:
         """
         Initialize the input handler.
 
@@ -169,21 +169,6 @@ class InputHandler:
                 on_toggle_menu,
                 on_escape,
                 on_menu_select,
-            )
-        else:
-            # Fallback: try to handle the key in host navigation mode if no specific mode is set
-            logging.debug(
-                f"No navigation mode set, using host navigation mode for key: {key}"
-            )
-            self._handle_host_navigation_key(
-                key,
-                on_navigate_up,
-                on_navigate_down,
-                on_navigate_left,
-                on_navigate_right,
-                on_toggle_fullscreen,
-                on_toggle_menu,
-                on_escape,
             )
 
     def show_help(self) -> None:

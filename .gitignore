@@ -69,3 +69,4 @@ debug.log
 # Coding agents
 /.claude/
 /.gemini/
+/specs/

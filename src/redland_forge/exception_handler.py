@@ -13,17 +13,25 @@ from enum import Enum
 
 class ExceptionSeverity(Enum):
     """Severity levels for exceptions."""
+
     CRITICAL = "CRITICAL"  # Program-breaking errors that should terminate execution
-    HIGH = "HIGH"         # Serious errors that affect functionality but allow continuation
-    MEDIUM = "MEDIUM"     # Errors that affect specific operations but don't break the program
-    LOW = "LOW"          # Minor errors that can be safely ignored or logged only
+    HIGH = "HIGH"  # Serious errors that affect functionality but allow continuation
+    MEDIUM = (
+        "MEDIUM"  # Errors that affect specific operations but don't break the program
+    )
+    LOW = "LOW"  # Minor errors that can be safely ignored or logged only
 
 
 class BuildException(Exception):
     """Custom exception class for build-related errors."""
 
-    def __init__(self, message: str, severity: ExceptionSeverity = ExceptionSeverity.MEDIUM,
-                 user_message: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        message: str,
+        severity: ExceptionSeverity = ExceptionSeverity.MEDIUM,
+        user_message: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         super().__init__(message)
         self.severity = severity
         self.user_message = user_message or message
@@ -34,8 +42,13 @@ class ExceptionHandler:
     """Centralized exception handling for the application."""
 
     @staticmethod
-    def handle_exception(e: Exception, context: str = "", hostname: Optional[str] = None,
-                        show_user: bool = True, log_level: int = logging.ERROR) -> Dict[str, Any]:
+    def handle_exception(
+        e: Exception,
+        context: str = "",
+        hostname: Optional[str] = None,
+        show_user: bool = True,
+        log_level: int = logging.ERROR,
+    ) -> Dict[str, Any]:
         """
         Handle an exception with appropriate logging and user visibility.
 
@@ -63,7 +76,11 @@ class ExceptionHandler:
             context_str = f"{hostname}: {context_str}" if context_str else hostname
 
         # Log the exception
-        log_message = f"{context_str}: {exc_type}: {exc_message}" if context_str else f"{exc_type}: {exc_message}"
+        log_message = (
+            f"{context_str}: {exc_type}: {exc_message}"
+            if context_str
+            else f"{exc_type}: {exc_message}"
+        )
         logging.log(log_level, log_message)
         logging.debug(f"Full traceback for {context_str}:")
         logging.debug(exc_traceback)
@@ -72,16 +89,19 @@ class ExceptionHandler:
         user_message = ExceptionHandler._create_user_message(e, context_str, severity)
 
         # Determine if this should be shown to user
-        should_show_user = show_user and severity in [ExceptionSeverity.CRITICAL, ExceptionSeverity.HIGH]
+        should_show_user = show_user and severity in [
+            ExceptionSeverity.CRITICAL,
+            ExceptionSeverity.HIGH,
+        ]
 
         return {
-            'severity': severity,
-            'user_message': user_message,
-            'should_show_user': should_show_user,
-            'log_message': log_message,
-            'traceback': exc_traceback,
-            'exception_type': exc_type,
-            'context': context_str
+            "severity": severity,
+            "user_message": user_message,
+            "should_show_user": should_show_user,
+            "log_message": log_message,
+            "traceback": exc_traceback,
+            "exception_type": exc_type,
+            "context": context_str,
         }
 
     @staticmethod
@@ -90,21 +110,30 @@ class ExceptionHandler:
         exc_type = type(e).__name__
 
         # Critical exceptions that should terminate execution
-        critical_exceptions = [
-            'SystemExit', 'KeyboardInterrupt', 'MemoryError'
-        ]
+        critical_exceptions = ["SystemExit", "KeyboardInterrupt", "MemoryError"]
 
         # High severity exceptions that affect major functionality
         high_severity_exceptions = [
-            'ConnectionError', 'TimeoutError', 'AuthenticationError',
-            'SSHException', 'FileNotFoundError', 'PermissionError',
-            'OSError', 'IOError', 'NameError', 'ImportError'
+            "ConnectionError",
+            "TimeoutError",
+            "AuthenticationError",
+            "SSHException",
+            "FileNotFoundError",
+            "PermissionError",
+            "OSError",
+            "IOError",
+            "NameError",
+            "ImportError",
         ]
 
         # Medium severity exceptions for operational issues
         medium_severity_exceptions = [
-            'ValueError', 'TypeError', 'AttributeError', 'KeyError',
-            'IndexError', 'RuntimeError'
+            "ValueError",
+            "TypeError",
+            "AttributeError",
+            "KeyError",
+            "IndexError",
+            "RuntimeError",
         ]
 
         if exc_type in critical_exceptions:
@@ -117,7 +146,9 @@ class ExceptionHandler:
             return ExceptionSeverity.LOW
 
     @staticmethod
-    def _create_user_message(e: Exception, context: str, severity: ExceptionSeverity) -> str:
+    def _create_user_message(
+        e: Exception, context: str, severity: ExceptionSeverity
+    ) -> str:
         """Create a user-friendly message for the exception."""
         exc_type = type(e).__name__
         exc_message = str(e)
@@ -149,8 +180,8 @@ class ExceptionHandler:
             ExceptionSeverity.CRITICAL: "🚨",
             ExceptionSeverity.HIGH: "❌",
             ExceptionSeverity.MEDIUM: "⚠️",
-            ExceptionSeverity.LOW: "ℹ️"
+            ExceptionSeverity.LOW: "ℹ️",
         }
 
-        emoji = severity_emoji.get(results['severity'], "❓")
+        emoji = severity_emoji.get(results["severity"], "❓")
         return f"{emoji} {results['user_message']}"

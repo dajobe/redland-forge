@@ -31,10 +31,10 @@ class BuildTimingCache:
 
     def __init__(
         self,
-        cache_file_path: str = None,
+        cache_file_path: Optional[str] = None,
         retention_days: int = 30,
         keep_builds: int = 5,
-    ):
+    ) -> None:
         """
         Initialize the build timing cache.
 
@@ -45,9 +45,7 @@ class BuildTimingCache:
         """
         # Set default path if none provided
         if cache_file_path is None:
-            cache_file_path = os.path.expanduser(
-                f"~/{Config.TIMING_CACHE_FILE}"
-            )
+            cache_file_path = os.path.expanduser(f"~/{Config.TIMING_CACHE_FILE}")
         # If it's a relative path, make it relative to home directory
         elif not os.path.isabs(cache_file_path):
             cache_file_path = os.path.expanduser(f"~/{cache_file_path}")
@@ -157,7 +155,7 @@ class BuildTimingCache:
         try:
             if os.path.exists(self.cache_file_path):
                 with open(self.cache_file_path, "r") as f:
-                    data = json.load(f)
+                    data: Dict[str, Any] = json.load(f)
                     # Validate version and structure
                     if data.get("version") == "1.0":
                         # Update cache settings to current values

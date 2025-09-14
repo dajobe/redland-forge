@@ -14,7 +14,7 @@ from typing import Optional, Callable
 class AutoExitManager:
     """Manages automatic exit after build completion."""
 
-    def __init__(self, exit_delay_seconds: int = 300, enabled: bool = True):
+    def __init__(self, exit_delay_seconds: int = 300, enabled: bool = True) -> None:
         """
         Initialize the auto-exit manager.
 

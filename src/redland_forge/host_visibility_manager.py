@@ -26,7 +26,7 @@ class HostVisibilityManager:
         layout_manager: LayoutManager,
         all_hosts: List[str],
         step_change_callback=None,
-    ):
+    ) -> None:
         """
         Initialize the host visibility manager.
 

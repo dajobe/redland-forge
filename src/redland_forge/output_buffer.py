@@ -11,7 +11,7 @@ from typing import List
 class OutputBuffer:
     """Efficient output buffer for managing build output lines."""
 
-    def __init__(self, max_lines: int = 100):
+    def __init__(self, max_lines: int = 100) -> None:
         """
         Initialize output buffer.
 
@@ -19,7 +19,7 @@ class OutputBuffer:
             max_lines: Maximum number of lines to keep in buffer
         """
         self.max_lines = max_lines
-        self.lines = []
+        self.lines: List[str] = []
         self.total_lines_processed = 0
 
     def add_line(self, line: str) -> None:

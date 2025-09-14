@@ -382,7 +382,9 @@ def build_on_host(tarball: str, userhost: str) -> int:
 
     # Detect which language bindings are available in the tarball
     bindings_languages = detect_bindings_languages(tarball)
-    bindings_arg = f" --bindings-languages {bindings_languages}" if bindings_languages else ""
+    bindings_arg = (
+        f" --bindings-languages {bindings_languages}" if bindings_languages else ""
+    )
 
     logging.info(f"Building on {colorize(host_label, Colors.BRIGHT_CYAN)}...")
     if bindings_languages:
@@ -400,7 +402,8 @@ def build_on_host(tarball: str, userhost: str) -> int:
 
     # Execute build script remotely with detected language bindings
     rc = run_command(
-        f"python3 ./build-agent.py {tarball_file} --no-print-hostname{bindings_arg}", userhost
+        f"python3 ./build-agent.py {tarball_file} --no-print-hostname{bindings_arg}",
+        userhost,
     )
 
     end_time = datetime.now()

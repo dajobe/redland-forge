@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "redland-forge"
-version = "1.0.2"
+version = "1.0.3"
 description = "A distributed build orchestrator for monitoring and managing parallel builds across multiple remote hosts."
 readme = "README.md"
 license = "MIT"
@@ -124,7 +124,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.6"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

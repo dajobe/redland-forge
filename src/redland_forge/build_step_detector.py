@@ -12,7 +12,7 @@ from typing import List, Optional
 class BuildStep:
     """Represents a build step with its detection patterns."""
 
-    def __init__(self, name: str, patterns: List[str], priority: int = 0):
+    def __init__(self, name: str, patterns: List[str], priority: int = 0) -> None:
         """
         Initialize a build step.
 

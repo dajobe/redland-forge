@@ -30,7 +30,7 @@ class BuildResult:
 class BuildSummaryCollector:
     """Collects build results and timing data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the build summary collector."""
         self.build_start_time = time.time()
         self.host_results: Dict[str, BuildResult] = {}
@@ -284,7 +284,7 @@ class BuildSummaryCollector:
     def print_summary(self) -> None:
         """Print the build summary to stdout."""
         summary = self.generate_summary()
-        print(summary)
+        print(summary, flush=True)  # Force immediate flush
         logging.info("Build summary printed to stdout")
 
     def get_statistics_summary(self) -> Dict[str, Any]:

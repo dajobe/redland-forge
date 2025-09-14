@@ -9,7 +9,7 @@ import logging
 import os
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, Tuple, Callable
 
 import paramiko
 
@@ -35,7 +35,7 @@ class ParallelSSHManager:
 
     def __init__(
         self, max_concurrent: int = 4, bindings_languages: Optional[List[str]] = None
-    ):
+    ) -> None:
         """
         Initialize the parallel SSH manager.
 
@@ -44,11 +44,11 @@ class ParallelSSHManager:
             bindings_languages: Optional list of language bindings to build.
         """
         self.max_concurrent = max_concurrent
-        self.active_connections = {}
-        self.connection_queue = []
-        self.results = {}
+        self.active_connections: Dict[str, threading.Thread] = {}
+        self.connection_queue: List[Tuple[str, str]] = []
+        self.results: Dict[str, Dict[str, Any]] = {}
         self.lock = threading.Lock()
-        self.build_script_path = None
+        self.build_script_path: Optional[str] = None
         self.build_start_callback = None
         self.bindings_languages = bindings_languages
 
@@ -71,7 +71,9 @@ class ParallelSSHManager:
         """
         self.build_script_path = script_path
 
-    def set_build_start_callback(self, callback):
+    def set_build_start_callback(
+        self, callback: Optional[Callable[[str], None]]
+    ) -> None:
         """
         Set callback function to be called when a build starts.
 
@@ -177,7 +179,10 @@ class ParallelSSHManager:
             except Exception as e:
                 # Fallback: try shell to get HOME
                 exception_results = ExceptionHandler.handle_exception(
-                    e, "SFTP directory resolution failed, using fallback", hostname, show_user=False
+                    e,
+                    "SFTP directory resolution failed, using fallback",
+                    hostname,
+                    show_user=False,
                 )
                 with self.lock:
                     self.results[hostname]["output"].append(
@@ -417,7 +422,7 @@ class ParallelSSHManager:
                 if hostname in self.active_connections:
                     del self.active_connections[hostname]
 
-    def get_results(self) -> Dict[str, Dict[str, any]]:
+    def get_results(self) -> Dict[str, Dict[str, Any]]:
         """
         Get the current build results.
 
@@ -426,7 +431,7 @@ class ParallelSSHManager:
         """
         return self.results
 
-    def get_active_connections(self) -> Dict[str, any]:
+    def get_active_connections(self) -> Dict[str, Any]:
         """
         Get the current active connections.
 

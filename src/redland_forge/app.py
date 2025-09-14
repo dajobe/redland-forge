@@ -12,7 +12,8 @@ import os
 import re
 import sys
 import time
-from typing import Dict, List, Optional
+import traceback
+from typing import Dict, List, Optional, Any, Callable
 
 from blessed import Terminal
 
@@ -39,14 +40,14 @@ def get_build_agent_script_path() -> Optional[str]:
 
     # Try to find build-agent.py in the same directory as this module
     package_dir = os.path.dirname(os.path.abspath(__file__))
-    agent_path = os.path.join(package_dir, 'build-agent.py')
+    agent_path = os.path.join(package_dir, "build-agent.py")
 
     if os.path.exists(agent_path):
         return agent_path
 
     # Fallback: development environment (source tree)
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    dev_path = os.path.join(script_dir, 'build-agent.py')
+    dev_path = os.path.join(script_dir, "build-agent.py")
     if os.path.exists(dev_path):
         return dev_path
 
@@ -87,7 +88,7 @@ class BuildTUI:
             # Initialize menu state
             self.menu_mode = False
             self.menu_selection = 0
-            self.menu_options = []
+            self.menu_options: List[str] = []
             logging.debug("Menu state initialized")
 
             # Initialize log scrolling state
@@ -270,7 +271,7 @@ class BuildTUI:
                 self.term, self.statistics_manager, self.auto_exit_manager
             )
 
-            self.host_sections = {}
+            self.host_sections: Dict[str, Any] = {}
             self.running = True
             self.focused_host = 0
 
@@ -281,8 +282,6 @@ class BuildTUI:
             # Re-raise FileNotFoundError without logging traceback
             raise
         except Exception as e:
-            import traceback
-
             logging.error(f"Error in BuildTUI.__init__: {e}")
             logging.error("Full traceback:")
             logging.error(traceback.format_exc())
@@ -291,7 +290,7 @@ class BuildTUI:
             traceback.print_exc()
             raise
 
-    def _create_step_change_callback(self):
+    def _create_step_change_callback(self) -> Callable[[str, str], None]:
         """Create the step change callback function."""
         logging.debug("Creating step change callback function")
 
@@ -354,6 +353,8 @@ class BuildTUI:
     def _trigger_exit(self) -> None:
         """Trigger application exit (called by auto-exit manager)."""
         logging.info("Auto-exit triggered, setting running to False")
+        # Small delay to ensure cleanup happens properly
+        time.sleep(0.1)
         self.running = False
 
     def _on_build_start(self, host_name: str) -> None:
@@ -434,8 +435,6 @@ class BuildTUI:
                 f"Layout setup completed: {len(self.host_sections)} host sections created"
             )
         except Exception as e:
-            import traceback
-
             logging.error(f"Error in setup_layout: {e}")
             logging.error("Full traceback:")
             logging.error(traceback.format_exc())
@@ -556,8 +555,6 @@ class BuildTUI:
 
         except Exception as e:
             # Fallback to simple output if blessed fails
-            import traceback
-
             print(f"TUI Error: {e}")
             print("Full traceback:")
             traceback.print_exc()
@@ -1239,22 +1236,24 @@ class BuildTUI:
                             # Small delay to prevent high CPU usage and reduce flickering
                             time.sleep(0.05)  # Reduced delay for more responsive input
                         except Exception as e:
-                            import traceback
-
                             exception_results = ExceptionHandler.handle_exception(
                                 e, "Main application loop error", show_user=True
                             )
-                            print(f"\n{ExceptionHandler.format_exception_summary(exception_results)}")
-                            if exception_results['severity'] == ExceptionSeverity.CRITICAL:
+                            print(
+                                f"\n{ExceptionHandler.format_exception_summary(exception_results)}"
+                            )
+                            if (
+                                exception_results["severity"]
+                                == ExceptionSeverity.CRITICAL
+                            ):
                                 print("Full traceback:")
                                 traceback.print_exc()
-                                break
+                                # Don't break - let the loop exit naturally so cleanup happens properly
+                                self.running = False
 
         except KeyboardInterrupt:
             print("\nBuild interrupted by user")
         except Exception as e:
-            import traceback
-
             exception_results = ExceptionHandler.handle_exception(
                 e, "Application run method error", show_user=True
             )
@@ -1264,23 +1263,30 @@ class BuildTUI:
         finally:
             # Clean up
             try:
-                # Print build summary before cleanup
-                if hasattr(self, "build_summary_collector"):
-                    self.build_summary_collector.print_summary()
-
-                # Clean up auto-exit manager
+                # Clean up managers first
                 if hasattr(self, "auto_exit_manager"):
                     self.auto_exit_manager.cleanup()
 
-                # Clean up progress display manager
                 if (
                     hasattr(self, "progress_display_manager")
                     and self.progress_display_manager
                 ):
                     self.progress_display_manager.cleanup()
 
-                print(self.term.normal_cursor())
-                print(self.term.exit_fullscreen())
+                # Exit fullscreen mode FIRST to return to normal terminal
+                print(self.term.normal_cursor(), flush=True)
+                print(self.term.exit_fullscreen(), flush=True)
+
+                # Small delay to ensure terminal mode switch is complete
+                time.sleep(0.1)
+
+                # NOW print build summary in normal terminal mode
+                if hasattr(self, "build_summary_collector"):
+                    print()  # Extra newline for separation
+                    self.build_summary_collector.print_summary()
+                    # Force flush to ensure summary is displayed before app exits
+                    import sys
+                    sys.stdout.flush()
             except Exception as e:
                 logging.error(f"Error during cleanup: {e}")
                 print(f"Error during cleanup: {e}")
@@ -1424,8 +1430,6 @@ class BuildTUI:
                         logging.debug(
                             f"Updated continuous progress info for {host_name}: {current_progress}"
                         )
-
-
 
 
 def read_hosts_from_file(filename: str) -> List[str]:
@@ -1650,7 +1654,7 @@ def _main_impl() -> int:
             from .build_timing_cache import BuildTimingCache
 
             cache = BuildTimingCache()
-            cache.remove_testing_hosts()
+            cache.clear_demo_hosts()
             print("Testing host data removed successfully")
             return 0
         except Exception as e:
@@ -1737,8 +1741,6 @@ def _main_impl() -> int:
         print(f"Error: {e}")
         return 1
     except Exception as e:
-        import traceback
-
         exception_results = ExceptionHandler.handle_exception(
             e, "Main application error", show_user=True
         )
@@ -1750,6 +1752,6 @@ def _main_impl() -> int:
     return 0
 
 
-def main():
+def main() -> int:
     """Main entry point for the redland-forge application."""
     return _main_impl()

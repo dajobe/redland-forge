@@ -26,7 +26,7 @@ class Renderer:
         terminal: Terminal,
         statistics_manager: StatisticsManager,
         auto_exit_manager=None,
-    ):
+    ) -> None:
         """
         Initialize the renderer.
 
@@ -38,9 +38,9 @@ class Renderer:
         self.term = terminal
         self.statistics_manager = statistics_manager
         self.auto_exit_manager = auto_exit_manager
-        self.last_clear = 0
-        self.last_render = 0
-        self.last_timer_update = 0
+        self.last_clear = 0.0
+        self.last_render = 0.0
+        self.last_timer_update = 0.0
 
     def render_header(
         self,

@@ -110,7 +110,7 @@ def setup_logging(no_print_hostname: bool = False) -> None:
 
     # Create a custom formatter that supports colors
     class ColoredFormatter(logging.Formatter):
-        def format(self, record):
+        def format(self, record) -> str:
             # Add colors based on log level
             if record.levelno >= logging.ERROR:
                 record.msg = colorize(f"{record.msg}", Colors.BRIGHT_RED)
@@ -573,7 +573,8 @@ def main() -> int:
     if "MAKEFLAGS" in os.environ:
         del os.environ["MAKEFLAGS"]
 
-    successful_langs, failed_langs = [], []
+    successful_langs: List[str] = []
+    failed_langs: List[str] = []
     if bindings_languages:
         # Build language bindings
         successful_langs, failed_langs = build_language_bindings(

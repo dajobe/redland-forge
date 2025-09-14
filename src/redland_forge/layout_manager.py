@@ -17,7 +17,9 @@ from .host_section import HostSection
 class LayoutManager:
     """Manages terminal layout and host section positioning."""
 
-    def __init__(self, terminal: Terminal, hosts: List[str], step_change_callback=None):
+    def __init__(
+        self, terminal: Terminal, hosts: List[str], step_change_callback=None
+    ) -> None:
         """
         Initialize the layout manager.
 
@@ -173,7 +175,6 @@ class LayoutManager:
             logging.debug(
                 f"Created host section for {host}: start_y={start_y}, height={section_height}, end_y={start_y + section_height}"
             )
-
 
     def get_max_visible_hosts(self) -> int:
         """

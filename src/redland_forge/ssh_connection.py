@@ -23,7 +23,7 @@ class SSHConnectionError(BuildRedlandError):
 
     def __init__(
         self, hostname: str, message: str, original_error: Optional[Exception] = None
-    ):
+    ) -> None:
         self.hostname = hostname
         self.original_error = original_error
         super().__init__(f"SSH connection failed for {hostname}: {message}")
@@ -32,7 +32,9 @@ class SSHConnectionError(BuildRedlandError):
 class FileTransferError(BuildRedlandError):
     """Raised when file transfer fails."""
 
-    def __init__(self, hostname: str, local_path: str, remote_path: str, message: str):
+    def __init__(
+        self, hostname: str, local_path: str, remote_path: str, message: str
+    ) -> None:
         self.hostname = hostname
         self.local_path = local_path
         self.remote_path = remote_path
@@ -44,7 +46,7 @@ class FileTransferError(BuildRedlandError):
 class BuildExecutionError(BuildRedlandError):
     """Raised when build execution fails."""
 
-    def __init__(self, hostname: str, exit_code: int, message: str):
+    def __init__(self, hostname: str, exit_code: int, message: str) -> None:
         self.hostname = hostname
         self.exit_code = exit_code
         super().__init__(
@@ -55,7 +57,7 @@ class BuildExecutionError(BuildRedlandError):
 class BuildTimeoutError(BuildRedlandError):
     """Raised when build times out."""
 
-    def __init__(self, hostname: str, timeout_seconds: int):
+    def __init__(self, hostname: str, timeout_seconds: int) -> None:
         self.hostname = hostname
         self.timeout_seconds = timeout_seconds
         super().__init__(
@@ -66,7 +68,9 @@ class BuildTimeoutError(BuildRedlandError):
 class TerminalError(BuildRedlandError):
     """Raised when terminal operations fail."""
 
-    def __init__(self, message: str, original_error: Optional[Exception] = None):
+    def __init__(
+        self, message: str, original_error: Optional[Exception] = None
+    ) -> None:
         self.original_error = original_error
         super().__init__(f"Terminal error: {message}")
 
@@ -98,7 +102,7 @@ class SSHConnection:
 
     def __init__(
         self, hostname: str, username: Optional[str] = None, timeout: int = 30
-    ):
+    ) -> None:
         """
         Initialize SSH connection.
 
@@ -166,7 +170,8 @@ class SSHConnection:
         try:
             transport = self.client.get_transport()
             if transport:
-                return transport.get_username()
+                username = transport.get_username()
+                return username if username is not None else None
         except:
             pass
 

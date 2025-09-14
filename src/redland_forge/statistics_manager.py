@@ -12,7 +12,7 @@ from typing import Dict, List, Any
 class StatisticsManager:
     """Manages build statistics and progress tracking."""
 
-    def __init__(self, all_hosts: List[str]):
+    def __init__(self, all_hosts: List[str]) -> None:
         """
         Initialize the statistics manager.
 
@@ -124,7 +124,7 @@ class StatisticsManager:
         Returns:
             Dictionary mapping status to count
         """
-        status_counts = {}
+        status_counts: Dict[str, int] = {}
         for result in ssh_results.values():
             status = result.get("status", "UNKNOWN")
             status_counts[status] = status_counts.get(status, 0) + 1
@@ -144,7 +144,7 @@ class StatisticsManager:
             Dictionary mapping status to count for visible hosts
         """
         visible_hosts = list(host_sections.keys())
-        status_counts = {}
+        status_counts: Dict[str, int] = {}
 
         for hostname in visible_hosts:
             if hostname in ssh_results:
@@ -165,7 +165,7 @@ class StatisticsManager:
         Returns:
             True if build is complete, False otherwise
         """
-        return stats["total_completed"] >= stats["total_hosts"]
+        return int(stats["total_completed"]) >= int(stats["total_hosts"])
 
     def get_completion_percentage(self, stats: Dict[str, Any]) -> float:
         """
@@ -177,7 +177,7 @@ class StatisticsManager:
         Returns:
             Completion percentage (0.0 to 100.0)
         """
-        return stats["overall_progress"]
+        return float(stats["overall_progress"])
 
     def get_remaining_hosts(self, stats: Dict[str, Any]) -> int:
         """
@@ -189,7 +189,7 @@ class StatisticsManager:
         Returns:
             Number of remaining hosts
         """
-        return stats["total_hosts"] - stats["total_completed"]
+        return int(stats["total_hosts"]) - int(stats["total_completed"])
 
     def get_success_rate(self, stats: Dict[str, Any]) -> float:
         """
@@ -201,9 +201,9 @@ class StatisticsManager:
         Returns:
             Success rate percentage (0.0 to 100.0)
         """
-        if stats["total_completed"] == 0:
+        if int(stats["total_completed"]) == 0:
             return 0.0
-        return (stats["completed"] / stats["total_completed"]) * 100
+        return (int(stats["completed"]) / int(stats["total_completed"])) * 100
 
     def get_failure_rate(self, stats: Dict[str, Any]) -> float:
         """
@@ -215,9 +215,9 @@ class StatisticsManager:
         Returns:
             Failure rate percentage (0.0 to 100.0)
         """
-        if stats["total_completed"] == 0:
+        if int(stats["total_completed"]) == 0:
             return 0.0
-        return (stats["failed"] / stats["total_completed"]) * 100
+        return (int(stats["failed"]) / int(stats["total_completed"])) * 100
 
     def get_detailed_statistics(
         self, host_sections: Dict[str, Any], ssh_results: Dict[str, Dict[str, Any]]

@@ -7,7 +7,7 @@ A module for managing and rendering individual host sections in the TUI.
 
 import logging
 import time
-from typing import List
+from typing import List, Dict, Any, Optional
 
 from blessed import Terminal
 
@@ -26,7 +26,7 @@ class BorderRenderer:
         term: Terminal,
         y: int,
         width: int,
-        border_color: str = None,
+        border_color: Optional[str] = None,
         is_focused: bool = False,
     ) -> None:
         """Draw a top border line."""
@@ -54,7 +54,7 @@ class BorderRenderer:
         term: Terminal,
         y: int,
         width: int,
-        border_color: str = None,
+        border_color: Optional[str] = None,
         is_focused: bool = False,
     ) -> None:
         """Draw a bottom border line."""
@@ -82,7 +82,7 @@ class BorderRenderer:
         term: Terminal,
         y: int,
         width: int,
-        border_color: str = None,
+        border_color: Optional[str] = None,
         is_focused: bool = False,
     ) -> None:
         """Draw a middle border line."""
@@ -107,7 +107,11 @@ class BorderRenderer:
 
     @staticmethod
     def draw_content_line(
-        term: Terminal, y: int, content: str, width: int, border_color: str = None
+        term: Terminal,
+        y: int,
+        content: str,
+        width: int,
+        border_color: Optional[str] = None,
     ) -> None:
         """Draw a content line with borders."""
         if border_color is None:
@@ -120,7 +124,7 @@ class BorderRenderer:
 
     @staticmethod
     def draw_empty_line(
-        term: Terminal, y: int, width: int, border_color: str = None
+        term: Terminal, y: int, width: int, border_color: Optional[str] = None
     ) -> None:
         """Draw an empty line with borders."""
         if border_color is None:
@@ -143,7 +147,7 @@ class HostSection:
 
     def __init__(
         self, hostname: str, start_y: int, height: int, step_change_callback=None
-    ):
+    ) -> None:
         """
         Initialize a host section.
 
@@ -163,16 +167,16 @@ class HostSection:
             0  # Track total lines processed (not just displayed)
         )
         self.step_trigger_line = ""  # Store the line that triggered the current step
-        self.start_time = None
+        self.start_time: Optional[float] = None
         self.current_step = ""
         self.duration = 0
         self.last_update = time.time()
-        self.completion_time = None  # Added for 10-second timeout
+        self.completion_time: Optional[float] = None  # Added for 10-second timeout
         self.step_change_callback = step_change_callback
         logging.debug(
             f"HostSection created for {self.hostname} with step_change_callback: {step_change_callback is not None}"
         )
-        self.progress_info = (
+        self.progress_info: Dict[str, Any] = (
             {}
         )  # Store progress information from progress display manager
 
@@ -622,7 +626,9 @@ class HostSection:
             Display hostname (e.g., 'host' from 'user@host.example.com')
         """
         # First remove username if present
-        hostname_part = self.hostname.split("@")[-1] if "@" in self.hostname else self.hostname
+        hostname_part = (
+            self.hostname.split("@")[-1] if "@" in self.hostname else self.hostname
+        )
         # Then remove domain if present
         return hostname_part.split(".")[0]
 
