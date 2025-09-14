@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "redland-forge"
-version = "1.0.3"
+version = "1.0.4"
 description = "A distributed build orchestrator for monitoring and managing parallel builds across multiple remote hosts."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

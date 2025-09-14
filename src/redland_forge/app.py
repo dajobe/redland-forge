@@ -29,6 +29,7 @@ from .exception_handler import ExceptionHandler, ExceptionSeverity
 from .auto_exit_manager import AutoExitManager
 from .build_summary_collector import BuildSummaryCollector
 from .progress_display_manager import ProgressDisplayManager
+from .version import get_version
 
 
 def get_build_agent_script_path() -> Optional[str]:
@@ -1464,7 +1465,15 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=f"{Config.APP_NAME} - {Config.APP_TAGLINE}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"{Config.APP_NAME} {get_version()}",
+        help="Show version number and exit",
+    )
+
+    parser.epilog = """
 Examples:
   %(prog)s redland-1.1.0.tar.gz user1@host1 user2@host2
   %(prog)s redland-1.1.0.tar.gz -f hosts.txt
@@ -1476,8 +1485,7 @@ Hosts file format:
   user2@host2
   # Blank lines are ignored
   user3@host3
-""",
-    )
+"""
     parser.add_argument(
         "tarball",
         nargs="?",

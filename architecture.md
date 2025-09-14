@@ -26,6 +26,7 @@ redland-forge/
 │   └── build-agent.py            # Remote build execution script
 │
 ├── 📦 Source Code (src/)
+│   ├── __init__.py               # Package initialization and version exports
 │   ├── app.py                    # Main BuildTUI class and orchestration
 │   ├── config.py                 # Centralized configuration management
 │   ├── layout_manager.py         # Terminal layout and positioning
@@ -44,7 +45,8 @@ redland-forge/
 │   ├── color_manager.py          # ANSI color scheme management
 │   ├── exception_handler.py      # Centralized exception handling
 │   ├── host_visibility_manager.py # Host display visibility management
-│   └── progress_display_manager.py # Progress display utilities
+│   ├── progress_display_manager.py # Progress display utilities
+│   └── version.py                # Version management and compatibility
 │
 ├── 🧪 Tests (tests/)
 │   ├── test_app.py               # Main application tests
@@ -69,13 +71,17 @@ redland-forge/
 │
 ├── ⚙️ Configuration
 │   ├── pyproject.toml            # Modern Python packaging and dependencies
-│   └── build-redland-on.py       # Build script
+│   ├── build-redland-on.py       # Build script for specific hosts
+│   ├── build-redland             # Main build script
+│   └── build-redland-on          # Build script variant
 │
-└── 📋 Project Files
-    ├── architecture.md           # Architecture documentation
-    ├── testing.md                # Testing documentation
-    ├── TODO.md                   # Future enhancements
-    └── build-redland-spec.md     # Build specifications
+├── 📋 Project Files
+│   ├── architecture.md           # Architecture documentation
+│   ├── testing.md                # Testing documentation
+│   ├── TODO.md                   # Future enhancements roadmap
+│   ├── build-redland-spec.md     # Build specifications
+│   ├── AGENTS.md                 # Agent documentation
+│   └── CHANGELOG.md              # Version history and changes
 ```
 
 ## Core Architecture
@@ -93,6 +99,66 @@ redland-forge/
   - Manages the main event loop and application state
   - Coordinates all subsystems (SSH, layout, rendering, input)
   - Handles application lifecycle (startup, shutdown, cleanup)
+
+## Technology Stack and Requirements
+
+### Python Version Requirements
+
+Redland Forge requires **Python 3.7+** as the minimum supported version. This requirement is driven by the following technical considerations:
+
+#### **Python 3.7+ Features Used**
+
+- **Dataclasses** (`@dataclass` decorator): Used extensively for structured data representation
+  - `BuildResult` class in `src/build_summary_collector.py`
+  - `CacheEntry` class in `src/build_timing_cache.py`
+  - Provides clean, type-safe data structures without boilerplate
+
+#### **Python 3.6+ Features (Also Compatible)**
+
+- **f-strings**: Used throughout the codebase for string formatting
+- **Type Hints**: Comprehensive type annotations using `typing` module
+- **Dictionary Ordering**: Relied upon for consistent behavior
+- **Pathlib**: Modern path handling in `src/version.py`
+
+#### **Version Compatibility Analysis**
+
+- **Python 3.6**: Would require converting dataclasses to regular classes (significant refactoring)
+- **Python 3.7**: Optimal balance of modern features and wide adoption
+- **Python 3.8+**: Supported but not required (importlib.metadata has fallback)
+- **Python 3.11+**: tomllib usage has fallback to tomli for older versions
+
+#### **Dependency Compatibility**
+
+- **paramiko>=3.3.1**: SSH/SFTP client library (Python 3.6+ compatible)
+- **blessed>=1.20.0**: Terminal UI library (Python 3.6+ compatible)
+- **tomli**: TOML parsing fallback for Python < 3.11 (Python 3.6+ compatible)
+
+### **Key Technology Choices**
+
+#### **Core Dependencies**
+
+- **blessed**: Terminal UI and cross-platform input handling
+- **paramiko**: SSH/SFTP connections for remote build execution
+- **pytest**: Comprehensive testing framework with 17 test modules covering all major components
+
+#### **Development Tools**
+
+- **MyPy**: Static type checking with Python 3.9+ requirement (separate from runtime)
+- **Black**: Code formatting for consistent style
+- **Flake8**: Linting and code quality checks
+
+#### **Design Philosophy**
+
+- **Type Safety**: Comprehensive type hints for maintainability
+- **Modular Architecture**: Clear separation of concerns across 20+ modules
+- **Terminal-First UI**: Rich terminal interface with real-time updates
+- **Cross-Platform**: Works on macOS, Linux, and Windows (with appropriate terminal)
+
+#### **Performance Considerations**
+
+- **Memory Efficient**: Output buffers with configurable size limits
+- **Concurrent Execution**: Parallel SSH connections with thread safety
+- **Optimized Rendering**: Only re-renders changed UI sections
 
 ## Architectural Components
 
@@ -197,6 +263,14 @@ redland-forge/
   - Handles color mode detection and switching
   - Manages status color mapping
   - Supports different color schemes
+
+#### Version Management
+
+- **`src/version.py`** - Version management and compatibility
+  - Provides single source of truth for version information
+  - Handles development vs production environment detection
+  - Manages TOML parsing with fallbacks for different Python versions
+  - Supports importlib.metadata with graceful degradation
 
 #### Configuration
 
@@ -303,7 +377,7 @@ Header/Footer Render ← Color Management ← Text Formatting
 
 ```diagram
 ┌─────────────────────────────────────────────────────────────┐
-│                    Redland Forge Application                    │
+│                    Redland Forge Application                │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
 │  │  BuildTUI   │────│ InputHandler│────│  Renderer   │      │
