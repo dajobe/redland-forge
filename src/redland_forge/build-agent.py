@@ -110,7 +110,7 @@ def setup_logging(no_print_hostname: bool = False) -> None:
 
     # Create a custom formatter that supports colors
     class ColoredFormatter(logging.Formatter):
-        def format(self, record) -> str:
+        def format(self, record: logging.LogRecord) -> str:
             # Add colors based on log level
             if record.levelno >= logging.ERROR:
                 record.msg = colorize(f"{record.msg}", Colors.BRIGHT_RED)

@@ -83,13 +83,13 @@ class BuildTUI:
 
             # Initialize full-screen state
             self.full_screen_mode = False
-            self.full_screen_host = None
+            self.full_screen_host: Optional[str] = None
             logging.debug("Full-screen state initialized")
 
             # Initialize menu state
             self.menu_mode = False
             self.menu_selection = 0
-            self.menu_options: List[str] = []
+            self.menu_options: List[Dict[str, Any]] = []
             logging.debug("Menu state initialized")
 
             # Initialize log scrolling state
@@ -1156,7 +1156,7 @@ class BuildTUI:
 
         logging.debug(f"Built menu with {len(self.menu_options)} options")
 
-    def _handle_input_key(self, key) -> None:
+    def _handle_input_key(self, key: Any) -> None:
         """Handle a single key press using the InputHandler."""
         logging.debug(
             f"Handling key: {key} (menu_mode={self.menu_mode}, full_screen_mode={self.full_screen_mode})"

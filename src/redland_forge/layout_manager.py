@@ -6,7 +6,7 @@ A module for managing terminal layout and host section positioning in the TUI.
 """
 
 import logging
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Callable
 from blessed import Terminal
 
 from .config import Config
@@ -18,7 +18,7 @@ class LayoutManager:
     """Manages terminal layout and host section positioning."""
 
     def __init__(
-        self, terminal: Terminal, hosts: List[str], step_change_callback=None
+        self, terminal: Terminal, hosts: List[str], step_change_callback: Optional[Callable] = None
     ) -> None:
         """
         Initialize the layout manager.

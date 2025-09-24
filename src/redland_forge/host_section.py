@@ -7,7 +7,7 @@ A module for managing and rendering individual host sections in the TUI.
 
 import logging
 import time
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 
 from blessed import Terminal
 
@@ -146,7 +146,7 @@ class HostSection:
     """Represents a host section in the TUI."""
 
     def __init__(
-        self, hostname: str, start_y: int, height: int, step_change_callback=None
+        self, hostname: str, start_y: int, height: int, step_change_callback: Optional[Callable] = None
     ) -> None:
         """
         Initialize a host section.
@@ -169,7 +169,7 @@ class HostSection:
         self.step_trigger_line = ""  # Store the line that triggered the current step
         self.start_time: Optional[float] = None
         self.current_step = ""
-        self.duration = 0
+        self.duration = 0.0
         self.last_update = time.time()
         self.completion_time: Optional[float] = None  # Added for 10-second timeout
         self.step_change_callback = step_change_callback
@@ -641,7 +641,7 @@ class HostSection:
         """
         return self.status in ["SUCCESS", "FAILED"]
 
-    def get_completion_time(self) -> float:
+    def get_completion_time(self) -> Optional[float]:
         """
         Get the completion time.
 

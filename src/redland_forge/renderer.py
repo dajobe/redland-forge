@@ -7,7 +7,10 @@ A module for handling all UI rendering logic in the TUI.
 
 import logging
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .auto_exit_manager import AutoExitManager
 
 from blessed import Terminal
 
@@ -25,7 +28,7 @@ class Renderer:
         self,
         terminal: Terminal,
         statistics_manager: StatisticsManager,
-        auto_exit_manager=None,
+        auto_exit_manager: Optional["AutoExitManager"] = None,
     ) -> None:
         """
         Initialize the renderer.

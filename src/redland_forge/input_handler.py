@@ -6,7 +6,7 @@ A module for handling keyboard input and help display in the TUI.
 """
 
 import logging
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 from enum import Enum
 
 from blessed import Terminal
@@ -95,7 +95,7 @@ class InputHandler:
 
     def _handle_key(
         self,
-        key,
+        key: Any,
         on_quit: Callable[[], None],
         on_navigate_up: Callable[[], None],
         on_navigate_down: Callable[[], None],
@@ -281,7 +281,7 @@ class InputHandler:
 
     def _handle_host_navigation_key(
         self,
-        key,
+        key: Any,
         on_navigate_up: Callable[[], None],
         on_navigate_down: Callable[[], None],
         on_navigate_left: Optional[Callable[[], None]],
@@ -310,7 +310,7 @@ class InputHandler:
 
     def _handle_log_scrolling_key(
         self,
-        key,
+        key: Any,
         on_navigate_up: Callable[[], None],
         on_navigate_down: Callable[[], None],
         on_page_up: Optional[Callable[[], None]],
@@ -349,7 +349,7 @@ class InputHandler:
 
     def _handle_full_screen_key(
         self,
-        key,
+        key: Any,
         on_navigate_up: Callable[[], None],
         on_navigate_down: Callable[[], None],
         on_page_up: Optional[Callable[[], None]],
@@ -362,12 +362,10 @@ class InputHandler:
         """Handle key presses in full-screen mode."""
         if key.code == self.term.KEY_UP:
             logging.debug("Scroll up one line (full-screen)")
-            if on_navigate_up:
-                on_navigate_up()
+            on_navigate_up()
         elif key.code == self.term.KEY_DOWN:
             logging.debug("Scroll down one line (full-screen)")
-            if on_navigate_down:
-                on_navigate_down()
+            on_navigate_down()
         elif key.code == self.term.KEY_PGUP:
             logging.debug("Scroll up one page (full-screen)")
             if on_page_up:
@@ -391,12 +389,14 @@ class InputHandler:
             or key == "\n"
         ):
             logging.debug("Exit full-screen mode")
-            if on_escape or on_toggle_fullscreen:
-                (on_escape or on_toggle_fullscreen)()
+            if on_escape:
+                on_escape()
+            elif on_toggle_fullscreen:
+                on_toggle_fullscreen()
 
     def _handle_menu_key(
         self,
-        key,
+        key: Any,
         on_navigate_up: Callable[[], None],
         on_navigate_down: Callable[[], None],
         on_toggle_menu: Optional[Callable[[], None]],
@@ -417,5 +417,7 @@ class InputHandler:
                 on_menu_select()
         elif key == "\t" or key.code == self.term.KEY_ESCAPE:
             logging.debug("Exit menu mode")
-            if on_toggle_menu or on_escape:
-                (on_toggle_menu or on_escape)()
+            if on_toggle_menu:
+                on_toggle_menu()
+            elif on_escape:
+                on_escape()

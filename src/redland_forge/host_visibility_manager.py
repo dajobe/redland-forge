@@ -8,7 +8,7 @@ and timeout-based host hiding/showing in the TUI.
 
 import logging
 import time
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Callable
 
 from blessed import Terminal
 
@@ -25,7 +25,7 @@ class HostVisibilityManager:
         terminal: Terminal,
         layout_manager: LayoutManager,
         all_hosts: List[str],
-        step_change_callback=None,
+        step_change_callback: Optional[Callable] = None,
     ) -> None:
         """
         Initialize the host visibility manager.
@@ -111,9 +111,9 @@ class HostVisibilityManager:
                     hasattr(self.host_sections[host], "completion_time")
                     and self.host_sections[host].completion_time is not None
                 ):
-                    time_since_completion = (
-                        current_time - self.host_sections[host].completion_time
-                    )
+                    completion_time = self.host_sections[host].completion_time
+                    assert completion_time is not None  # Help mypy understand this can't be None
+                    time_since_completion = current_time - completion_time
                     logging.debug(
                         f"Host {host} completed {time_since_completion:.1f}s ago (timeout: {Config.HOST_VISIBILITY_TIMEOUT_SECONDS}s)"
                     )

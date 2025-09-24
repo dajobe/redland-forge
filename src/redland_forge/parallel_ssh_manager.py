@@ -49,7 +49,7 @@ class ParallelSSHManager:
         self.results: Dict[str, Dict[str, Any]] = {}
         self.lock = threading.Lock()
         self.build_script_path: Optional[str] = None
-        self.build_start_callback = None
+        self.build_start_callback: Optional[Callable[[str], None]] = None
         self.bindings_languages = bindings_languages
 
     def add_host(self, hostname: str, tarball: str) -> None:
@@ -173,9 +173,12 @@ class ParallelSSHManager:
             # Resolve remote build directory to an absolute path for SFTP
             # Prefer SFTP normalize to get the remote home directory reliably
             try:
-                if not ssh.sftp:
+                if not ssh.sftp and ssh.client:
                     ssh.sftp = ssh.client.open_sftp()
-                remote_home_dir = ssh.sftp.normalize(".")
+                if ssh.sftp:
+                    remote_home_dir = ssh.sftp.normalize(".")
+                else:
+                    raise RuntimeError("SFTP connection not available")
             except Exception as e:
                 # Fallback: try shell to get HOME
                 exception_results = ExceptionHandler.handle_exception(
@@ -255,6 +258,8 @@ class ParallelSSHManager:
                 )
 
             # Execute build command with real-time output monitoring
+            if not ssh.client:
+                raise RuntimeError(f"SSH client not available for {hostname}")
             stdin, stdout, stderr = ssh.client.exec_command(build_cmd)
 
             # Set build timeout
@@ -266,7 +271,8 @@ class ParallelSSHManager:
                 while not stdout.channel.exit_status_ready():
                     # Check if SSH connection is still alive
                     if (
-                        not ssh.client.get_transport()
+                        not ssh.client
+                        or not ssh.client.get_transport()
                         or not ssh.client.get_transport().is_active()
                     ):
                         with self.lock:
