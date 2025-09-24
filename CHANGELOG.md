@@ -5,6 +5,23 @@ All notable changes to Redland Forge are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-09-24
+
+### Fixed
+
+- Complete MyPy type checking resolution - all type errors fixed.
+- Added comprehensive type annotations across all modules.
+- Fixed type mismatches (float vs int, None vs callable).
+- Resolved optional type handling with proper None checks.
+- Updated minimum Python requirement from 3.7 to 3.9 for better dependency
+  compatibility.
+
+### Changed
+
+- Enhanced type safety with proper forward references and type guards.
+- Improved callback parameter handling in input system.
+- All 408 tests continue to pass with enhanced type checking.
+
 ## [1.0.4] - 2025-09-14
 
 - Added `--version` option to display version information
